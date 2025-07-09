@@ -170,6 +170,7 @@ return {
 		for i, task in ipairs(tasks) do
 			no_tasks = false
 			if i > 8 then break end
+			if task.deadline > 10 then break end
 			todo_items[i] = dashboard.button(
 				tostring(i),
 				"(" .. dayToString(task.deadline) .. "): " .. task.item,
