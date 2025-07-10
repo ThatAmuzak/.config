@@ -16,6 +16,11 @@ Set-Alias quit ex
 Set-Alias cc clear
 Set-Alias ff fastfetch
 
+Set-Alias n nvim
+Set-Alias v nvim
+Set-Alias vi nvim
+Set-Alias vim nvim
+
 function openCurrentDirectory{Start-Process .}
 Set-Alias exp openCurrentDirectory
 
