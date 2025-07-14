@@ -75,6 +75,12 @@ return {
 				{ desc = "Insert File Link" }
 			),
 			vim.keymap.set("n", "<leader>nil", "<Plug>(neorg.telescope.insert_link)", { desc = "Insert Linkable" }),
+			vim.keymap.set("n", "<leader>nsf", function()
+				local file_name = vim.fn.expand("%:t")
+				require("telescope").extensions.live_grep_args.live_grep_args({
+					default_text = file_name,
+				})
+			end, { desc = "Search for file references in notes" }),
 		})
 
 		vim.api.nvim_create_autocmd("FileType", {
