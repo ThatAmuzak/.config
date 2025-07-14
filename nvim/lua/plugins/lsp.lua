@@ -164,7 +164,13 @@ return {
 			--
 			-- But for many setups, the LSP (`tsserver`) will work just fine
 			ltex = {
+				filetypes = { "markdown", "tex", "norg", "org", "bib", "plaintex" },
 				language = "en",
+				settings = {
+					ltex = {
+						enabled = { "markdown", "tex", "norg", "org", "bib", "plaintex" },
+					},
+				},
 				flags = {
 					debounce_text_changes = 1000, -- Adjust the delay (in milliseconds) as needed
 				},
