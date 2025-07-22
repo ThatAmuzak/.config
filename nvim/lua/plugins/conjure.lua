@@ -1,14 +1,14 @@
 return {
 	{
-		"ThatAmuzak/conjure",
-		branch = "comment-out-opt",
+		"Olical/conjure",
+		branch = "main",
 		ft = { "clojure", "fennel", "python" }, -- etc
 		init = function()
 			-- Set configuration options here
 			-- Uncomment this to get verbose logging to help diagnose internal Conjure issues
 			-- This is VERY helpful when reporting an issue with the project
 			-- vim.g["conjure#debug"] = true
-			vim.g["conjure#log#raw_out"] = true
+			vim.g["conjure#client#python#stdio#command"] = "python -iq"
 		end,
 
 		-- Optional cmp-conjure integration
