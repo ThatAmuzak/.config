@@ -15,7 +15,9 @@ return {
 				"prettier", -- ts/js formatter
 				"stylua", -- lua formatter
 				"eslint_d", -- ts/js linter
-				"ruff", -- Python linter and formatter
+				-- "ruff", -- Python linter and formatter
+				"pylint",
+				"black",
 				"gofmt",
 				"goimports",
 				"csharpier",
@@ -35,8 +37,10 @@ return {
 				extra_args = { "--config", ".csharpierrc" },
 			}),
 			formatting.google_java_format,
-			require("none-ls.formatting.ruff").with({ extra_args = { "--extend-select", "I" } }),
-			require("none-ls.formatting.ruff_format"),
+			formatting.black,
+			diagnostics.pylint,
+			-- require("none-ls.formatting.ruff").with({ extra_args = { "--extend-select", "I" } }),
+			-- require("none-ls.formatting.ruff_format"),
 			require("none-ls.formatting.latexindent"),
 		}
 
