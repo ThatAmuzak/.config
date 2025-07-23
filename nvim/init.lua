@@ -52,3 +52,4 @@ require("lazy").setup({
 })
 
 require("plugins.terminal")
+require("plugins.neorg-filelink")

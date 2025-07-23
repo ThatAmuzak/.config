@@ -4,7 +4,6 @@ return {
 	version = "*", -- Pin Neorg to the latest stable release
 	dependencies = {
 		"nvim-lua/plenary.nvim",
-		"ThatAmuzak/neorg-telescope",
 	},
 	config = function()
 		require("neorg").setup({
@@ -22,7 +21,6 @@ return {
 				},
 				["core.completion"] = { config = { engine = "nvim-cmp" }, name = "[Neorg]" },
 				["core.integrations.nvim-cmp"] = {},
-				["core.integrations.telescope"] = {},
 			},
 			vim.keymap.set("n", "<leader>ntt", "<Plug>(neorg.qol.todo-items.todo.task-cycle)", { desc = "Cycle Task" }),
 			vim.keymap.set(
@@ -68,13 +66,6 @@ return {
 				{ desc = "Mark Task Undone" }
 			),
 			vim.keymap.set("n", "<leader>nid", "<Plug>(neorg.tempus.insert-date)", { desc = "Insert Date" }),
-			vim.keymap.set(
-				"n",
-				"<leader>nif",
-				"<Plug>(neorg.telescope.insert_file_link)",
-				{ desc = "Insert File Link" }
-			),
-			vim.keymap.set("n", "<leader>nil", "<Plug>(neorg.telescope.insert_link)", { desc = "Insert Linkable" }),
 			vim.keymap.set("n", "<leader>nsf", function()
 				local file_name = vim.fn.expand("%:t")
 				require("telescope").extensions.live_grep_args.live_grep_args({
@@ -87,7 +78,6 @@ return {
 			pattern = "norg",
 			callback = function()
 				vim.opt_local.spell = false
-				require("no-neck-pain").enable()
 			end,
 		})
 	end,

@@ -213,8 +213,7 @@ return {
 
 		vim.keymap.set("n", "<leader>A", function()
 			vim.cmd("Alpha")
-			require("no-neck-pain").disable()
 			populateTasks()
-		end, { desc = "Launch Alpha and disable NoNeckPain" })
+		end, { desc = "Launch Alpha" })
 	end,
 }
