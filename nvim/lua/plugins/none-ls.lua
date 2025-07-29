@@ -37,7 +37,7 @@ return {
 				extra_args = { "--config", ".csharpierrc" },
 			}),
 			formatting.google_java_format,
-			formatting.black,
+			-- formatting.black,
 			diagnostics.pylint,
 			-- require("none-ls.formatting.ruff").with({ extra_args = { "--extend-select", "I" } }),
 			-- require("none-ls.formatting.ruff_format"),
