@@ -66,6 +66,7 @@ return {
 				{ desc = "Mark Task Undone" }
 			),
 			vim.keymap.set("n", "<leader>nid", "<Plug>(neorg.tempus.insert-date)", { desc = "Insert Date" }),
+			vim.keymap.set("i", "<C-d>", "<Esc><Plug>(neorg.tempus.insert-date)", { desc = "Insert Date" }),
 			vim.keymap.set("n", "<leader>nsf", function()
 				local file_name = vim.fn.expand("%:t")
 				require("telescope").extensions.live_grep_args.live_grep_args({
