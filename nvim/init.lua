@@ -52,4 +52,5 @@ require("lazy").setup({
 })
 
 require("plugins.terminal")
+require("plugins.research-paper-manager")
 require("plugins.neorg-filelink")
