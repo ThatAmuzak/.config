@@ -38,11 +38,15 @@ Komorebic(cmd) {
 !1::Komorebic("focus-workspace 0")               ; Alt+1 switches to workspace 0
 !2::Komorebic("focus-workspace 1")               ; Alt+2 switches to workspace 1
 !3::Komorebic("focus-workspace 2")               ; Alt+3 switches to workspace 2
+!4::Komorebic("focus-workspace 3")               ; Alt+3 switches to workspace 3
+!5::Komorebic("focus-workspace 4")               ; Alt+3 switches to workspace 4
 
 ; Move window to workspaces 0–2
 !+1::Komorebic("move-to-workspace 0")            ; Alt+Shift+1 moves window to workspace 0
 !+2::Komorebic("move-to-workspace 1")            ; Alt+Shift+2 moves window to workspace 1
 !+3::Komorebic("move-to-workspace 2")            ; Alt+Shift+3 moves window to workspace 2
+!+4::Komorebic("move-to-workspace 3")            ; Alt+Shift+3 moves window to workspace 3
+!+5::Komorebic("move-to-workspace 4")            ; Alt+Shift+3 moves window to workspace 4
 
 ; Cycle between monitors
 !w::Komorebic("cycle-monitor next")             ; Alt+W cycles to next monitor
