@@ -155,9 +155,9 @@ return {
 		local servers = {
 			-- clangd = {},
 			gopls = {},
-			pyright = {
-				capabilities = require("cmp_nvim_lsp").default_capabilities(),
-			},
+			-- pyright = {
+			-- 	capabilities = require("cmp_nvim_lsp").default_capabilities(),
+			-- },
 			-- rust_analyzer = {},
 			-- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
 			--
@@ -193,24 +193,24 @@ return {
 				sdk_include_prereleases = true,
 			},
 			ts_ls = {}, -- tsserver is deprecated
-			-- ruff = {},
+			ruff = {},
 			jdtls = {},
-			-- pylsp = {
-			-- 	settings = {
-			-- 		pylsp = {
-			-- 			plugins = {
-			-- 				pyflakes = { enabled = false },
-			-- 				pycodestyle = { enabled = false },
-			-- 				autopep8 = { enabled = false },
-			-- 				yapf = { enabled = false },
-			-- 				mccabe = { enabled = false },
-			-- 				pylsp_mypy = { enabled = false },
-			-- 				pylsp_black = { enabled = false },
-			-- 				pylsp_isort = { enabled = false },
-			-- 			},
-			-- 		},
-			-- 	},
-			-- },
+			pylsp = {
+				settings = {
+					pylsp = {
+						plugins = {
+							pyflakes = { enabled = false },
+							pycodestyle = { enabled = false },
+							autopep8 = { enabled = false },
+							yapf = { enabled = false },
+							mccabe = { enabled = false },
+							pylsp_mypy = { enabled = false },
+							pylsp_black = { enabled = false },
+							pylsp_isort = { enabled = false },
+						},
+					},
+				},
+			},
 			html = { filetypes = { "html", "twig", "hbs" } },
 			cssls = {},
 			jsonls = {},
