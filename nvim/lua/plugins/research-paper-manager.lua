@@ -52,7 +52,7 @@ local function authors_to_string(authors_tbl)
 	return table.concat(names, ", ")
 end
 
-local generate_norg_files = function()
+local generate_norg_files = function(force)
 	local content, err = read_file("~/Notes/Brain2/papers/metadata/Library.json")
 	if not content then
 		vim.api.nvim_echo({ { "Error reading file: " .. err, "ErrorMsg" } }, true, { err = true })
@@ -79,7 +79,7 @@ local generate_norg_files = function()
 		local filename = citation_key .. ".norg"
 		local filepath = vim.fn.expand("~/Notes/Brain2/papers/" .. filename)
 
-		if vim.fn.filereadable(filepath) == 1 then
+		if vim.fn.filereadable(filepath) == 1 and not force then
 			goto continue
 		end
 
@@ -139,5 +139,11 @@ local generate_norg_files = function()
 	end
 end
 
-vim.api.nvim_create_user_command("RefreshPapers", generate_norg_files, {})
+vim.api.nvim_create_user_command("RefreshPapers", function()
+	generate_norg_files(false)
+end, {})
+vim.api.nvim_create_user_command("ForceRefreshPapers", function()
+	generate_norg_files(true)
+end, {})
 vim.keymap.set("n", "<leader>lrp", "<cmd>RefreshPapers<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>flrp", "<cmd>ForceRefreshPapers<CR>", { noremap = true, silent = true })
