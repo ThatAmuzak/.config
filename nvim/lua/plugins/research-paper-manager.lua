@@ -31,6 +31,13 @@ local function parse_json(str)
 	return tbl, nil
 end
 
+local function trim(s)
+	if type(s) ~= "string" then
+		return s
+	end
+	return s:gsub("^%s*(.-)%s*$", "%1")
+end
+
 local function authors_to_string(authors_tbl)
 	if type(authors_tbl) ~= "table" then
 		return ""
@@ -39,8 +46,8 @@ local function authors_to_string(authors_tbl)
 	for _, a in ipairs(authors_tbl) do
 		local given = a.given or ""
 		local family = a.family or ""
-		given = given:gsub("^%s*(.-)%s*$", "%1")
-		family = family:gsub("^%s*(.-)%s*$", "%1")
+		given = trim(given)
+		family = trim(family)
 		if given ~= "" or family ~= "" then
 			if given ~= "" and family ~= "" then
 				table.insert(names, given .. " " .. family)
@@ -50,6 +57,51 @@ local function authors_to_string(authors_tbl)
 		end
 	end
 	return table.concat(names, ", ")
+end
+
+-- Try several common CSL/metadata keys to find a container (journal / conference) and publisher
+local function resolve_publication_and_publisher(rec)
+	local publication = ""
+	local publisher = ""
+
+	-- Publication name: common fields
+	local pfields = {
+		"container-title",
+		"container-title-short",
+		"container_title",
+		"collection-title",
+		"collection_title",
+		"journal",
+		"journal-title",
+		"publisher",
+	}
+	for _, k in ipairs(pfields) do
+		if type(rec[k]) == "string" and trim(rec[k]) ~= "" then
+			publication = trim(rec[k])
+			break
+		end
+		-- also try dotted access
+		if rec[k] == nil and type(rec[k:gsub("%-", "_")]) == "string" and trim(rec[k:gsub("%-", "_")]) ~= "" then
+			publication = trim(rec[k:gsub("%-", "_")])
+			break
+		end
+	end
+
+	if type(rec.publisher) == "string" and trim(rec.publisher) ~= "" then
+		publisher = trim(rec.publisher)
+	elseif type(rec["publisher"]) == "string" and trim(rec["publisher"]) ~= "" then
+		publisher = trim(rec["publisher"])
+	end
+
+	if publication == "" then
+		if type(rec["event"]) == "string" and trim(rec["event"]) ~= "" then
+			publication = trim(rec["event"])
+		elseif type(rec["booktitle"]) == "string" and trim(rec["booktitle"]) ~= "" then
+			publication = trim(rec["booktitle"])
+		end
+	end
+
+	return publication, publisher
 end
 
 local generate_norg_files = function(force)
@@ -105,6 +157,18 @@ local generate_norg_files = function(force)
 
 		local doi = rec.DOI or rec.doi or ""
 
+		local publication_name, publisher = resolve_publication_and_publisher(rec)
+		local publication_line = ""
+		if publication_name ~= "" then
+			if publisher ~= "" then
+				publication_line = string.format("- Publication: %s (%s)", publication_name, publisher)
+			else
+				publication_line = string.format("- Publication: %s", publication_name)
+			end
+		elseif publisher ~= "" then
+			publication_line = string.format("- Publisher: %s", publisher)
+		end
+
 		local lines = {
 			"",
 			"___",
@@ -112,11 +176,17 @@ local generate_norg_files = function(force)
 			"",
 			string.format("- Authors: %s", authors_str),
 			string.format("- Year: %s", year),
-			string.format("- DOI: [Paper Link]{www.doi.org/%s}", doi),
-			string.format("- Paper: {/ ./pdfs/%s.pdf}[PDF]", citation_key),
-			"",
-			"___",
 		}
+
+		if publication_line ~= "" then
+			table.insert(lines, publication_line)
+		end
+
+		table.insert(lines, string.format("- DOI: [Paper Link]{www.doi.org/%s}", doi))
+		table.insert(lines, string.format("- Paper: {/ ./pdfs/%s.pdf}[PDF]", citation_key))
+		table.insert(lines, string.format("- Text: {/ ./txts/%s.txt}[Text]", citation_key))
+		table.insert(lines, "")
+		table.insert(lines, "___")
 
 		local f, ferr = io.open(filepath, "w")
 		if not f then
@@ -145,5 +215,5 @@ end, {})
 vim.api.nvim_create_user_command("ForceRefreshPapers", function()
 	generate_norg_files(true)
 end, {})
-vim.keymap.set("n", "<leader>lrp", "<cmd>RefreshPapers<CR>", { noremap = true, silent = true })
-vim.keymap.set("n", "<leader>flrp", "<cmd>ForceRefreshPapers<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>nrp", "<cmd>RefreshPapers<CR>", { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>nrfp", "<cmd>ForceRefreshPapers<CR>", { noremap = true, silent = true })
