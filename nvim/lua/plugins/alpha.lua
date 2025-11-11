@@ -49,7 +49,20 @@ return {
 		local function populateTasks()
 			local root = vim.fn.expand("~/Notes/Brain2")
 			local pattern = [[- \(\s*\)]]
-			local cmd = { "rg", "--no-heading", "--pcre2", "-n", "-e", pattern, root }
+			local cmd = {
+				"rg",
+				"--no-heading",
+				"-n",
+				"--glob",
+				"*.norg",
+				"-g",
+				"!journal/**",
+				"-g",
+				"!papers/**",
+				"-e",
+				pattern,
+				root,
+			}
 			local results = vim.fn.systemlist(cmd)
 
 			local function trim(s)
@@ -131,20 +144,27 @@ return {
 				if not rparen then goto continue end
 
 				local status = trim(rest:sub(1, rparen-1))
-				rest         = rest:sub(rparen+1)
+				rest = rest:sub(rparen+1)
 
 				local brace = rest:find("}")
 				if not brace then goto continue end
 
 				local deadline = trim(rest:sub(1, brace-1))
-				local item     = trim(rest:sub(brace+1))
+				local item = trim(rest:sub(brace+1))
 
 				local deadline_parts = splitByWhitespace(deadline)
 
 				local currentDate = os.date("*t")
 				local targetMonth = getMonthNumber(deadline_parts[4])
 				if not targetMonth then goto continue end
-				local targetDate = {year = tonumber(deadline_parts[5]), month = getMonthNumber(deadline_parts[4]), day = tonumber(deadline_parts[3]) + 1, hour = 0, min = 0, sec = 0}
+				local targetDate = {
+					year = tonumber(deadline_parts[5]),
+					month = getMonthNumber(deadline_parts[4]),
+					day = tonumber(deadline_parts[3]) + 1,
+					hour = 0,
+					min = 0,
+					sec = 0,
+				}
 
 				local relativeDeadline = dayToString(math.floor(getDaysDifference(currentDate, targetDate)))
 
@@ -153,12 +173,12 @@ return {
 					item = string.sub(item, 1, (40 - string.len(relativeDeadline))) .. "..."
 				end
 
-				tasks[#tasks+1] = {
-					path     = path,
+				tasks[#tasks + 1] = {
+					path = path,
 					line_num = line_num,
-					status   = status,
+					status = status,
 					deadline = math.floor(getDaysDifference(currentDate, targetDate)),
-					item     = item,
+					item = item,
 				}
 
 				::continue::
@@ -183,7 +203,6 @@ return {
 			if no_tasks then
 				table.insert(todo_items, dashboard.button("q", "󰳑  Nothing left to do", ":q<CR>"))
 			end
-
 		end
 
 		local todos = {
