@@ -67,6 +67,14 @@ return {
 			),
 			vim.keymap.set("n", "<leader>nid", "<Plug>(neorg.tempus.insert-date)", { desc = "Insert Date" }),
 			vim.keymap.set("i", "<C-d>", "<Esc><Plug>(neorg.tempus.insert-date)", { desc = "Insert Date" }),
+			vim.keymap.set("i", "<C-j>", function()
+				-- break undo sequence
+				vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-g>u", true, false, true), "n", false)
+				-- insert new line with checklist
+				vim.api.nvim_feedkeys("\n- ( ) ", "n", false)
+				-- break undo sequence again so undo stops here
+				vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<C-g>u", true, false, true), "n", false)
+			end),
 			vim.keymap.set("n", "<leader>nsf", function()
 				local file_name = vim.fn.expand("%:t")
 				require("telescope").extensions.live_grep_args.live_grep_args({
