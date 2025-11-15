@@ -13,7 +13,7 @@ return {
 		require("mason-null-ls").setup({
 			ensure_installed = {
 				"prettier", -- ts/js formatter
-				"stylua", -- lua formatter
+				-- "stylua", -- lua formatter
 				"eslint_d", -- ts/js linter
 				"ruff", -- Python linter and formatter
 				-- "pylint",
@@ -30,7 +30,7 @@ return {
 
 		local sources = {
 			formatting.prettier.with({ filetypes = { "html", "json", "yaml", "markdown" } }),
-			formatting.stylua,
+			-- formatting.stylua,
 			formatting.gofmt,
 			formatting.goimports,
 			formatting.csharpier.with({
