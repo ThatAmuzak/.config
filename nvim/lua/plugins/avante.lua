@@ -50,7 +50,7 @@ return {
 				name = "Summarize",
 				description = "Summarize research paper",
 				details = "Summarize a research paper quickly",
-				prompt = "Read the contents of the provided text file, which contains a research paper. Summarize the paper in a clear, high-level manner, highlighting the main objectives, methods, and results. Format the summary in an org format. Have a single Summary second level header, with one third level header for Goal, one for Method, and one for Results. Subpointers are fine, but keep it short, easy to read and easy to understand. Apply the summary output as a modification to the end of the attached norg file.",
+				prompt = "Read the contents of the provided text file, which contains a research paper. Summarize the paper in a clear, high-level manner, highlighting the main objectives, methods, and results. Format the summary in an org format. Have a single Summary second level header, with one fourth level header for Goal, one for Method, and one for Results. Subpointers are fine, but keep it short, easy to read and easy to understand. Apply the summary output as a modification with a search and replace to the end of the currently open buffer norg file.",
 			},
 		},
 	},

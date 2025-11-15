@@ -217,3 +217,41 @@ vim.api.nvim_create_user_command("ForceRefreshPapers", function()
 end, {})
 vim.keymap.set("n", "<leader>nrp", "<cmd>RefreshPapers<CR>", { noremap = true, silent = true })
 vim.keymap.set("n", "<leader>nrfp", "<cmd>ForceRefreshPapers<CR>", { noremap = true, silent = true })
+
+
+-- Automatic summarizer
+
+local api = require("avante.api")
+
+-- your custom function
+local function summarize_paper()
+	local cwd = vim.loop.cwd()
+	local expected = vim.loop.fs_realpath(vim.fn.expand("~/Notes/Brain2"))
+	local real_cwd = vim.loop.fs_realpath(cwd)
+	if real_cwd ~= expected then
+		vim.notify("⚠️ Not in ~/Notes/Brain2; current working directory is: " .. cwd, vim.log.levels.WARN)
+		return
+	end
+
+	-- Get current buffer name, strip extension
+	local bufname = vim.api.nvim_buf_get_name(0)
+	if bufname == "" then
+		vim.notify("No file name for current buffer", vim.log.levels.ERROR)
+		return
+	end
+	local filename = vim.fn.fnamemodify(bufname, ":t:r")  -- get tail, remove extension
+
+	local relpath = string.format("papers/txts/%s.txt", filename)
+
+	api.ask({ new_chat = true })
+
+	api.add_selected_file(relpath)
+
+	-- Feed the keys
+	vim.defer_fn(function()
+		local seq = "#Summarize" .. vim.api.nvim_replace_termcodes("<C-s>", true, false, true)
+		vim.api.nvim_feedkeys(seq, "i", true)
+	end, 600)
+end
+
+vim.keymap.set("n", "<leader>up", summarize_paper, { desc = "Avante: Summarize research paper" })
