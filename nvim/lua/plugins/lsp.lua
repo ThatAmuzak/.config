@@ -165,17 +165,27 @@ return {
 			--    https://github.com/pmizio/typescript-tools.nvim
 			--
 			-- But for many setups, the LSP (`tsserver`) will work just fine
-			ltex = {
+			ltex_plus = {
+				cmd = { "ltex-ls-plus" },
 				filetypes = { "markdown", "tex", "norg", "org", "bib", "plaintex" },
-				language = "en",
+				root_markers = { ".git" },
 				settings = {
 					ltex = {
-						enabled = { "markdown", "tex", "norg", "org", "bib", "plaintex" },
+						enabled = { "latex", "tex", "markdown", "norg", "org", "bib", "plaintex" },
+						language = "en-US",  -- or just "en", or whatever you want
+						-- other LTeX+-specific settings:
+						-- you can configure extraRules, java paths, heap size, etc.
+						-- see the LTeX+ settings documentation :contentReference[oaicite:0]{index=0}  
 					},
 				},
 				flags = {
-					debounce_text_changes = 1000, -- Adjust the delay (in milliseconds) as needed
+					debounce_text_changes = 1000,
 				},
+				on_attach = function(client, bufnr)
+					-- if you were doing ltex_extra previously, you can still load it here:
+					require("ltex_extra").setup({})
+					-- plus your usual on_attach stuff
+				end,
 			},
 			omnisharp = {
 				cmd = {
