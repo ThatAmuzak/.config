@@ -135,6 +135,21 @@ return {
 				end
 			end,
 		})
+		vim.api.nvim_create_autocmd("LspAttach", {
+		  group = vim.api.nvim_create_augroup("ltex-extra-attach", { clear = true }),
+		  callback = function(args)
+			local client = vim.lsp.get_client_by_id(args.data.client_id)
+			if not client then return end
+			-- match any ltex variant the server might present as (covers name mismatches)
+			if client.name:match("[Ll]tex") then
+			  local ok, ltex_extra = pcall(require, "ltex_extra")
+			  if ok and ltex_extra then
+				-- call once per buffer/client
+				pcall(ltex_extra.setup, {})
+			  end
+			end
+		  end,
+		})
 
 		-- LSP servers and clients are able to communicate to each other what features they support.
 		--  By default, Neovim doesn't support everything that is in the LSP specification.
@@ -181,11 +196,6 @@ return {
 				flags = {
 					debounce_text_changes = 1000,
 				},
-				on_attach = function(client, bufnr)
-					-- if you were doing ltex_extra previously, you can still load it here:
-					require("ltex_extra").setup({})
-					-- plus your usual on_attach stuff
-				end,
 			},
 			omnisharp = {
 				cmd = {
@@ -296,9 +306,6 @@ return {
 					server.on_attach = function(client, bufnr)
 						if original_on_attach then
 							original_on_attach(client, bufnr)
-						end
-						if server_name == "ltex" then
-							require("ltex_extra").setup({})
 						end
 					end
 					require("lspconfig")[server_name].setup(server)
