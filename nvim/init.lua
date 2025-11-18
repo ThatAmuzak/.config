@@ -49,6 +49,7 @@ require("lazy").setup({
 	require("plugins.no-neck-pain"),
 	require("plugins.csvview"),
 	require("plugins.nfnl"),
+	require("plugins.ghost"),
 })
 
 require("plugins.terminal")
