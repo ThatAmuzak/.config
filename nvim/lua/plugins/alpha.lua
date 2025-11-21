@@ -26,7 +26,7 @@ return {
 				dashboard.button("n", "  New File", ":enew<CR>"),
 				dashboard.button("e", "󰙅  Open Oil", "<Cmd>Oil<CR>"),
 				dashboard.button("d", "󰂺  Open Journal", ":cd ~/Notes/Brain2/ | Neorg journal today<CR>"),
-				dashboard.button("i", "󰧑  Open Index", ":cd ~/Notes/Brain2/ | Neorg index <CR>"),
+				dashboard.button("p", "  Open Project Manager", ":ProjectMgr<CR>"),
 			},
 			opts = { spacing = 1 },
 		}
