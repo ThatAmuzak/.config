@@ -25,32 +25,6 @@ return {
 
 		-- Useful for getting pretty icons, but requires a Nerd Font.
 		{ "nvim-tree/nvim-web-devicons", enabled = vim.g.have_nerd_font },
-		{
-
-			"ThatAmuzak/telescope-zotero.nvim",
-			url = "https://github.com/ThatAmuzak/telescope-zotero.nvim",
-			branch = "better-bib-fetch",
-			dependencies = {
-				{ "kkharji/sqlite.lua" },
-			},
-			opts = {
-				ft = {
-					tex = {
-						insert_key_formatter = function(citekey)
-							return "\\cite{" .. citekey .. "}"
-						end,
-						locate_bib = function()
-							return vim.fn.getcwd() .. "/References/refs.bib"
-						end,
-					},
-				},
-			},
-			config = function()
-				require("zotero").setup()
-				require("telescope").load_extension("zotero")
-				vim.keymap.set("n", "<leader>sz", ":Telescope zotero<cr>", { desc = "[z]otero" })
-			end,
-		},
 	},
 	config = function()
 		require("telescope").setup({
@@ -95,7 +69,6 @@ return {
 		pcall(require("telescope").load_extension, "live_grep_args")
 
 		-- local telescope = require("telescope")
-		-- telescope.load_extension("zotero")
 
 		-- See `:help telescope.builtin`
 		local builtin = require("telescope.builtin")
