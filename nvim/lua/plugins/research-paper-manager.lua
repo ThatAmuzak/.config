@@ -117,6 +117,7 @@ local generate_norg_files = function(force)
 		return
 	end
 
+	local counter = 0
 	for idx, rec in ipairs(tbl) do
 		local citation_key = rec["citation-key"] or rec.citation_key or ""
 		if citation_key == "" then
@@ -178,6 +179,8 @@ local generate_norg_files = function(force)
 			string.format("- Year: %s", year),
 		}
 
+		counter = counter + 1
+
 		if publication_line ~= "" then
 			table.insert(lines, publication_line)
 		end
@@ -206,6 +209,12 @@ local generate_norg_files = function(force)
 		f:close()
 
 		::continue::
+	end
+
+	if counter > 0 then
+		vim.notify("Paper notes generation complete. Added " .. counter .. " papers")
+	else
+		vim.notify("No new papers to add")
 	end
 end
 
