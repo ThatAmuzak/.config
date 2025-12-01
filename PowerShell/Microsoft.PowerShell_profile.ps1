@@ -21,6 +21,12 @@ Set-Alias v nvim
 Set-Alias vi nvim
 Set-Alias vim nvim
 
+function launchbrain {
+    z brain2
+    nvim
+}
+Set-Alias brain launchbrain
+
 function openCurrentDirectory{Start-Process .}
 Set-Alias exp openCurrentDirectory
 
