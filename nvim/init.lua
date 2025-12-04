@@ -45,7 +45,6 @@ require("lazy").setup({
 	require("plugins.trim"),
 	require("plugins.ufo"),
 	require("plugins.neorg"),
-	-- require("plugins.conjure"),
 	require("plugins.no-neck-pain"),
 	require("plugins.csvview"),
 	require("plugins.nfnl"),
