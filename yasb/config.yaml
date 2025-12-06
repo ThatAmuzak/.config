@@ -230,7 +230,7 @@ widgets:
             icon: "Zen",
             launch: "explorer C:\\Program Files\\Zen Browser\\zen.exe",
           }
-        - { icon: "Terminal", launch: "wt" }
+        - { icon: "Term", launch: "Wezterm" }
   traffic:
     type: "yasb.traffic.TrafficWidget"
     options:
