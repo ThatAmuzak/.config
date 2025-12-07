@@ -7,17 +7,14 @@ return {
 	---@module 'avante'
 	---@type avante.Config
 	opts = {
-		-- add any opts here
-		-- this file can contain specific instructions for your project
 		instructions_file = "avante.md",
-		-- for example
-		provider = "openai",
 		mode = "legacy",
+		provider = "gemini",
 		providers = {
-			openai = {
-				endpoint = "https://api.openai.com/v1", -- LLM API endpoint
-				api_key = "OPENAI_API_KEY", -- Environment variable name for the LLM API key
-				model = "gpt-5-mini", -- LLM model name
+			gemini = {
+				endpoint = "https://generativelanguage.googleapis.com/v1beta", -- Gemini API endpoint
+				api_key = "AVANTE_GEMINI_API_KEY", -- Environment variable name
+				model = "models/gemini-2.5-flash", -- Gemini model name
 				timeout = 30000,
 				extra_request_body = {
 					temperature = 0.75,
@@ -50,7 +47,7 @@ return {
 				name = "Summarize",
 				description = "Summarize research paper",
 				details = "Summarize a research paper quickly",
-				prompt = "Read the contents of the provided text file, which contains a research paper. Summarize the paper in a clear, high-level manner, highlighting the main objectives, methods, and results. Format the summary in an org format. Have a single Summary second level header, with one fourth level header for Goal, one for Method, and one for Results. Subpointers are fine, but keep it short, easy to read and easy to understand. Apply the summary output as a modification with a search and replace to the end of the currently open buffer norg file.",
+				prompt = "Read the contents of the provided text file, which contains a research paper. Summarize the paper in a clear, high-level manner, highlighting the main objectives, methods, and results. Format the summary in neovim's norg format, similar to emacs org mode. Have a single Summary second level header (two stars and a space), with one fourth level header (4 stars and a space) for Goal, one for Method, and one for Results. Subpointers are fine, but keep it short, easy to read and easy to understand. Apply the summary output as a modification with a search and replace to the end of the currently open buffer norg file. Keep the formatting light. For formatting, bold is a single pair of stars around the content, italacs is a single pair of forward slashes, and underline is a single pair of underscores. A bullet point is a hyphen and a numeric point is a tilde. Nesting pointers is just adding more of those symbols so two hyphens for a nested bullet point.",
 			},
 		},
 	},
