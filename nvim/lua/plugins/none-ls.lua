@@ -24,6 +24,7 @@ return {
 				"latexindent",
 				"google-java-format",
 				"fnlfmt",
+				"clang-format",
 			},
 			automatic_installation = true,
 		})
@@ -33,6 +34,7 @@ return {
 			formatting.stylua,
 			formatting.gofmt,
 			formatting.goimports,
+			formatting.clang_format,
 			formatting.csharpier.with({
 				extra_args = { "--config", ".csharpierrc" },
 			}),

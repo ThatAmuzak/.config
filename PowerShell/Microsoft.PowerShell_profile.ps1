@@ -56,3 +56,45 @@ function rmrf {
 }
 
 Set-Alias rn Rename-Item
+
+function crun {
+    param(
+        [Parameter(Mandatory)]
+        [string]$file
+    )
+
+    $base = [System.IO.Path]::GetFileNameWithoutExtension($file)
+    $exe = "$base.exe"
+
+    gcc -o $exe $file 2>&1 |
+        Tee-Object -Variable compileOutput
+
+    if ($LASTEXITCODE -ne 0) {
+        return
+    }
+
+    # run
+    & .\$exe
+}
+
+
+function cruns {
+    param(
+        [Parameter(Mandatory)]
+        [string]$file
+    )
+
+    $base = [System.IO.Path]::GetFileNameWithoutExtension($file)
+    $exe = "$base.exe"
+
+    gcc -std=c17 -Wall -Wextra -Wpedantic -Werror -o $exe $file 2>&1 |
+        Tee-Object -Variable compileOutput
+
+    if ($LASTEXITCODE -ne 0) {
+        return
+    }
+
+    ""
+    Write-Output "=== output ==="
+    & .\$exe
+}
