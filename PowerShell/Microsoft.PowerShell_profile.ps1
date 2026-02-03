@@ -63,8 +63,9 @@ function crun {
         [string]$file
     )
 
+    $fileDir = Split-Path -Parent $file
     $base = [System.IO.Path]::GetFileNameWithoutExtension($file)
-    $exe = "$base.exe"
+    $exe = Join-Path -Path $fileDir -ChildPath "$base.exe"
 
     gcc -o $exe $file 2>&1 |
         Tee-Object -Variable compileOutput
@@ -74,7 +75,7 @@ function crun {
     }
 
     # run
-    & .\$exe
+    & $exe
 }
 
 
@@ -84,8 +85,9 @@ function cruns {
         [string]$file
     )
 
+    $fileDir = Split-Path -Parent $file
     $base = [System.IO.Path]::GetFileNameWithoutExtension($file)
-    $exe = "$base.exe"
+    $exe = Join-Path -Path $fileDir -ChildPath "$base.exe"
 
     gcc -std=c17 -Wall -Wextra -Wpedantic -Werror -o $exe $file 2>&1 |
         Tee-Object -Variable compileOutput
@@ -96,5 +98,5 @@ function cruns {
 
     ""
     Write-Output "=== output ==="
-    & .\$exe
+    & $exe
 }
