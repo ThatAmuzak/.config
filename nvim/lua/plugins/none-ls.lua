@@ -25,6 +25,7 @@ return {
 				"google-java-format",
 				"fnlfmt",
 				"clang-format",
+				"cljfmt",
 			},
 			automatic_installation = true,
 		})
@@ -39,6 +40,7 @@ return {
 				extra_args = { "--config", ".csharpierrc" },
 			}),
 			formatting.google_java_format,
+			formatting.cljfmt,
 			-- formatting.black,
 			-- diagnostics.pylint,
 			require("none-ls.formatting.ruff").with({ extra_args = { "--extend-select", "I" } }),

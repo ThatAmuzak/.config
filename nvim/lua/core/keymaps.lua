@@ -9,8 +9,34 @@ local function map(mode, lhs, rhs, desc)
 end
 
 -- Save and quit
-map("n", "<leader>ww", "<cmd> wa <CR>", "Save file")
-map("n", "<leader>qq", "<cmd> wqa <CR>", "Save all and quit")
+map("n", "<leader>ww", function()
+	for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+		if
+			vim.api.nvim_buf_is_loaded(buf)
+			and vim.bo[buf].buftype ~= "terminal"
+			and vim.bo[buf].modifiable
+			and vim.bo[buf].modified
+		then
+			vim.api.nvim_buf_call(buf, function()
+				vim.cmd("silent write")
+			end)
+		end
+	end
+end, "Save file(s)")
+map("n", "<leader>qq", function()
+	for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+		if vim.api.nvim_buf_is_loaded(buf) then
+			if vim.bo[buf].buftype == "terminal" then
+				vim.cmd("bd! " .. buf)
+			elseif vim.bo[buf].modifiable and vim.bo[buf].modified then
+				vim.api.nvim_buf_call(buf, function()
+					vim.cmd("silent write")
+				end)
+			end
+		end
+	end
+	vim.cmd("qa")
+end, "Save all and quit")
 
 -- Editing enhancements
 map("n", "j", "gj", "Move visual line down")

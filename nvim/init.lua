@@ -50,6 +50,8 @@ require("lazy").setup({
 	require("plugins.nfnl"),
 	require("plugins.ghost"),
 	require("plugins.projectmgr"),
+	require("plugins.conjure"),
+	require("plugins.jack-in"),
 })
 
 require("plugins.terminal")
