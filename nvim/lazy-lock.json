@@ -24,6 +24,7 @@
   "lazy.nvim": { "branch": "main", "commit": "85c7ff3711b730b4030d03144f6db6375044ae82" },
   "lazygit.nvim": { "branch": "main", "commit": "2305deed25bc61b866d5d39189e9105a45cf1cfb" },
   "local-highlight.nvim": { "branch": "master", "commit": "272f36f412c0a82c785c01256abf4eda4c1cb11d" },
+  "lsp-progress.nvim": { "branch": "main", "commit": "f6d5af10563b895ff846346f57cbd4451439f4c1" },
   "ltex_extra.nvim": { "branch": "master", "commit": "49ea83c231139d98b7c9668c99e7b4591421b056" },
   "lua-utils.nvim": { "branch": "main", "commit": "e565749421f4bbb5d2e85e37c3cef9d56553d8bd" },
   "lualine.nvim": { "branch": "master", "commit": "3946f0122255bc377d14a59b27b609fb3ab25768" },
