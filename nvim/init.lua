@@ -52,6 +52,7 @@ require("lazy").setup({
 	require("plugins.projectmgr"),
 	require("plugins.conjure"),
 	require("plugins.jack-in"),
+	require("plugins.sexp"),
 })
 
 require("plugins.terminal")
