@@ -31,8 +31,8 @@ Komorebic(cmd) {
 !9::Komorebic("resize-axis vertical decrease")    ; Alt+[ decreases height
 
 ; Flip layout orientation
-!x::Komorebic("flip-layout horizontal")          ; Alt+X flips layout horizontally
-!z::Komorebic("flip-layout vertical")            ; Alt+Z flips layout vertically
+!+h::Komorebic("flip-layout horizontal")          ; Alt+Shift+H flips layout horizontally
+!+v::Komorebic("flip-layout vertical")            ; Alt+Shift+V flips layout vertically
 
 ; Switch to workspaces 0–2
 !1::Komorebic("focus-workspace 0")               ; Alt+1 switches to workspace 0
