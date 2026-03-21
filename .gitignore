@@ -15,3 +15,5 @@ emacs/eln-cache/30.2-0424f8e2
 emacs/elpaca
 emacs/config.org~
 emacs/auto-save-list
+emacs/#config.org#
+emacs/recentf

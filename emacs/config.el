@@ -112,6 +112,7 @@
     "b p" '(previous-buffer :wk "Previous buffer")
     "b r" '(revert-buffer :wk "Reload buffer"))
 
+  ;; Window
   (amuzak/leader-keys
     "v" '(evil-window-vsplit :wk "Split window vertically")
     "h" '(evil-window-split :wk "Split window horizontally")
@@ -137,6 +138,7 @@
   ;; Misc
   (amuzak/leader-keys
     "SPC" '(find-file :wk "Find file")
+    "f r" '(counsel-recentf :wk "Find recent files")
     "c c" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit Emacs Config")
     "a" (lambda () (interactive) (evil-goto-first-line) (evil-visual-line) (evil-goto-line))
     "ww" '((lambda () (interactive)
@@ -184,6 +186,16 @@
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)
 
+(setq paragraph-start "\\([ \t]*$\\)\\|\\(^\\s-*$\\)")
+(setq paragraph-separate "\\([ \t]*$\\)\\|\\(^\\s-*$\\)")
+
+(use-package all-the-icons
+  :ensure t
+  :if (display-graphic-p))
+(use-package all-the-icons-dired
+  :ensure t
+  :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
+
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
@@ -192,6 +204,17 @@
 (global-display-line-numbers-mode 1)
 (global-visual-line-mode t)
 ()
+
+(use-package evil-goggles
+  :ensure t
+  :after evil
+  :config
+  (evil-goggles-mode)
+  (setq evil-goggles-duration 0.25))
+
+(setq scroll-conservatively 101)
+(setq scroll-margin 5)
+(pixel-scroll-precision-mode 1)
 
 (use-package which-key
   :init
@@ -223,3 +246,33 @@
 (electric-indent-mode -1)
 
 (require 'org-tempo)
+
+(use-package counsel
+  :ensure t
+  :after ivy
+  :config (counsel-mode))
+
+(use-package ivy
+  :ensure t
+  :bind
+  (("C-SPC" . ivy-resume))
+  :custom
+  (setq ivy-use-virtual-buffers t)
+  (setq ivy-count-format "(%d/%d) ")
+  (setq enable-recursive-minibuffers t)
+  :config
+  (ivy-mode))
+(use-package all-the-icons-ivy-rich
+  :ensure t
+  :init (all-the-icons-ivy-rich-mode 1))
+
+(use-package ivy-rich
+  :after ivy
+  :ensure t
+  :init (ivy-rich-mode 1)
+  :custom
+  (ivy-virtual-abbreviate 'full
+                          ivy-rich-switch-buffer-align-virtual-buffer t
+                          ivy-rich-path-style 'abbrev)
+  :config
+  (ivy-set-display-transformer 'ivy-switch-buffer 'ivy-rich-switch-buffer-transformer))
