@@ -36,7 +36,6 @@
     (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
 (add-hook 'after-init-hook #'elpaca-process-queues)
 (elpaca `(,@elpaca-order))
-
 ;; Install use-package support
 (elpaca elpaca-use-package
   ;; Enable use-package :ensure support for Elpaca.
@@ -51,9 +50,34 @@
   (setq evil-want-keybinding nil)
   (setq evil-vsplit-window-right t)
   (setq evil-split-window-below t)
-  (evil-mode))
+  (evil-mode)
+  :config
+
+  ;; QoL rebinds
+  (define-key evil-normal-state-map "j" 'evil-next-visual-line)
+  (define-key evil-normal-state-map "k" 'evil-previous-visual-line)
+  (define-key evil-visual-state-map "j" 'evil-next-visual-line)
+  (define-key evil-visual-state-map "k" 'evil-previous-visual-line)
+  (define-key evil-normal-state-map "x" (lambda () (interactive) (evil-delete (point) (1+ (point)) 'line ?_)))
+  (define-key evil-normal-state-map (kbd "C-d") (lambda () (interactive) (evil-scroll-down nil) (recenter)))
+  (define-key evil-normal-state-map (kbd "C-u") (lambda () (interactive) (evil-scroll-up nil) (recenter)))
+  (define-key evil-normal-state-map "n" (lambda () (interactive) (evil-search-next) (recenter)))
+  (define-key evil-normal-state-map "N" (lambda () (interactive) (evil-search-previous) (recenter)))
+  (define-key evil-normal-state-map "G" (lambda () (interactive) (evil-goto-line) (recenter)))
+  (define-key evil-normal-state-map (kbd "<up>") (lambda () (interactive) (evil-window-increase-height 2)))
+  (define-key evil-normal-state-map (kbd "<down>") (lambda () (interactive) (evil-window-decrease-height 2)))
+  (define-key evil-normal-state-map (kbd "<left>") (lambda () (interactive) (evil-window-decrease-width 2)))
+  (define-key evil-normal-state-map (kbd "<right>") (lambda () (interactive) (evil-window-increase-width 2)))
+  (define-key evil-visual-state-map "<" (lambda () (interactive) (evil-shift-left (region-beginning) (region-end)) (evil-visual-restore)))
+  (define-key evil-visual-state-map ">" (lambda () (interactive) (evil-shift-right (region-beginning) (region-end)) (evil-visual-restore)))
+  (define-key evil-visual-state-map "p" (lambda () (interactive) (evil-delete (region-beginning) (region-end) 'line ?_) (evil-paste-after nil)))
+  (define-key evil-normal-state-map (kbd "C-k") 'evil-window-up)
+  (define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
+  (define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
+  (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right))
+
 (use-package evil-collection
-  :ensure t
+  :ensure 
   :demand t
   :after evil
   :config
@@ -73,35 +97,129 @@
 
   ;; 'SPC' as global leader key
   (general-create-definer amuzak/leader-keys
-			  :states '(normal insert visual emacs)
-			  :keymaps 'override
-			  :prefix "SPC"
-			  :global-prefix "C-SPC")
+    :states '(normal insert visual emacs)
+    :keymaps 'override
+    :prefix "SPC"
+    :global-prefix "C-SPC")
+
+  ;; Buffer
   (amuzak/leader-keys
-    "b" '(:ignore t :wk "buffer")
-    "bb" '(switch-to-buffer :wk "Switch buffer")
-    "bs" '(kill-this-buffer :wk "Kill this buffer")
-    "bn" '(next-buffer :wk "Next buffer")
-    "bp" '(previous-buffer :wk "Previous buffer")
-    "br" '(revert-buffer :wk "Reload buffer")
-    )
+    "b" '(:ignore t :wk "Buffer")
+    "b b" '(switch-to-buffer :wk "Switch buffer")
+    "b i" '(ibuffer :wk "List active buffers")
+    "b s" '(kill-this-buffer :wk "Kill this buffer")
+    "b n" '(next-buffer :wk "Next buffer")
+    "b p" '(previous-buffer :wk "Previous buffer")
+    "b r" '(revert-buffer :wk "Reload buffer"))
+
+  (amuzak/leader-keys
+    "v" '(evil-window-vsplit :wk "Split window vertically")
+    "h" '(evil-window-split :wk "Split window horizontally")
+    "se" '(balance-windows :wk "Make splits equal size")
+    "xs" '(evil-window-delete :wk "Close current split"))
+
+  ;; Evaluate
+  (amuzak/leader-keys
+    "e" '(:ignore t :wk "Evaluate")
+    "e b" '(eval-buffer :wk "Evaluate elisp in buffer")
+    "e d" '(eval-defun :wk "Evalute defun containing or after point")
+    "e e" '(eval-expression :wk "Evalute an elisp expression")
+    "e l" '(eval-last-sexp :wk "Evaluate elisp expression before point")
+    "e r" '(eval-region :wk "Evaluate elisp in region"))
+
+  ;; Emacs Utils
+  (amuzak/leader-keys
+    "d" '(:ignore t :wk "Help")
+    "d f" '(describe-function :wk "Describe Function")
+    "d v" '(describe-variable :wk "Describe Variable")
+    "r r" '((lambda () (interactive) (load-file "~/.config/emacs/init.el")) :wk "Reload Emacs Config"))
+
+  ;; Misc
+  (amuzak/leader-keys
+    "SPC" '(find-file :wk "Find file")
+    "c c" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit Emacs Config")
+    "a" (lambda () (interactive) (evil-goto-first-line) (evil-visual-line) (evil-goto-line))
+    "ww" '((lambda () (interactive)
+             (save-some-buffers t (lambda ()
+				    (and (buffer-modified-p)
+					 (not (string-match-p "\\*.*\\*" (buffer-name)))
+					 (not (eq major-mode 'comint-mode)))))
+             (message "All files saved"))
+	   :wk "Save file(s)")
+    "qq" '((lambda () (interactive)
+             (save-some-buffers t (lambda ()
+				    (and (buffer-modified-p)
+					 (not (string-match-p "\\*.*\\*" (buffer-name)))
+					 (not (eq major-mode 'comint-mode)))))
+             (message "All files saved, exiting...")
+             (kill-emacs))
+	   :wk "Save all and quit"))
+  (general-define-key
+   :states 'normal
+   "gcc" '(comment-line :wk "Comment line"))
   )
 
 (set-face-attribute 'default nil
-		      :font "Consolas"
-		      :height 110
-		      :weight 'medium)
+		    :font "JetBrains Mono"
+		    :height 110
+		    :weight 'medium)
 (set-face-attribute 'variable-pitch nil
-		      :font "Constantia"
-		      :height 120
-		      :weight 'medium)
+		    :font "Ubuntu"
+		    :height 120
+		    :weight 'medium)
 (set-face-attribute 'fixed-pitch nil
-		      :font "Consolas"
-		      :height 110
-		      :weight 'medium)
+		    :font "JetBrains Mono"
+		    :height 110
+		    :weight 'medium)
 (set-face-attribute 'font-lock-comment-face nil
 		    :slant 'italic)
 (set-face-attribute 'font-lock-keyword-face nil
 		    :slant 'italic)
-;; (add-to-list 'default-frame-alist '(font . "Consolas"))
-;; (setq-default line-spacing 0.12)
+;; this will become useful once we move to the emacsclient
+(add-to-list 'default-frame-alist '(font . "JetBrains Mono-11"))
+(setq-default line-spacing 0.12)
+
+(global-set-key (kbd "C-=") 'text-scale-increase)
+(global-set-key (kbd "C--") 'text-scale-decrease)
+(global-set-key (kbd "C-=") 'text-scale-increase)
+(global-set-key (kbd "C--") 'text-scale-decrease)
+
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+(setq display-line-numbers-type 'relative)
+
+(global-display-line-numbers-mode 1)
+(global-visual-line-mode t)
+()
+
+(use-package which-key
+  :init
+  (which-key-mode 1)
+  :config
+  (setq which-key-side-window-location 'bottom
+	which-key-sort-order #'which-key-key-order-alpha
+	which-key-sort-uppercase-first nil
+	which-key-add-column-padding 1
+	which-key-max-display-columns nil
+	which-key-min-display-lines 6
+	which-key-side-window-slot -10
+	which-key-side-window-max-height 0.25
+	which-key-idle-delay 0.8
+	which-key-max-description-length 25
+	which-key-allow-imprecise-window-fit t
+	which-key-separator " -> "))
+
+(use-package toc-org
+  :ensure t
+  :commands toc-org-enable
+  :init (add-hook 'org-mode-hook 'toc-org-enable))
+
+(add-hook 'org-mode-hook 'org-indent-mode)
+(use-package org-superstar
+  :ensure (:host github :repo "integral-dw/org-superstar-mode")
+  :hook (org-mode . org-superstar-mode))
+
+(electric-indent-mode -1)
+
+(require 'org-tempo)
