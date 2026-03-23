@@ -58,7 +58,7 @@
   (define-key evil-normal-state-map "k" 'evil-previous-visual-line)
   (define-key evil-visual-state-map "j" 'evil-next-visual-line)
   (define-key evil-visual-state-map "k" 'evil-previous-visual-line)
-  (define-key evil-normal-state-map "x" (lambda () (interactive) (evil-delete (point) (1+ (point)) 'line ?_)))
+  (define-key evil-visual-state-map (kbd "x") 'evil-delete)
   (define-key evil-normal-state-map (kbd "C-d") (lambda () (interactive) (evil-scroll-down nil) (recenter)))
   (define-key evil-normal-state-map (kbd "C-u") (lambda () (interactive) (evil-scroll-up nil) (recenter)))
   (define-key evil-normal-state-map "n" (lambda () (interactive) (evil-search-next) (recenter)))
