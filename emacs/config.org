@@ -24,6 +24,7 @@
   - [[#enabling-toc][Enabling ToC]]
   - [[#enabling-org-bullets][Enabling Org Bullets]]
   - [[#disable-electric-indent][Disable Electric Indent]]
+  - [[#automatic-code-blocks-per-language][Automatic Code Blocks Per Language]]
 - [[#ivy-counsel][IVY (COUNSEL)]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
@@ -341,6 +342,15 @@ Icon package for use with dashboard, dired, ibuffer, etc
 
 #+begin_src emacs-lisp
   (require 'org-tempo)
+#+end_src
+
+** Automatic Code Blocks Per Language
+
+#+begin_src emacs-lisp
+  (add-to-list 'org-structure-template-alist '("se" . "src emacs-lisp"))
+  (add-to-list 'org-structure-template-alist '("sp" . "src python"))
+  (add-to-list 'org-structure-template-alist '("sr" . "src R"))
+  (add-to-list 'org-structure-template-alist '("sc" . "src clojure"))
 #+end_src
 
 * IVY (COUNSEL) 

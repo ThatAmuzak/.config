@@ -247,6 +247,11 @@
 
 (require 'org-tempo)
 
+(add-to-list 'org-structure-template-alist '("se" . "src emacs-lisp"))
+(add-to-list 'org-structure-template-alist '("sp" . "src python"))
+(add-to-list 'org-structure-template-alist '("sr" . "src R"))
+(add-to-list 'org-structure-template-alist '("sc" . "src clojure"))
+
 (use-package counsel
   :ensure t
   :after ivy
