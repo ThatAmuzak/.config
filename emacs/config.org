@@ -9,14 +9,18 @@
   - [[#package-manager][Package Manager]]
   - [[#load-evil-mode][Load Evil Mode]]
   - [[#general-keybindings][General Keybindings]]
-- [[#fonts][Fonts]]
+- [[#emacs-properties][EMACS PROPERTIES]]
+  - [[#automatic-pairing][Automatic pairing]]
+  - [[#custom-highlight-color][Custom highlight color]]
+- [[#fonts][FONTS]]
   - [[#default-fonts][Default Fonts]]
   - [[#zooming-inout][Zooming In/Out]]
   - [[#fixing-emacs-paragraphs][Fixing Emacs Paragraphs]]
   - [[#all-the-icons][All The Icons]]
-- [[#gui-tweaks][GUI Tweaks]]
+- [[#gui-tweaks][GUI TWEAKS]]
   - [[#disable-menubar-toolbar-scrollbar][Disable Menubar, Toolbar, Scrollbar]]
   - [[#display-line-numbers-truncated-lines][Display Line Numbers, Truncated Lines]]
+  - [[#color-theme][Color Theme]]
   - [[#yank-on-highlight][Yank on highlight]]
   - [[#scroll-behavior][Scroll behavior]]
 - [[#which-key][WHICH-KEY]]
@@ -205,7 +209,20 @@
     )
 #+end_src
 
-* Fonts
+* EMACS PROPERTIES
+
+** Automatic pairing
+#+begin_src emacs-lisp
+(electric-pair-mode 1)
+#+end_src
+
+** Custom highlight color
+#+begin_src emacs-lisp
+(custom-set-faces
+  '(region ((t (:background "#5f695f")))))
+#+end_src
+
+* FONTS
 ** Default Fonts
 You might have to ensure these are installed on your system
 #+begin_src emacs-lisp
@@ -257,7 +274,7 @@ Icon package for use with dashboard, dired, ibuffer, etc
     :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
 #+end_src
 
-* GUI Tweaks
+* GUI TWEAKS
 
 ** Disable Menubar, Toolbar, Scrollbar
 
@@ -273,7 +290,15 @@ Icon package for use with dashboard, dired, ibuffer, etc
 #+begin_src emacs-lisp
   (global-display-line-numbers-mode 1)
   (global-visual-line-mode t)
-  ()
+#+end_src
+
+** Color Theme
+
+#+begin_src emacs-lisp
+  (use-package darktooth-theme
+    :ensure (:host github :repo "emacsfodder/emacs-theme-darktooth")
+    :config
+    (load-theme 'darktooth t))
 #+end_src
 
 ** Yank on highlight

@@ -161,6 +161,11 @@
    "gcc" '(comment-line :wk "Comment line"))
   )
 
+(electric-pair-mode 1)
+
+(custom-set-faces
+  '(region ((t (:background "#5f695f")))))
+
 (set-face-attribute 'default nil
 		    :font "JetBrains Mono"
 		    :height 110
@@ -203,7 +208,11 @@
 
 (global-display-line-numbers-mode 1)
 (global-visual-line-mode t)
-()
+
+(use-package darktooth-theme
+  :ensure (:host github :repo "emacsfodder/emacs-theme-darktooth")
+  :config
+  (load-theme 'darktooth t))
 
 (use-package evil-goggles
   :ensure t
