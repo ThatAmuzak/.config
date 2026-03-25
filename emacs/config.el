@@ -74,7 +74,8 @@
   (define-key evil-normal-state-map (kbd "C-k") 'evil-window-up)
   (define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
   (define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
-  (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right))
+  (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
+  (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
 
 (use-package evil-collection
   :ensure 
@@ -158,13 +159,12 @@
 	   :wk "Save all and quit"))
   (general-define-key
    :states 'normal
-   "gcc" '(comment-line :wk "Comment line"))
-  )
+   "gcc" '(comment-line :wk "Comment line")))
 
 (electric-pair-mode 1)
 
 (custom-set-faces
-  '(region ((t (:background "#5f695f")))))
+ '(region ((t (:background "#5f695f")))))
 
 (set-face-attribute 'default nil
 		    :font "JetBrains Mono"
@@ -225,6 +225,18 @@
 (setq scroll-margin 5)
 (pixel-scroll-precision-mode 1)
 
+(use-package holo-layer
+  :ensure (:host github :repo "manateelazycat/holo-layer")
+  :init
+  (setq holo-layer-python-command "~/scoop/apps/python/current/python.exe")
+  (setq holo-layer-python-file
+        (expand-file-name "elpaca/sources/holo-layer/holo_layer.py"
+                          user-emacs-directory))
+  (setq holo-layer-enable-cursor-animation t)
+  (setq holo-layer-enable-indent-rainbow t)
+  :config
+  (holo-layer-enable))
+
 (use-package which-key
   :init
   (which-key-mode 1)
@@ -246,6 +258,8 @@
   :ensure t
   :commands toc-org-enable
   :init (add-hook 'org-mode-hook 'toc-org-enable))
+
+;; enable link via enter(with-eval-after-load 'evil
 
 (add-hook 'org-mode-hook 'org-indent-mode)
 (use-package org-superstar

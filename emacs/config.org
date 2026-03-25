@@ -23,6 +23,7 @@
   - [[#color-theme][Color Theme]]
   - [[#yank-on-highlight][Yank on highlight]]
   - [[#scroll-behavior][Scroll behavior]]
+  - [[#rainbow-indent-and-jelly-cursor][Rainbow indent and Jelly cursor]]
 - [[#which-key][WHICH-KEY]]
 - [[#org-mode][ORG MODE]]
   - [[#enabling-toc][Enabling ToC]]
@@ -115,7 +116,8 @@
     (define-key evil-normal-state-map (kbd "C-k") 'evil-window-up)
     (define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
     (define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
-    (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right))
+    (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
+    (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
 
   (use-package evil-collection
     :ensure 
@@ -205,21 +207,20 @@
   	   :wk "Save all and quit"))
     (general-define-key
      :states 'normal
-     "gcc" '(comment-line :wk "Comment line"))
-    )
+     "gcc" '(comment-line :wk "Comment line")))
 #+end_src
 
 * EMACS PROPERTIES
 
 ** Automatic pairing
 #+begin_src emacs-lisp
-(electric-pair-mode 1)
+  (electric-pair-mode 1)
 #+end_src
 
 ** Custom highlight color
 #+begin_src emacs-lisp
-(custom-set-faces
-  '(region ((t (:background "#5f695f")))))
+  (custom-set-faces
+   '(region ((t (:background "#5f695f")))))
 #+end_src
 
 * FONTS
@@ -318,6 +319,22 @@ Icon package for use with dashboard, dired, ibuffer, etc
   (pixel-scroll-precision-mode 1)
 #+end_src
 
+** Rainbow indent and Jelly cursor
+
+#+begin_src emacs-lisp
+  (use-package holo-layer
+    :ensure (:host github :repo "manateelazycat/holo-layer")
+    :init
+    (setq holo-layer-python-command "~/scoop/apps/python/current/python.exe")
+    (setq holo-layer-python-file
+          (expand-file-name "elpaca/sources/holo-layer/holo_layer.py"
+                            user-emacs-directory))
+    (setq holo-layer-enable-cursor-animation t)
+    (setq holo-layer-enable-indent-rainbow t)
+    :config
+    (holo-layer-enable))
+#+end_src
+
 * WHICH-KEY
 
 #+begin_src emacs-lisp
@@ -348,6 +365,8 @@ Icon package for use with dashboard, dired, ibuffer, etc
     :ensure t
     :commands toc-org-enable
     :init (add-hook 'org-mode-hook 'toc-org-enable))
+
+  ;; enable link via enter(with-eval-after-load 'evil
 #+end_src
 
 ** Enabling Org Bullets
