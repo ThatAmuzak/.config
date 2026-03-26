@@ -11,6 +11,8 @@
   - [[#general-keybindings][General Keybindings]]
 - [[#emacs-properties][EMACS PROPERTIES]]
   - [[#automatic-pairing][Automatic pairing]]
+  - [[#automatic-trim-whitespace][Automatic trim whitespace]]
+  - [[#automatic-clear-multiple-blank-lines][Automatic clear multiple blank lines]]
   - [[#custom-highlight-color][Custom highlight color]]
   - [[#dired-properties][Dired properties]]
 - [[#fonts][FONTS]]
@@ -31,15 +33,17 @@
   - [[#enabling-toc][Enabling ToC]]
   - [[#enabling-org-bullets][Enabling Org Bullets]]
   - [[#disable-electric-indent][Disable Electric Indent]]
+  - [[#fix-linting-if-scrolling-from-bottom][Fix Linting if scrolling from bottom]]
   - [[#automatic-code-blocks-per-language][Automatic Code Blocks Per Language]]
 - [[#dashboard][DASHBOARD]]
 - [[#ivy-counsel][IVY (COUNSEL)]]
 - [[#misc][MISC]]
   - [[#grease][Grease]]
+  - [[#undo-fu][Undo-Fu]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
-** Package Manager
 
+** Package Manager
 
 #+begin_src emacs-lisp
   (defvar elpaca-installer-version 0.12)
@@ -126,7 +130,7 @@
     (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
 
   (use-package evil-collection
-    :ensure 
+    :ensure
     :demand t
     :after evil
     :config
@@ -223,6 +227,23 @@
   (electric-pair-mode 1)
 #+end_src
 
+** Automatic trim whitespace
+
+#+begin_src emacs-lisp
+  (add-hook 'before-save-hook 'delete-trailing-whitespace)
+#+end_src
+
+** Automatic clear multiple blank lines
+
+#+begin_src emacs-lisp
+(add-hook 'before-save-hook
+          (lambda ()
+            (save-excursion
+              (goto-char (point-min))
+              (while (re-search-forward "^\n+" nil t)
+                (replace-match "\n")))))
+#+end_src
+
 ** Custom highlight color
 #+begin_src emacs-lisp
   (custom-set-faces
@@ -230,7 +251,7 @@
 #+end_src
 
 #+begin_src emacs-lisp
-  (set-language-environment "UTF-8") 
+  (set-language-environment "UTF-8")
 #+end_src
 
 ** Dired properties
@@ -396,8 +417,6 @@ More icons
     :ensure t
     :commands toc-org-enable
     :init (add-hook 'org-mode-hook 'toc-org-enable))
-
-  ;; enable link via enter(with-eval-after-load 'evil
 #+end_src
 
 ** Enabling Org Bullets
@@ -419,6 +438,12 @@ More icons
   (require 'org-tempo)
 #+end_src
 
+** Fix Linting if scrolling from bottom
+
+#+begin_src emacs-lisp
+  (add-hook 'org-mode-hook #'font-lock-fontify-buffer)
+#+end_src
+
 ** Automatic Code Blocks Per Language
 
 #+begin_src emacs-lisp
@@ -431,14 +456,14 @@ More icons
 * DASHBOARD
 
 #+begin_src emacs-lisp
-  (set-language-environment "UTF-8") 
+  (set-language-environment "UTF-8")
   (use-package dashboard
     :ensure t
     :after nerd-icons
     :init
     (setq dashboard-center-content t)
     (setq dashboard-icon-type 'nerd-icons)
-    (setq dashboard-display-icons-p t)   
+    (setq dashboard-display-icons-p t)
     (setq dashboard-set-heading-icons t)
     (setq dashboard-set-file-icons t)
     (setq dashboard-items '((recents . 5)
@@ -455,7 +480,7 @@ More icons
     (advice-add 'dashboard-replace-displayable :override #'my/dashboard-replace-displayable))
 #+end_src
 
-* IVY (COUNSEL) 
+* IVY (COUNSEL)
 Ivy is a generic completion mechanism for emacs. Counsel is a collection of Ivy-enhanced versions of common emacs commands
 Ivy-rich allows adding descriptions alongside commands in M-x
 
@@ -501,4 +526,18 @@ The Oil.nvim substitute
   (use-package grease
     :ensure (:host github :repo "mwac-dev/grease.el")
     :commands (grease-open grease-toggle grease-here))
+#+end_src
+
+** Undo-Fu
+
+Proper vim like linear undo redo system
+
+#+begin_src emacs-lisp
+  (use-package undo-fu
+    :elpaca t)
+
+  (setq evil-undo-system 'undo-fu)
+
+  (with-eval-after-load 'evil
+    (define-key evil-normal-state-map (kbd "C-r") 'evil-redo))
 #+end_src

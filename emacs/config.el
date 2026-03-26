@@ -78,7 +78,7 @@
   (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
 
 (use-package evil-collection
-  :ensure 
+  :ensure
   :demand t
   :after evil
   :config
@@ -162,6 +162,15 @@
    "gcc" '(comment-line :wk "Comment line")))
 
 (electric-pair-mode 1)
+
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+
+(add-hook 'before-save-hook
+          (lambda ()
+            (save-excursion
+              (goto-char (point-min))
+              (while (re-search-forward "^\n+" nil t)
+                (replace-match "\n")))))
 
 (custom-set-faces
  '(region ((t (:background "#5f695f")))))
@@ -273,8 +282,6 @@
   :commands toc-org-enable
   :init (add-hook 'org-mode-hook 'toc-org-enable))
 
-;; enable link via enter(with-eval-after-load 'evil
-
 (add-hook 'org-mode-hook 'org-indent-mode)
 (use-package org-superstar
   :ensure (:host github :repo "integral-dw/org-superstar-mode")
@@ -284,19 +291,21 @@
 
 (require 'org-tempo)
 
+(add-hook 'org-mode-hook #'font-lock-fontify-buffer)
+
 (add-to-list 'org-structure-template-alist '("se" . "src emacs-lisp"))
 (add-to-list 'org-structure-template-alist '("sp" . "src python"))
 (add-to-list 'org-structure-template-alist '("sr" . "src R"))
 (add-to-list 'org-structure-template-alist '("sc" . "src clojure"))
 
-(set-language-environment "UTF-8") 
+(set-language-environment "UTF-8")
 (use-package dashboard
   :ensure t
   :after nerd-icons
   :init
   (setq dashboard-center-content t)
   (setq dashboard-icon-type 'nerd-icons)
-  (setq dashboard-display-icons-p t)   
+  (setq dashboard-display-icons-p t)
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
   (setq dashboard-items '((recents . 5)
@@ -345,3 +354,11 @@
 (use-package grease
   :ensure (:host github :repo "mwac-dev/grease.el")
   :commands (grease-open grease-toggle grease-here))
+
+(use-package undo-fu
+  :elpaca t)
+
+(setq evil-undo-system 'undo-fu)
+
+(with-eval-after-load 'evil
+  (define-key evil-normal-state-map (kbd "C-r") 'evil-redo))
