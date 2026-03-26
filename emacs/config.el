@@ -166,6 +166,14 @@
 (custom-set-faces
  '(region ((t (:background "#5f695f")))))
 
+(set-language-environment "UTF-8")
+
+(setq default-directory "~/")
+
+;; Map backspace to go up a directory in Dired
+(with-eval-after-load 'dired
+  (define-key dired-mode-map (kbd "<backspace>") 'dired-up-directory))
+
 (set-face-attribute 'default nil
 		    :font "JetBrains Mono"
 		    :height 110
@@ -197,9 +205,15 @@
 (use-package all-the-icons
   :ensure t
   :if (display-graphic-p))
-(use-package all-the-icons-dired
+
+(use-package nerd-icons
   :ensure t
-  :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
+  :config
+  (setq nerd-icons-font-family "Symbols Nerd Font Mono"))
+
+(use-package nerd-icons-dired
+  :ensure t
+  :hook (dired-mode . nerd-icons-dired-mode))
 
 (menu-bar-mode -1)
 (tool-bar-mode -1)
@@ -275,6 +289,29 @@
 (add-to-list 'org-structure-template-alist '("sr" . "src R"))
 (add-to-list 'org-structure-template-alist '("sc" . "src clojure"))
 
+(set-language-environment "UTF-8") 
+(use-package dashboard
+  :ensure t
+  :after nerd-icons
+  :init
+  (setq dashboard-center-content t)
+  (setq dashboard-icon-type 'nerd-icons)
+  (setq dashboard-display-icons-p t)   
+  (setq dashboard-set-heading-icons t)
+  (setq dashboard-set-file-icons t)
+  (setq dashboard-items '((recents . 5)
+                          (agenda . 5)
+                          (bookmarks . 5)
+                          (projects . 5)))
+  :config
+  (add-hook 'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
+  (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
+  (dashboard-setup-startup-hook))
+(with-eval-after-load 'dashboard
+  (defun my/dashboard-replace-displayable (str)
+    str)
+  (advice-add 'dashboard-replace-displayable :override #'my/dashboard-replace-displayable))
+
 (use-package counsel
   :ensure t
   :after ivy
@@ -290,9 +327,9 @@
   (setq enable-recursive-minibuffers t)
   :config
   (ivy-mode))
-(use-package all-the-icons-ivy-rich
+(use-package nerd-icons-ivy-rich
   :ensure t
-  :init (all-the-icons-ivy-rich-mode 1))
+  :init (nerd-icons-ivy-rich-mode 1))
 
 (use-package ivy-rich
   :after ivy
@@ -304,3 +341,7 @@
                           ivy-rich-path-style 'abbrev)
   :config
   (ivy-set-display-transformer 'ivy-switch-buffer 'ivy-rich-switch-buffer-transformer))
+
+(use-package grease
+  :ensure (:host github :repo "mwac-dev/grease.el")
+  :commands (grease-open grease-toggle grease-here))

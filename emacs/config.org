@@ -12,11 +12,13 @@
 - [[#emacs-properties][EMACS PROPERTIES]]
   - [[#automatic-pairing][Automatic pairing]]
   - [[#custom-highlight-color][Custom highlight color]]
+  - [[#dired-properties][Dired properties]]
 - [[#fonts][FONTS]]
   - [[#default-fonts][Default Fonts]]
   - [[#zooming-inout][Zooming In/Out]]
   - [[#fixing-emacs-paragraphs][Fixing Emacs Paragraphs]]
   - [[#all-the-icons][All The Icons]]
+  - [[#nerd-fonts][Nerd Fonts]]
 - [[#gui-tweaks][GUI TWEAKS]]
   - [[#disable-menubar-toolbar-scrollbar][Disable Menubar, Toolbar, Scrollbar]]
   - [[#display-line-numbers-truncated-lines][Display Line Numbers, Truncated Lines]]
@@ -30,10 +32,14 @@
   - [[#enabling-org-bullets][Enabling Org Bullets]]
   - [[#disable-electric-indent][Disable Electric Indent]]
   - [[#automatic-code-blocks-per-language][Automatic Code Blocks Per Language]]
+- [[#dashboard][DASHBOARD]]
 - [[#ivy-counsel][IVY (COUNSEL)]]
+- [[#misc][MISC]]
+  - [[#grease][Grease]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 ** Package Manager
+
 
 #+begin_src emacs-lisp
   (defvar elpaca-installer-version 0.12)
@@ -223,6 +229,20 @@
    '(region ((t (:background "#5f695f")))))
 #+end_src
 
+#+begin_src emacs-lisp
+  (set-language-environment "UTF-8") 
+#+end_src
+
+** Dired properties
+
+#+begin_src emacs-lisp
+  (setq default-directory "~/")
+
+  ;; Map backspace to go up a directory in Dired
+  (with-eval-after-load 'dired
+    (define-key dired-mode-map (kbd "<backspace>") 'dired-up-directory))
+#+end_src
+
 * FONTS
 ** Default Fonts
 You might have to ensure these are installed on your system
@@ -270,9 +290,20 @@ Icon package for use with dashboard, dired, ibuffer, etc
   (use-package all-the-icons
     :ensure t
     :if (display-graphic-p))
-  (use-package all-the-icons-dired
+#+end_src
+
+** Nerd Fonts
+More icons
+
+#+begin_src emacs-lisp
+  (use-package nerd-icons
     :ensure t
-    :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
+    :config
+    (setq nerd-icons-font-family "Symbols Nerd Font Mono"))
+
+  (use-package nerd-icons-dired
+    :ensure t
+    :hook (dired-mode . nerd-icons-dired-mode))
 #+end_src
 
 * GUI TWEAKS
@@ -397,6 +428,33 @@ Icon package for use with dashboard, dired, ibuffer, etc
   (add-to-list 'org-structure-template-alist '("sc" . "src clojure"))
 #+end_src
 
+* DASHBOARD
+
+#+begin_src emacs-lisp
+  (set-language-environment "UTF-8") 
+  (use-package dashboard
+    :ensure t
+    :after nerd-icons
+    :init
+    (setq dashboard-center-content t)
+    (setq dashboard-icon-type 'nerd-icons)
+    (setq dashboard-display-icons-p t)   
+    (setq dashboard-set-heading-icons t)
+    (setq dashboard-set-file-icons t)
+    (setq dashboard-items '((recents . 5)
+                            (agenda . 5)
+                            (bookmarks . 5)
+                            (projects . 5)))
+    :config
+    (add-hook 'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
+    (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
+    (dashboard-setup-startup-hook))
+  (with-eval-after-load 'dashboard
+    (defun my/dashboard-replace-displayable (str)
+      str)
+    (advice-add 'dashboard-replace-displayable :override #'my/dashboard-replace-displayable))
+#+end_src
+
 * IVY (COUNSEL) 
 Ivy is a generic completion mechanism for emacs. Counsel is a collection of Ivy-enhanced versions of common emacs commands
 Ivy-rich allows adding descriptions alongside commands in M-x
@@ -417,9 +475,9 @@ Ivy-rich allows adding descriptions alongside commands in M-x
     (setq enable-recursive-minibuffers t)
     :config
     (ivy-mode))
-  (use-package all-the-icons-ivy-rich
+  (use-package nerd-icons-ivy-rich
     :ensure t
-    :init (all-the-icons-ivy-rich-mode 1))
+    :init (nerd-icons-ivy-rich-mode 1))
 
   (use-package ivy-rich
     :after ivy
@@ -433,3 +491,14 @@ Ivy-rich allows adding descriptions alongside commands in M-x
     (ivy-set-display-transformer 'ivy-switch-buffer 'ivy-rich-switch-buffer-transformer))
 #+end_src
 
+* MISC
+
+** Grease
+
+The Oil.nvim substitute
+
+#+begin_src emacs-lisp
+  (use-package grease
+    :ensure (:host github :repo "mwac-dev/grease.el")
+    :commands (grease-open grease-toggle grease-here))
+#+end_src
