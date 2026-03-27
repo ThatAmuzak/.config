@@ -142,6 +142,7 @@
     "f r" '(counsel-recentf :wk "Find recent files")
     "c c" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit Emacs Config")
     "a" (lambda () (interactive) (evil-goto-first-line) (evil-visual-line) (evil-goto-line))
+    "d d" '(dashboard-open :wk "Open Dashboard")
     "ww" '((lambda () (interactive)
              (save-some-buffers t (lambda ()
 				    (and (buffer-modified-p)
@@ -177,11 +178,13 @@
 
 (set-language-environment "UTF-8")
 
-(setq default-directory "~/")
+(setq initial-buffer-choice "~/")
 
 ;; Map backspace to go up a directory in Dired
 (with-eval-after-load 'dired
   (define-key dired-mode-map (kbd "<backspace>") 'dired-up-directory))
+
+(setq gc-cons-threshold (* 100 1024 1024)) ; 100MB
 
 (set-face-attribute 'default nil
 		    :font "JetBrains Mono"
@@ -320,6 +323,29 @@
   (defun my/dashboard-replace-displayable (str)
     str)
   (advice-add 'dashboard-replace-displayable :override #'my/dashboard-replace-displayable))
+
+(defun my/wezterm-launch-terminal ()
+  "Launch WezTerm in the git root (if in a git repo) or the current buffer's directory."
+  (interactive)
+  (let* ((buf-dir (or (and buffer-file-name
+                           (file-name-directory buffer-file-name))
+                      default-directory))
+         (git-root
+          (string-trim
+           (shell-command-to-string
+            (format "git -C %s rev-parse --show-toplevel 2>NUL"
+                    (shell-quote-argument (expand-file-name buf-dir))))))
+         (cwd (if (and git-root (not (string-empty-p git-root)))
+                  git-root
+                buf-dir))
+         (cwd-win (replace-regexp-in-string "/" "\\\\" (expand-file-name cwd))))
+    (start-process "wezterm" nil
+                   "wezterm" "start"
+                   "--new-tab"
+                   "--cwd" cwd-win
+                   "--" "pwsh" "-NoLogo")))
+
+(global-set-key (kbd "C-/") #'my/wezterm-launch-terminal)
 
 (use-package counsel
   :ensure t
