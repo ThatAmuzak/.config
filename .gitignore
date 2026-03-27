@@ -18,3 +18,5 @@ emacs/auto-save-list
 emacs/#config.org#
 emacs/recentf
 emacs/.#config.org
+emacs/history
+emacs/projects

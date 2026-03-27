@@ -38,11 +38,12 @@
   - [[#automatic-code-blocks-per-language][Automatic Code Blocks Per Language]]
 - [[#dashboard][DASHBOARD]]
 - [[#terminal][TERMINAL]]
-- [[#ivy-counsel][IVY (COUNSEL)]]
+- [[#vertico][VERTICO]]
 - [[#misc][MISC]]
   - [[#grease][Grease]]
   - [[#undo-fu][Undo-Fu]]
   - [[#surround][Surround]]
+  - [[#commenter][Commenter]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -199,7 +200,7 @@
 
     ;; Misc
     (amuzak/leader-keys
-      "SPC" '(find-file :wk "Find file")
+      "SPC" '(project-find-file :wk "Find file")
       "f r" '(counsel-recentf :wk "Find recent files")
       "c c" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit Emacs Config")
       "a" (lambda () (interactive) (evil-goto-first-line) (evil-visual-line) (evil-goto-line))
@@ -220,10 +221,10 @@
                (message "All files saved, exiting...")
                (kill-emacs))
     	   :wk "Save all and quit"))
-    (general-define-key
-     :states 'normal
-     "gcc" '(comment-line :wk "Comment line"))
-    )
+
+  (general-define-key
+   :states '(normal visual)
+   "gcc" '(evilnc-comment-or-uncomment-lines :wk "Toggle comment")))
 #+end_src
 
 * EMACS PROPERTIES
@@ -525,41 +526,79 @@ Maybe once I can move out of Windows this will be easier
                      "lazygit")))
 #+end_src
 
-* IVY (COUNSEL)
-Ivy is a generic completion mechanism for emacs. Counsel is a collection of Ivy-enhanced versions of common emacs commands
-Ivy-rich allows adding descriptions alongside commands in M-x
+* VERTICO
+
+Better M-x minibuffer
 
 #+begin_src emacs-lisp
-  (use-package counsel
+  ;; Vertico - vertical completion UI
+  (use-package vertico
     :ensure t
-    :after ivy
-    :config (counsel-mode))
+    :init
+    (vertico-mode))
 
-  (use-package ivy
-    :ensure t
-    :bind
-    (("C-SPC" . ivy-resume))
-    :custom
-    (setq ivy-use-virtual-buffers t)
-    (setq ivy-count-format "(%d/%d) ")
-    (setq enable-recursive-minibuffers t)
-    :config
-    (ivy-mode))
-  (use-package nerd-icons-ivy-rich
-    :ensure t
-    :init (nerd-icons-ivy-rich-mode 1))
+  ;; Persist history across sessions (vertico sorts by recency)
+  (use-package savehist
+    :init
+    (savehist-mode))
 
-  (use-package ivy-rich
-    :after ivy
+  ;; Orderless - fuzzy/flex matching similar to telescope
+  (use-package orderless
     :ensure t
-    :init (ivy-rich-mode 1)
     :custom
-    (ivy-virtual-abbreviate 'full
-                            ivy-rich-switch-buffer-align-virtual-buffer t
-                            ivy-rich-path-style 'abbrev)
+    (completion-styles '(orderless flex basic))
+    (completion-category-overrides '((file (styles orderless basic partial-completion)))))
+
+  ;; Marginalia - annotations in the minibuffer (file size, docstrings, etc.)
+  (use-package marginalia
+    :ensure t
+    :init
+    (marginalia-mode))
+
+  ;; Nerd Icons for marginalia (requires nerd-icons and a patched font)
+  (use-package nerd-icons-completion
+    :ensure t
+    :after marginalia
     :config
-    (ivy-set-display-transformer 'ivy-switch-buffer 'ivy-rich-switch-buffer-transformer))
+    (nerd-icons-completion-mode)
+    (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 #+end_src
+
+# * IVY (COUNSEL)
+# Ivy is a generic completion mechanism for emacs. Counsel is a collection of Ivy-enhanced versions of common emacs commands
+# Ivy-rich allows adding descriptions alongside commands in M-x
+
+# #+begin_src emacs-lisp
+#   (use-package counsel
+#     :ensure t
+#     :after ivy
+#     :config (counsel-mode))
+
+#   (use-package ivy
+#     :ensure t
+#     :bind
+#     (("C-SPC" . ivy-resume))
+#     :custom
+#     (setq ivy-use-virtual-buffers t)
+#     (setq ivy-count-format "(%d/%d) ")
+#     (setq enable-recursive-minibuffers t)
+#     :config
+#     (ivy-mode))
+#   (use-package nerd-icons-ivy-rich
+#     :ensure t
+#     :init (nerd-icons-ivy-rich-mode 1))
+
+#   (use-package ivy-rich
+#     :after ivy
+#     :ensure t
+#     :init (ivy-rich-mode 1)
+#     :custom
+#     (ivy-virtual-abbreviate 'full
+#                             ivy-rich-switch-buffer-align-virtual-buffer t
+#                             ivy-rich-path-style 'abbrev)
+#     :config
+#     (ivy-set-display-transformer 'ivy-switch-buffer 'ivy-rich-switch-buffer-transformer))
+# #+end_src
 
 * MISC
 
@@ -596,4 +635,13 @@ Nvim Surround Capabilities
     :ensure t
     :config
     (global-evil-surround-mode 1))
+#+end_src
+
+** Commenter
+
+Proper commenting functionality
+
+#+begin_src emacs-lisp
+  (use-package evil-nerd-commenter
+    :ensure (:host github :repo "redguardtoo/evil-nerd-commenter"))
 #+end_src
