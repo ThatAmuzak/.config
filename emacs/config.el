@@ -143,24 +143,26 @@
     "c c" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit Emacs Config")
     "a" (lambda () (interactive) (evil-goto-first-line) (evil-visual-line) (evil-goto-line))
     "d d" '(dashboard-open :wk "Open Dashboard")
+    "l g" '(my/launch-lazygit :wk "Launch LazyGit")
     "ww" '((lambda () (interactive)
              (save-some-buffers t (lambda ()
-				    (and (buffer-modified-p)
-					 (not (string-match-p "\\*.*\\*" (buffer-name)))
-					 (not (eq major-mode 'comint-mode)))))
+  				    (and (buffer-modified-p)
+  					 (not (string-match-p "\\*.*\\*" (buffer-name)))
+  					 (not (eq major-mode 'comint-mode)))))
              (message "All files saved"))
-	   :wk "Save file(s)")
+  	   :wk "Save file(s)")
     "qq" '((lambda () (interactive)
              (save-some-buffers t (lambda ()
-				    (and (buffer-modified-p)
-					 (not (string-match-p "\\*.*\\*" (buffer-name)))
-					 (not (eq major-mode 'comint-mode)))))
+  				    (and (buffer-modified-p)
+  					 (not (string-match-p "\\*.*\\*" (buffer-name)))
+  					 (not (eq major-mode 'comint-mode)))))
              (message "All files saved, exiting...")
              (kill-emacs))
-	   :wk "Save all and quit"))
+  	   :wk "Save all and quit"))
   (general-define-key
    :states 'normal
-   "gcc" '(comment-line :wk "Comment line")))
+   "gcc" '(comment-line :wk "Comment line"))
+  )
 
 (electric-pair-mode 1)
 
@@ -324,28 +326,24 @@
     str)
   (advice-add 'dashboard-replace-displayable :override #'my/dashboard-replace-displayable))
 
-(defun my/wezterm-launch-terminal ()
-  "Launch WezTerm in the git root (if in a git repo) or the current buffer's directory."
+(global-set-key (kbd "C-/") #'my/launch-shell)
+(defun my/launch-shell ()
+  "Launch WezTerm in the project root or current directory."
   (interactive)
-  (let* ((buf-dir (or (and buffer-file-name
-                           (file-name-directory buffer-file-name))
-                      default-directory))
-         (git-root
-          (string-trim
-           (shell-command-to-string
-            (format "git -C %s rev-parse --show-toplevel 2>NUL"
-                    (shell-quote-argument (expand-file-name buf-dir))))))
-         (cwd (if (and git-root (not (string-empty-p git-root)))
-                  git-root
-                buf-dir))
-         (cwd-win (replace-regexp-in-string "/" "\\\\" (expand-file-name cwd))))
-    (start-process "wezterm" nil
-                   "wezterm" "start"
-                   "--new-tab"
-                   "--cwd" cwd-win
-                   "--" "pwsh" "-NoLogo")))
+  (let ((dir (or (project-root (project-current)) default-directory)))
+    (call-process "wezterm" nil 0 nil
+                  "start" "--cwd" (expand-file-name dir)
+                  "pwsh" "-NoLogo")))
+(global-set-key (kbd "C-/") #'my/launch-shell)
 
-(global-set-key (kbd "C-/") #'my/wezterm-launch-terminal)
+(defun my/launch-lazygit ()
+  "Launch lazygit in WezTerm from the current buffer's directory."
+  (interactive)
+  (let ((dir (expand-file-name default-directory)))
+    (start-process "wezterm-lazygit" nil
+                   "wezterm" "start"
+                   "--cwd" dir
+                   "lazygit")))
 
 (use-package counsel
   :ensure t
@@ -388,3 +386,8 @@
 
 (with-eval-after-load 'evil
   (define-key evil-normal-state-map (kbd "C-r") 'evil-redo))
+
+(use-package evil-surround
+  :ensure t
+  :config
+  (global-evil-surround-mode 1))
