@@ -15,6 +15,7 @@
   - [[#automatic-clear-multiple-blank-lines][Automatic clear multiple blank lines]]
   - [[#custom-highlight-color][Custom highlight color]]
   - [[#dired-properties][Dired properties]]
+  - [[#increase-gc-threshold][Increase GC Threshold]]
 - [[#fonts][FONTS]]
   - [[#default-fonts][Default Fonts]]
   - [[#zooming-inout][Zooming In/Out]]
@@ -236,12 +237,12 @@
 ** Automatic clear multiple blank lines
 
 #+begin_src emacs-lisp
-(add-hook 'before-save-hook
-          (lambda ()
-            (save-excursion
-              (goto-char (point-min))
-              (while (re-search-forward "^\n+" nil t)
-                (replace-match "\n")))))
+  (add-hook 'before-save-hook
+            (lambda ()
+              (save-excursion
+                (goto-char (point-min))
+                (while (re-search-forward "^\n+" nil t)
+                  (replace-match "\n")))))
 #+end_src
 
 ** Custom highlight color
@@ -262,6 +263,12 @@
   ;; Map backspace to go up a directory in Dired
   (with-eval-after-load 'dired
     (define-key dired-mode-map (kbd "<backspace>") 'dired-up-directory))
+#+end_src
+
+** Increase GC Threshold
+
+#+begin_src emacs-lisp
+  (setq gc-cons-threshold (* 100 1024 1024)) ; 100MB
 #+end_src
 
 * FONTS
