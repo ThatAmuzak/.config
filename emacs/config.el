@@ -52,7 +52,7 @@
   (setq evil-split-window-below t)
   (evil-mode)
   :config
-
+  (evil-select-search-module 'evil-search-module 'evil-search)
   ;; QoL rebinds
   (define-key evil-normal-state-map "j" 'evil-next-visual-line)
   (define-key evil-normal-state-map "k" 'evil-previous-visual-line)
@@ -61,8 +61,9 @@
   (define-key evil-visual-state-map (kbd "x") 'evil-delete)
   (define-key evil-normal-state-map (kbd "C-d") (lambda () (interactive) (evil-scroll-down nil) (recenter)))
   (define-key evil-normal-state-map (kbd "C-u") (lambda () (interactive) (evil-scroll-up nil) (recenter)))
-  (define-key evil-normal-state-map "n" (lambda () (interactive) (evil-search-next) (recenter)))
-  (define-key evil-normal-state-map "N" (lambda () (interactive) (evil-search-previous) (recenter)))
+  (define-key evil-normal-state-map "n" (lambda () (interactive) (evil-ex-search-next) (recenter)))
+  (define-key evil-normal-state-map "N" (lambda () (interactive) (evil-ex-search-previous) (recenter)))
+  (define-key evil-normal-state-map (kbd "<escape>") #'evil-ex-nohighlight)
   (define-key evil-normal-state-map "G" (lambda () (interactive) (evil-goto-line) (recenter)))
   (define-key evil-normal-state-map (kbd "<up>") (lambda () (interactive) (evil-window-increase-height 2)))
   (define-key evil-normal-state-map (kbd "<down>") (lambda () (interactive) (evil-window-decrease-height 2)))
@@ -139,8 +140,6 @@
   ;; Misc
   (amuzak/leader-keys
     "SPC" '(project-find-file :wk "Find file")
-    "f r" '(counsel-recentf :wk "Find recent files")
-    "c c" '((lambda () (interactive) (find-file "~/.config/emacs/config.org")) :wk "Edit Emacs Config")
     "a" (lambda () (interactive) (evil-goto-first-line) (evil-visual-line) (evil-goto-line))
     "d d" '(dashboard-open :wk "Open Dashboard")
     "l g" '(my/launch-lazygit :wk "Launch LazyGit")
@@ -160,9 +159,9 @@
              (kill-emacs))
   	   :wk "Save all and quit"))
 
-(general-define-key
- :states '(normal visual)
- "gcc" '(evilnc-comment-or-uncomment-lines :wk "Toggle comment")))
+  (general-define-key
+   :states '(normal visual)
+   "gcc" '(evilnc-comment-or-uncomment-lines :wk "Toggle comment")))
 
 (electric-pair-mode 1)
 
@@ -185,6 +184,8 @@
 ;; Map backspace to go up a directory in Dired
 (with-eval-after-load 'dired
   (define-key dired-mode-map (kbd "<backspace>") 'dired-up-directory))
+
+(setq backup-directory-alist '((".*" . "~/.config/emacs/backup")))
 
 (setq gc-cons-threshold (* 100 1024 1024)) ; 100MB
 
@@ -276,11 +277,11 @@
 	which-key-max-display-columns nil
 	which-key-min-display-lines 6
 	which-key-side-window-slot -10
-	which-key-side-window-max-height 0.25
+	which-key-side-window-max-height 0.55
 	which-key-idle-delay 0.8
-	which-key-max-description-length 25
+	which-key-max-description-length 50
 	which-key-allow-imprecise-window-fit t
-	which-key-separator " -> "))
+	which-key-separator "  "))
 
 (use-package toc-org
   :ensure t
@@ -302,6 +303,58 @@
 (add-to-list 'org-structure-template-alist '("sp" . "src python"))
 (add-to-list 'org-structure-template-alist '("sr" . "src R"))
 (add-to-list 'org-structure-template-alist '("sc" . "src clojure"))
+
+(use-package org-modern
+  :ensure t
+  :hook (org-mode . org-modern-mode)
+  :config
+  (modify-all-frames-parameters
+   '((right-divider-width . 0)
+     (internal-border-width . 0)))
+  (dolist (face '(window-divider
+                  window-divider-first-pixel
+                  window-divider-last-pixel))
+    (face-spec-reset-face face)
+    (set-face-foreground face (face-attribute 'default :background)))
+  ;; (set-face-background 'fringe (face-attribute 'default :background))
+  (set-face-background 'org-block (color-darken-name (face-attribute 'default :background) 30))
+  (setq org-modern-todo-faces org-todo-keyword-faces)
+  (setq org-modern-todo t)
+  (setq org-modern-tag t)
+  (setq org-modern-table t
+	org-ellipsis " "
+	org-modern-block-fringe nil))
+
+(use-package org-modern-indent
+  :ensure (:host github :repo "jdtsmith/org-modern-indent")
+  :config ; add late to hook
+  (org-modern-indent-mode 1)
+  (add-hook 'org-mode-hook #'org-modern-indent-mode t))
+
+(use-package olivetti
+  :ensure t
+  :diminish olivetti-mode
+  :bind (("<left-margin> <mouse-1>" . ignore)
+         ("<right-margin> <mouse-1>" . ignore)
+         ("C-c {" . olivetti-shrink)
+         ("C-c }" . olivetti-expand)
+         ("C-c |" . olivetti-set-width))
+  :custom
+  (olivetti-body-width 0.65)          ; 70% of window width
+  (olivetti-minimum-body-width 80)   ; Minimum width in characters
+  (olivetti-recall-visual-line-mode-entry-state t)
+  :hook
+  ((markdown-mode . olivetti-mode)
+   (org-mode . olivetti-mode)))
+
+(defun my/olivetti-only-when-single-window ()
+  "Enable Olivetti mode only when there is a single window."
+  (if (= (count-windows) 1)
+      (olivetti-mode 1)
+    (olivetti-mode -1)))
+
+;; (add-hook 'window-configuration-change-hook
+;;           #'my/olivetti-only-when-single-window)
 
 (set-language-environment "UTF-8")
 (use-package dashboard
