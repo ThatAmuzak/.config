@@ -457,3 +457,31 @@
 
 (use-package evil-nerd-commenter
   :ensure (:host github :repo "redguardtoo/evil-nerd-commenter"))
+
+(use-package scroll-on-jump
+  :after evil
+  :ensure t
+  :config
+  (setq scroll-on-jump-duration 0.15
+        scroll-on-jump-smooth t
+        scroll-on-jump-curve 'smooth-out
+        scroll-on-jump-curve-power 4.0)
+
+  (with-eval-after-load 'evil
+    (scroll-on-jump-advice-add evil-undo)
+    (scroll-on-jump-advice-add evil-redo)
+    (scroll-on-jump-advice-add evil-jump-item)
+    (scroll-on-jump-advice-add evil-jump-forward)
+    (scroll-on-jump-advice-add evil-jump-backward)
+    (scroll-on-jump-advice-add evil-ex-search-next)
+    (scroll-on-jump-advice-add evil-ex-search-previous)
+    (scroll-on-jump-advice-add evil-forward-paragraph)
+    (scroll-on-jump-advice-add evil-backward-paragraph)
+    (scroll-on-jump-advice-add evil-goto-mark)
+
+    (scroll-on-jump-with-scroll-advice-add evil-goto-line)
+    (scroll-on-jump-with-scroll-advice-add evil-scroll-down)
+    (scroll-on-jump-with-scroll-advice-add evil-scroll-up)
+    (scroll-on-jump-with-scroll-advice-add evil-scroll-line-to-center)
+    (scroll-on-jump-with-scroll-advice-add evil-scroll-line-to-top)
+    (scroll-on-jump-with-scroll-advice-add evil-scroll-line-to-bottom)))
