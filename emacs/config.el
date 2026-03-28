@@ -189,24 +189,31 @@
 
 (setq gc-cons-threshold (* 100 1024 1024)) ; 100MB
 
+;; Setting the default font
 (set-face-attribute 'default nil
-		    :font "JetBrains Mono"
+		    :font "JetBrainsMono NFM"
 		    :height 110
 		    :weight 'medium)
+;; Setting font for variable pitch
 (set-face-attribute 'variable-pitch nil
-		    :font "Ubuntu"
-		    :height 120
-		    :weight 'medium)
+                    :family (or (car (seq-filter
+                                      (lambda (f) (member f (font-family-list)))
+                                      '("Ubuntu" "DejaVu Sans" "Arial")))
+                                "Sans")
+                    :height 140)
+;;Setting font for fixed pitch
 (set-face-attribute 'fixed-pitch nil
-		    :font "JetBrains Mono"
+		    :font "JetBrainsMono NFM"
 		    :height 110
 		    :weight 'medium)
+
+;; Makes commented text and keywords  italics
 (set-face-attribute 'font-lock-comment-face nil
 		    :slant 'italic)
 (set-face-attribute 'font-lock-keyword-face nil
 		    :slant 'italic)
-;; this will become useful once we move to the emacsclient
-(add-to-list 'default-frame-alist '(font . "JetBrains Mono-11"))
+
+(add-to-list 'default-frame-alist '(font . "JetBrainsMono NFM-11"))
 (setq-default line-spacing 0.12)
 
 (global-set-key (kbd "C-=") 'text-scale-increase)
@@ -272,6 +279,7 @@
   :config
   (setq which-key-side-window-location 'bottom
 	which-key-sort-order #'which-key-key-order-alpha
+        which-key-side-window-max-height 0.99
 	which-key-sort-uppercase-first nil
 	which-key-add-column-padding 1
 	which-key-max-display-columns nil
@@ -280,7 +288,7 @@
 	which-key-side-window-max-height 0.55
 	which-key-idle-delay 0.8
 	which-key-max-description-length 50
-	which-key-allow-imprecise-window-fit t
+	which-key-allow-imprecise-window-fit nil
 	which-key-separator "  "))
 
 (use-package toc-org
