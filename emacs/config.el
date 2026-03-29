@@ -253,6 +253,9 @@
 (use-package evil-goggles
   :ensure t
   :after evil
+:init
+(setq evil-goggles-enable-delete nil)
+(setq evil-goggles-enable-change nil)
   :config
   (evil-goggles-mode)
   (setq evil-goggles-duration 0.25))
@@ -453,7 +456,7 @@
   (dimmer-configure-which-key)
   (dimmer-mode t)
   :config
-    (setq dimmer-fraction 0.40))
+  (setq dimmer-fraction 0.40))
 
 (use-package grease
   :ensure (:host github :repo "mwac-dev/grease.el")
@@ -511,6 +514,7 @@
   :ensure t
   :config (global-anzu-mode +1))
 
+;; evil integration
 (use-package evil-anzu
   :ensure t
   :after (evil anzu))
@@ -556,7 +560,7 @@
   :ensure t
   :config
   (setq symbol-overlay-idle-time 0.2)
-  (set-face-background 'symbol-overlay-default-face "gray30")
+  (set-face-background 'symbol-overlay-default-face "#694b35")
   (define-globalized-minor-mode global-symbol-overlay-mode
     symbol-overlay-mode symbol-overlay-mode)
   (global-symbol-overlay-mode 1))

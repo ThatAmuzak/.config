@@ -2,7 +2,7 @@
 #+AUTHOR: Amuzak
 #+DESCRIPTION: Amuzak's (Rishav's) personal Emacs config.
 #+STARTUP: showeverything
-#+OPTIONS: toc:1
+#+OPTIONS: toc:2
 
 * TOC                                                                   :toc:
 - [[#important-programs-to-load-first][IMPORTANT PROGRAMS TO LOAD FIRST]]
@@ -17,7 +17,6 @@
   - [[#dired-properties][Dired properties]]
   - [[#set-backup-directory-to-one-source][Set backup directory to one source]]
   - [[#increase-gc-threshold][Increase GC Threshold]]
-  - [[#make-searches-like-neovim][Make Searches like Neovim]]
 - [[#fonts][FONTS]]
   - [[#default-fonts][Default Fonts]]
   - [[#zooming-inout][Zooming In/Out]]
@@ -288,8 +287,6 @@
   (setq gc-cons-threshold (* 100 1024 1024)) ; 100MB
 #+end_src
 
-** Make Searches like Neovim
-
 * FONTS
 ** Default Fonts
 You might have to ensure these are installed on your system
@@ -393,6 +390,9 @@ More icons
   (use-package evil-goggles
     :ensure t
     :after evil
+    :init
+    (setq evil-goggles-enable-delete nil)
+    (setq evil-goggles-enable-change nil)
     :config
     (evil-goggles-mode)
     (setq evil-goggles-duration 0.25))
@@ -660,7 +660,7 @@ Better M-x minibuffer
     (dimmer-configure-which-key)
     (dimmer-mode t)
     :config
-      (setq dimmer-fraction 0.40))
+    (setq dimmer-fraction 0.40))
 
 #+end_src
 
@@ -757,6 +757,7 @@ Statusline info. Need to add LSP info down the line
     :ensure t
     :config (global-anzu-mode +1))
 
+  ;; evil integration
   (use-package evil-anzu
     :ensure t
     :after (evil anzu))
@@ -808,7 +809,7 @@ Highlight matching symbols in buffer
     :ensure t
     :config
     (setq symbol-overlay-idle-time 0.2)
-    (set-face-background 'symbol-overlay-default-face "gray30")
+    (set-face-background 'symbol-overlay-default-face "#694b35")
     (define-globalized-minor-mode global-symbol-overlay-mode
       symbol-overlay-mode symbol-overlay-mode)
     (global-symbol-overlay-mode 1))
