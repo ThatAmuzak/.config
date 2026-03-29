@@ -534,3 +534,11 @@
         doom-modeline-percent-position            '(-3 "%p"))
 
   (doom-modeline-set-modeline 'my-modeline t))
+
+(use-package symbol-overlay
+  :ensure t
+  :config
+  (setq symbol-overlay-idle-time 0.1)
+  (define-globalized-minor-mode global-symbol-overlay-mode
+    symbol-overlay-mode symbol-overlay-mode)
+  (global-symbol-overlay-mode 1))
