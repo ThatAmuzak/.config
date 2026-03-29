@@ -542,3 +542,18 @@
   (define-globalized-minor-mode global-symbol-overlay-mode
     symbol-overlay-mode symbol-overlay-mode)
   (global-symbol-overlay-mode 1))
+
+(use-package golden-ratio
+ :ensure t
+ :init
+ (golden-ratio-mode 1)
+ :config
+ (dolist (cmd '(evil-window-left
+                evil-window-right
+                evil-window-up
+                evil-window-down
+                evil-window-next
+                evil-window-prev
+                evil-window-split
+                evil-window-vsplit))
+   (add-to-list 'golden-ratio-extra-commands cmd)))
