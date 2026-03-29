@@ -279,13 +279,12 @@
   :config
   (setq which-key-side-window-location 'bottom
 	which-key-sort-order #'which-key-key-order-alpha
-        which-key-side-window-max-height 0.99
 	which-key-sort-uppercase-first nil
 	which-key-add-column-padding 1
 	which-key-max-display-columns nil
 	which-key-min-display-lines 6
 	which-key-side-window-slot -10
-	which-key-side-window-max-height 0.55
+	which-key-side-window-max-height 0.2
 	which-key-idle-delay 0.8
 	which-key-max-description-length 50
 	which-key-allow-imprecise-window-fit nil
@@ -438,6 +437,24 @@
   (nerd-icons-completion-mode)
   (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 
+;; Center of screen vertico
+(use-package vertico-posframe
+  :ensure t
+  :init
+  (vertico-posframe-mode 1))
+
+;; Darken background when using posframe
+;; Also works amazingly well when searching
+;; And when alt tabbed out of emacs
+(use-package dimmer
+  :ensure t
+  :init
+  (dimmer-configure-posframe)
+  (dimmer-configure-which-key)
+  (dimmer-mode t)
+  :config
+    (setq dimmer-fraction 0.40))
+
 (use-package grease
   :ensure (:host github :repo "mwac-dev/grease.el")
   :commands (grease-open grease-toggle grease-here))
@@ -462,7 +479,7 @@
   :after evil
   :ensure t
   :config
-  (setq scroll-on-jump-duration 0.15
+  (setq scroll-on-jump-duration 0.3
         scroll-on-jump-smooth t
         scroll-on-jump-curve 'smooth-out
         scroll-on-jump-curve-power 4.0)
@@ -487,7 +504,7 @@
     (scroll-on-jump-with-scroll-advice-add evil-scroll-line-to-bottom)))
 
 (use-package shrink-path
-    :ensure (:host gitlab :repo "bennya/shrink-path.el"))
+  :ensure (:host gitlab :repo "bennya/shrink-path.el"))
 
 ;; Required for search match counts in the modeline
 (use-package anzu
@@ -538,22 +555,8 @@
 (use-package symbol-overlay
   :ensure t
   :config
-  (setq symbol-overlay-idle-time 0.1)
+  (setq symbol-overlay-idle-time 0.2)
+  (set-face-background 'symbol-overlay-default-face "gray30")
   (define-globalized-minor-mode global-symbol-overlay-mode
     symbol-overlay-mode symbol-overlay-mode)
   (global-symbol-overlay-mode 1))
-
-(use-package golden-ratio
- :ensure t
- :init
- (golden-ratio-mode 1)
- :config
- (dolist (cmd '(evil-window-left
-                evil-window-right
-                evil-window-up
-                evil-window-down
-                evil-window-next
-                evil-window-prev
-                evil-window-split
-                evil-window-vsplit))
-   (add-to-list 'golden-ratio-extra-commands cmd)))

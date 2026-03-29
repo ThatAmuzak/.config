@@ -51,7 +51,6 @@
   - [[#scroll-on-jump][Scroll on Jump]]
   - [[#modeline][Modeline]]
   - [[#symbol-overlay][Symbol Overlay]]
-  - [[#golden-ratio][Golden Ratio]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -431,13 +430,12 @@ More icons
     :config
     (setq which-key-side-window-location 'bottom
   	which-key-sort-order #'which-key-key-order-alpha
-          which-key-side-window-max-height 0.99
   	which-key-sort-uppercase-first nil
   	which-key-add-column-padding 1
   	which-key-max-display-columns nil
   	which-key-min-display-lines 6
   	which-key-side-window-slot -10
-  	which-key-side-window-max-height 0.55
+  	which-key-side-window-max-height 0.2
   	which-key-idle-delay 0.8
   	which-key-max-description-length 50
   	which-key-allow-imprecise-window-fit nil
@@ -645,6 +643,25 @@ Better M-x minibuffer
     :config
     (nerd-icons-completion-mode)
     (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
+
+  ;; Center of screen vertico
+  (use-package vertico-posframe
+    :ensure t
+    :init
+    (vertico-posframe-mode 1))
+
+  ;; Darken background when using posframe
+  ;; Also works amazingly well when searching
+  ;; And when alt tabbed out of emacs
+  (use-package dimmer
+    :ensure t
+    :init
+    (dimmer-configure-posframe)
+    (dimmer-configure-which-key)
+    (dimmer-mode t)
+    :config
+      (setq dimmer-fraction 0.40))
+
 #+end_src
 
 * MISC
@@ -695,12 +712,14 @@ Proper commenting functionality
 
 ** Scroll on Jump
 
+Animated scrolling. Nice when working with others and they need to visually see where you are moving
+
 #+begin_src emacs-lisp
   (use-package scroll-on-jump
     :after evil
     :ensure t
     :config
-    (setq scroll-on-jump-duration 0.15
+    (setq scroll-on-jump-duration 0.3
           scroll-on-jump-smooth t
           scroll-on-jump-curve 'smooth-out
           scroll-on-jump-curve-power 4.0)
@@ -727,84 +746,70 @@ Proper commenting functionality
 
 ** Modeline
 
+Statusline info. Need to add LSP info down the line
+
 #+begin_src emacs-lisp
   (use-package shrink-path
     :ensure (:host gitlab :repo "bennya/shrink-path.el"))
 
-;; Required for search match counts in the modeline
-(use-package anzu
-  :ensure t
-  :config (global-anzu-mode +1))
+  ;; Required for search match counts in the modeline
+  (use-package anzu
+    :ensure t
+    :config (global-anzu-mode +1))
 
-(use-package evil-anzu
-  :ensure t
-  :after (evil anzu))
+  (use-package evil-anzu
+    :ensure t
+    :after (evil anzu))
 
-(use-package doom-modeline
-  :ensure t
-  :init (doom-modeline-mode 1)
-  :config
+  (use-package doom-modeline
+    :ensure t
+    :init (doom-modeline-mode 1)
+    :config
 
-  ;; ── Evil state tags (no "state" suffix) ────────────────────────────
-  (setq doom-modeline-modal t
-        doom-modeline-modal-icon nil  ; text only, no icon
-        evil-normal-state-tag   " NORMAL "
-        evil-insert-state-tag   " INSERT "
-        evil-visual-state-tag   " VISUAL "
-        evil-replace-state-tag  " REPLACE "
-        evil-operator-state-tag " OPERATOR "
-        evil-motion-state-tag   " MOTION "
-        evil-emacs-state-tag    " EMACS ")
+    ;; ── Evil state tags (no "state" suffix) ────────────────────────────
+    (setq doom-modeline-modal t
+          doom-modeline-modal-icon nil  ; text only, no icon
+          evil-normal-state-tag   " NORMAL "
+          evil-insert-state-tag   " INSERT "
+          evil-visual-state-tag   " VISUAL "
+          evil-replace-state-tag  " REPLACE "
+          evil-operator-state-tag " OPERATOR "
+          evil-motion-state-tag   " MOTION "
+          evil-emacs-state-tag    " EMACS ")
 
-  ;; ── State face colors ───────────────────────────────────────────────
-  (set-face-attribute 'doom-modeline-evil-normal-state   nil :foreground "#1e1e2e" :background "#cba6f7" :weight 'bold)
-  (set-face-attribute 'doom-modeline-evil-insert-state   nil :foreground "#1e1e2e" :background "#a6e3a1" :weight 'bold)
-  (set-face-attribute 'doom-modeline-evil-visual-state   nil :foreground "#1e1e2e" :background "#fab387" :weight 'bold)
-  (set-face-attribute 'doom-modeline-evil-replace-state  nil :foreground "#1e1e2e" :background "#f38ba8" :weight 'bold)
-  (set-face-attribute 'doom-modeline-evil-operator-state nil :foreground "#1e1e2e" :background "#f9e2af" :weight 'bold)
-  (set-face-attribute 'doom-modeline-evil-motion-state   nil :foreground "#1e1e2e" :background "#89b4fa" :weight 'bold)
-  (set-face-attribute 'doom-modeline-evil-emacs-state    nil :foreground "#1e1e2e" :background "#a6adc8" :weight 'bold)
+    ;; ── State face colors ───────────────────────────────────────────────
+    (set-face-attribute 'doom-modeline-evil-normal-state   nil :foreground "#1e1e2e" :background "#cba6f7" :weight 'bold)
+    (set-face-attribute 'doom-modeline-evil-insert-state   nil :foreground "#1e1e2e" :background "#a6e3a1" :weight 'bold)
+    (set-face-attribute 'doom-modeline-evil-visual-state   nil :foreground "#1e1e2e" :background "#fab387" :weight 'bold)
+    (set-face-attribute 'doom-modeline-evil-replace-state  nil :foreground "#1e1e2e" :background "#f38ba8" :weight 'bold)
+    (set-face-attribute 'doom-modeline-evil-operator-state nil :foreground "#1e1e2e" :background "#f9e2af" :weight 'bold)
+    (set-face-attribute 'doom-modeline-evil-motion-state   nil :foreground "#1e1e2e" :background "#89b4fa" :weight 'bold)
+    (set-face-attribute 'doom-modeline-evil-emacs-state    nil :foreground "#1e1e2e" :background "#a6adc8" :weight 'bold)
 
-  ;; ── Custom modeline definition ──────────────────────────────────────
-  (doom-modeline-def-modeline 'my-modeline
-    ;; left: state  vcs  filename
-    '(modals vcs buffer-info)
-    ;; right: major-mode  matches  buffer-position (line:col + %)
-    '(matches buffer-position))
+    ;; ── Custom modeline definition ──────────────────────────────────────
+    (doom-modeline-def-modeline 'my-modeline
+      ;; left: state  vcs  filename
+      '(modals vcs buffer-info)
+      ;; right: major-mode  matches  buffer-position (line:col + %)
+      '(matches buffer-position))
 
-  (setq doom-modeline-position-column-line-format '("%l:%c")
-        doom-modeline-percent-position            '(-3 "%p"))
+    (setq doom-modeline-position-column-line-format '("%l:%c")
+          doom-modeline-percent-position            '(-3 "%p"))
 
-  (doom-modeline-set-modeline 'my-modeline t))
+    (doom-modeline-set-modeline 'my-modeline t))
 #+end_src
 
 ** Symbol Overlay
 
-#+begin_src emacs-lisp
-(use-package symbol-overlay
-  :ensure t
-  :config
-  (setq symbol-overlay-idle-time 0.1)
-  (define-globalized-minor-mode global-symbol-overlay-mode
-    symbol-overlay-mode symbol-overlay-mode)
-  (global-symbol-overlay-mode 1))
-#+end_src
-
-** Golden Ratio
+Highlight matching symbols in buffer
 
 #+begin_src emacs-lisp
- (use-package golden-ratio
-  :ensure t
-  :init
-  (golden-ratio-mode 1)
-  :config
-  (dolist (cmd '(evil-window-left
-                 evil-window-right
-                 evil-window-up
-                 evil-window-down
-                 evil-window-next
-                 evil-window-prev
-                 evil-window-split
-                 evil-window-vsplit))
-    (add-to-list 'golden-ratio-extra-commands cmd)))
+  (use-package symbol-overlay
+    :ensure t
+    :config
+    (setq symbol-overlay-idle-time 0.2)
+    (set-face-background 'symbol-overlay-default-face "gray30")
+    (define-globalized-minor-mode global-symbol-overlay-mode
+      symbol-overlay-mode symbol-overlay-mode)
+    (global-symbol-overlay-mode 1))
 #+end_src
