@@ -76,13 +76,6 @@
   (define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
   (define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
   (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
-  (defun my-evil-toggle-fold-recursive ()
-    (interactive)
-    (if (evil-fold-closed (point))
-	(evil-open-fold-recursively)
-      (evil-close-fold-recursively)))
-
-  (define-key evil-normal-state-map "za" 'my-evil-toggle-fold-recursive)
   (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
 
 (use-package evil-collection
@@ -97,6 +90,8 @@
 ;;Note this will cause evaluate the declaration immediately. It is not deferred.
 ;;Useful for configuring built-in emacs features.
 (use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
+
+
 
 (use-package general
   :ensure t
@@ -147,12 +142,12 @@
   ;; Org Roam
   (amuzak/leader-keys
 	"n"  '(:ignore t :wk "Org-Roam")
-	"n l" 'org-roam-buffer-toggle
-	"n f" 'org-roam-node-find
-	"n g" 'org-roam-graph
-	"n i" 'org-roam-node-insert
-	"n c" 'org-roam-capture
-	"n j" 'org-roam-dailies-capture-today)
+	"n l" '(org-roam-buffer-toggle :wk "Toggle Org Roam Buffer")
+	"n f" '(org-roam-node-find :wk "Find Org Node")
+	"n g" '(org-roam-graph :wk "Open Org Roam Graph")
+	"n i" '(org-roam-node-insert :wk "Link to a Node")
+	"n c" '(org-roam-capture :wk "Org Roam Capture")
+	"n j" '(org-roam-dailies-capture-today :wk "Org Roam Daily Capture Today"))
 
   ;; Misc
   (amuzak/leader-keys
@@ -317,14 +312,19 @@
 
 (electric-indent-mode -1)
 
-(require 'org-tempo)
-
 (add-hook 'org-mode-hook #'font-lock-fontify-buffer)
+
+(require 'org-tempo)
 
 (add-to-list 'org-structure-template-alist '("se" . "src emacs-lisp"))
 (add-to-list 'org-structure-template-alist '("sp" . "src python"))
 (add-to-list 'org-structure-template-alist '("sr" . "src R"))
 (add-to-list 'org-structure-template-alist '("sc" . "src clojure"))
+
+(add-hook 'org-mode-hook 'org-indent-mode)
+(use-package org-bullets
+  :ensure t)
+(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 
 (use-package org-modern
   :ensure t
