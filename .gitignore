@@ -21,3 +21,6 @@ emacs/.#config.org
 emacs/history
 emacs/projects
 emacs/org-roam.db
+emacs/backup
+emacs/.org-id-locations
+emacs/bookmarks

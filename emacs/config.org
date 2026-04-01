@@ -17,6 +17,8 @@
   - [[#dired-properties][Dired properties]]
   - [[#set-backup-directory-to-one-source][Set backup directory to one source]]
   - [[#increase-gc-threshold][Increase GC Threshold]]
+  - [[#minibuffer-escape][Minibuffer escape]]
+  - [[#set-backup-directory][Set backup directory]]
 - [[#fonts][FONTS]]
   - [[#default-fonts][Default Fonts]]
   - [[#zooming-inout][Zooming In/Out]]
@@ -104,55 +106,59 @@
 ** Load Evil Mode
 
 #+begin_src emacs-lisp
-  ;; Expands to: (elpaca evil (use-package evil :demand t))
-  (use-package evil
-    :ensure t
-    :demand t
-    :init
-    (setq evil-want-integration t)
-    (setq evil-want-keybinding nil)
-    (setq evil-vsplit-window-right t)
-    (setq evil-split-window-below t)
-    (evil-mode)
-    :config
-    (evil-select-search-module 'evil-search-module 'evil-search)
-    ;; QoL rebinds
-    (define-key evil-normal-state-map "j" 'evil-next-visual-line)
-    (define-key evil-normal-state-map "k" 'evil-previous-visual-line)
-    (define-key evil-visual-state-map "j" 'evil-next-visual-line)
-    (define-key evil-visual-state-map "k" 'evil-previous-visual-line)
-    (define-key evil-visual-state-map (kbd "x") 'evil-delete)
-    (define-key evil-normal-state-map (kbd "C-d") (lambda () (interactive) (evil-scroll-down nil) (recenter)))
-    (define-key evil-normal-state-map (kbd "C-u") (lambda () (interactive) (evil-scroll-up nil) (recenter)))
-    (define-key evil-normal-state-map "n" (lambda () (interactive) (evil-ex-search-next) (recenter)))
-    (define-key evil-normal-state-map "N" (lambda () (interactive) (evil-ex-search-previous) (recenter)))
-    (define-key evil-normal-state-map (kbd "<escape>") #'evil-ex-nohighlight)
-    (define-key evil-normal-state-map "G" (lambda () (interactive) (evil-goto-line) (recenter)))
-    (define-key evil-normal-state-map (kbd "<up>") (lambda () (interactive) (evil-window-increase-height 2)))
-    (define-key evil-normal-state-map (kbd "<down>") (lambda () (interactive) (evil-window-decrease-height 2)))
-    (define-key evil-normal-state-map (kbd "<left>") (lambda () (interactive) (evil-window-decrease-width 2)))
-    (define-key evil-normal-state-map (kbd "<right>") (lambda () (interactive) (evil-window-increase-width 2)))
-    (define-key evil-visual-state-map "<" (lambda () (interactive) (evil-shift-left (region-beginning) (region-end)) (evil-visual-restore)))
-    (define-key evil-visual-state-map ">" (lambda () (interactive) (evil-shift-right (region-beginning) (region-end)) (evil-visual-restore)))
-    (define-key evil-visual-state-map "p" (lambda () (interactive) (evil-delete (region-beginning) (region-end) 'line ?_) (evil-paste-after nil)))
-    (define-key evil-normal-state-map (kbd "C-k") 'evil-window-up)
-    (define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
-    (define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
-    (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
-    (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
+    ;; Expands to: (elpaca evil (use-package evil :demand t))
+    (use-package evil
+      :ensure t
+      :demand t
+      :init
+      (setq evil-want-integration t)
+      (setq evil-want-keybinding nil)
+      (setq evil-vsplit-window-right t)
+      (setq evil-split-window-below t)
+      (evil-mode)
+      :config
+      (evil-select-search-module 'evil-search-module 'evil-search)
+      ;; QoL rebinds
+      (define-key evil-normal-state-map "j" 'evil-next-visual-line)
+      (define-key evil-normal-state-map "k" 'evil-previous-visual-line)
+      (define-key evil-visual-state-map "j" 'evil-next-visual-line)
+      (define-key evil-visual-state-map "k" 'evil-previous-visual-line)
+      (define-key evil-visual-state-map (kbd "x") 'evil-delete)
+      (define-key evil-normal-state-map (kbd "C-d") (lambda () (interactive) (evil-scroll-down nil) (recenter)))
+      (define-key evil-normal-state-map (kbd "C-u") (lambda () (interactive) (evil-scroll-up nil) (recenter)))
+      (define-key evil-normal-state-map "n" (lambda () (interactive) (evil-ex-search-next) (recenter)))
+      (define-key evil-normal-state-map "N" (lambda () (interactive) (evil-ex-search-previous) (recenter)))
+      (define-key evil-normal-state-map (kbd "<escape>") #'evil-ex-nohighlight)
+      (define-key evil-normal-state-map "G" (lambda () (interactive) (evil-goto-line) (recenter)))
+      (define-key evil-normal-state-map (kbd "<up>") (lambda () (interactive) (evil-window-increase-height 2)))
+      (define-key evil-normal-state-map (kbd "<down>") (lambda () (interactive) (evil-window-decrease-height 2)))
+      (define-key evil-normal-state-map (kbd "<left>") (lambda () (interactive) (evil-window-decrease-width 2)))
+      (define-key evil-normal-state-map (kbd "<right>") (lambda () (interactive) (evil-window-increase-width 2)))
+      (define-key evil-visual-state-map "<" (lambda () (interactive) (evil-shift-left (region-beginning) (region-end)) (evil-visual-restore)))
+      (define-key evil-visual-state-map ">" (lambda () (interactive) (evil-shift-right (region-beginning) (region-end)) (evil-visual-restore)))
+      (define-key evil-visual-state-map "p" (lambda () (interactive) (evil-delete (region-beginning) (region-end) 'line ?_) (evil-paste-after nil)))
+      (define-key evil-normal-state-map (kbd "C-k") 'evil-window-up)
+      (define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
+      (define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
+      (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
+      (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
 
-  (use-package evil-collection
-    :ensure
-    :demand t
-    :after evil
-    :config
-    (setq evil-collection-mode-list '(dashboard dired ibuffer))
-    (evil-collection-init))
+    (use-package evil-collection
+      :ensure
+      :demand t
+      :after evil
+      :config
+      (setq evil-collection-mode-list '(dashboard dired ibuffer))
+      (evil-collection-init))
 
-  ;;Turns off elpaca-use-package-mode current declaration
-  ;;Note this will cause evaluate the declaration immediately. It is not deferred.
-  ;;Useful for configuring built-in emacs features.
-  (use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
+  (with-eval-after-load 'evil-maps
+    (define-key evil-motion-state-map (kbd "RET") nil)
+    (define-key evil-motion-state-map (kbd "TAB") nil))
+
+    ;;Turns off elpaca-use-package-mode current declaration
+    ;;Note this will cause evaluate the declaration immediately. It is not deferred.
+    ;;Useful for configuring built-in emacs features.
+    (use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
 
 #+end_src
 
@@ -296,6 +302,18 @@
 
 #+begin_src emacs-lisp
   (setq gc-cons-threshold (* 100 1024 1024)) ; 100MB
+#+end_src
+
+** Minibuffer escape
+
+#+begin_src emacs-lisp
+(global-set-key [escape] 'keyboard-escape-quit)
+#+end_src
+
+** Set backup directory
+
+#+begin_src emacs-lisp
+(setq backup-directory-alist '((".*" . "~/.config/emacs/backups/")))
 #+end_src
 
 * FONTS
