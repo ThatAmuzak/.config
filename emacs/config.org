@@ -33,12 +33,13 @@
 - [[#which-key][WHICH-KEY]]
 - [[#org-mode][ORG MODE]]
   - [[#enabling-toc][Enabling ToC]]
-  - [[#enabling-org-bullets][Enabling Org Bullets]]
   - [[#disable-electric-indent][Disable Electric Indent]]
   - [[#fix-linting-if-scrolling-from-bottom][Fix Linting if scrolling from bottom]]
   - [[#automatic-code-blocks-per-language][Automatic Code Blocks Per Language]]
   - [[#modern-org][Modern Org]]
   - [[#centering-org-mode][Centering Org Mode]]
+- [[#note-taking][NOTE TAKING]]
+  - [[#thoughs-and-tasks][Thoughs and Tasks]]
 - [[#dashboard][DASHBOARD]]
 - [[#terminal][TERMINAL]]
 - [[#vertico][VERTICO]]
@@ -203,6 +204,16 @@
       "d f" '(describe-function :wk "Describe Function")
       "d v" '(describe-variable :wk "Describe Variable")
       "r r" '((lambda () (interactive) (load-file "~/.config/emacs/init.el")) :wk "Reload Emacs Config"))
+
+    ;; Org Roam
+    (amuzak/leader-keys
+	"n"  '(:ignore t :wk "Org-Roam")
+	"n l" 'org-roam-buffer-toggle
+	"n f" 'org-roam-node-find
+	"n g" 'org-roam-graph
+	"n i" 'org-roam-node-insert
+	"n c" 'org-roam-capture
+	"n j" 'org-roam-dailies-capture-today)
 
     ;; Misc
     (amuzak/leader-keys
@@ -453,15 +464,6 @@ More icons
     :init (add-hook 'org-mode-hook 'toc-org-enable))
 #+end_src
 
-** Enabling Org Bullets
-
-#+begin_src emacs-lisp
-  (add-hook 'org-mode-hook 'org-indent-mode)
-  (use-package org-superstar
-    :ensure (:host github :repo "integral-dw/org-superstar-mode")
-    :hook (org-mode . org-superstar-mode))
-#+end_src
-
 ** Disable Electric Indent
 
 #+begin_src emacs-lisp
@@ -507,9 +509,22 @@ More icons
     (setq org-modern-todo-faces org-todo-keyword-faces)
     (setq org-modern-todo t)
     (setq org-modern-tag t)
-    (setq org-modern-table t
-  	org-ellipsis " "
-  	org-modern-block-fringe nil))
+    (setq org-modern-hide-stars " ")
+    (setq org-modern-fold-stars
+  	'(("" . "")
+            ("" . "")
+            ("" . "")
+            ("󰮺" . "󰮷")
+            ("" . "")))
+    (setq ;;org-modern-star '("◉" "○" "✸" "✿")
+     org-modern-table t
+     org-ellipsis " "
+     org-modern-checkbox '((?X . "") (?- . "❍") (\s . "☐"))
+     org-modern-block-fringe nil
+     org-modern-priority
+     '((?A . "󱗗")  ;; High
+       (?B . "󰜥")  ;; Medium
+       (?C . "󰒲")))) ;; Low
 
   (use-package org-modern-indent
     :ensure (:host github :repo "jdtsmith/org-modern-indent")
@@ -545,6 +560,25 @@ More icons
 
   ;; (add-hook 'window-configuration-change-hook
   ;;           #'my/olivetti-only-when-single-window)
+#+end_src
+
+* NOTE TAKING
+
+** Thoughs and Tasks
+
+*** Org-Roam
+
+#+begin_src emacs-lisp
+  (use-package org-roam
+    :ensure t
+    :custom
+    (org-roam-directory (file-truename "~/Notes/Brain/"))
+    :config
+    ;; If you're using a vertical completion framework, you might want a more informative completion interface
+    (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+    (org-roam-db-autosync-mode)
+    ;; If using org-roam-protocol
+    (require 'org-roam-protocol))
 #+end_src
 
 * DASHBOARD

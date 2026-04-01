@@ -76,6 +76,13 @@
   (define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
   (define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
   (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
+  (defun my-evil-toggle-fold-recursive ()
+    (interactive)
+    (if (evil-fold-closed (point))
+	(evil-open-fold-recursively)
+      (evil-close-fold-recursively)))
+
+  (define-key evil-normal-state-map "za" 'my-evil-toggle-fold-recursive)
   (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
 
 (use-package evil-collection
@@ -136,6 +143,16 @@
     "d f" '(describe-function :wk "Describe Function")
     "d v" '(describe-variable :wk "Describe Variable")
     "r r" '((lambda () (interactive) (load-file "~/.config/emacs/init.el")) :wk "Reload Emacs Config"))
+
+  ;; Org Roam
+  (amuzak/leader-keys
+	"n"  '(:ignore t :wk "Org-Roam")
+	"n l" 'org-roam-buffer-toggle
+	"n f" 'org-roam-node-find
+	"n g" 'org-roam-graph
+	"n i" 'org-roam-node-insert
+	"n c" 'org-roam-capture
+	"n j" 'org-roam-dailies-capture-today)
 
   ;; Misc
   (amuzak/leader-keys
@@ -253,9 +270,9 @@
 (use-package evil-goggles
   :ensure t
   :after evil
-:init
-(setq evil-goggles-enable-delete nil)
-(setq evil-goggles-enable-change nil)
+  :init
+  (setq evil-goggles-enable-delete nil)
+  (setq evil-goggles-enable-change nil)
   :config
   (evil-goggles-mode)
   (setq evil-goggles-duration 0.25))
@@ -298,11 +315,6 @@
   :commands toc-org-enable
   :init (add-hook 'org-mode-hook 'toc-org-enable))
 
-(add-hook 'org-mode-hook 'org-indent-mode)
-(use-package org-superstar
-  :ensure (:host github :repo "integral-dw/org-superstar-mode")
-  :hook (org-mode . org-superstar-mode))
-
 (electric-indent-mode -1)
 
 (require 'org-tempo)
@@ -331,9 +343,22 @@
   (setq org-modern-todo-faces org-todo-keyword-faces)
   (setq org-modern-todo t)
   (setq org-modern-tag t)
-  (setq org-modern-table t
-	org-ellipsis " "
-	org-modern-block-fringe nil))
+  (setq org-modern-hide-stars " ")
+  (setq org-modern-fold-stars
+	'(("" . "")
+          ("" . "")
+          ("" . "")
+          ("󰮺" . "󰮷")
+          ("" . "")))
+  (setq ;;org-modern-star '("◉" "○" "✸" "✿")
+   org-modern-table t
+   org-ellipsis " "
+   org-modern-checkbox '((?X . "") (?- . "❍") (\s . "☐"))
+   org-modern-block-fringe nil
+   org-modern-priority
+   '((?A . "󱗗")  ;; High
+     (?B . "󰜥")  ;; Medium
+     (?C . "󰒲")))) ;; Low
 
 (use-package org-modern-indent
   :ensure (:host github :repo "jdtsmith/org-modern-indent")
@@ -365,6 +390,17 @@
 
 ;; (add-hook 'window-configuration-change-hook
 ;;           #'my/olivetti-only-when-single-window)
+
+(use-package org-roam
+  :ensure t
+  :custom
+  (org-roam-directory (file-truename "~/Notes/Brain/"))
+  :config
+  ;; If you're using a vertical completion framework, you might want a more informative completion interface
+  (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+  (org-roam-db-autosync-mode)
+  ;; If using org-roam-protocol
+  (require 'org-roam-protocol))
 
 (set-language-environment "UTF-8")
 (use-package dashboard
