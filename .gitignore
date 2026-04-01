@@ -24,3 +24,4 @@ emacs/org-roam.db
 emacs/backup
 emacs/.org-id-locations
 emacs/bookmarks
+emacs/backups

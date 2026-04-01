@@ -13,8 +13,11 @@
   - [[#automatic-pairing][Automatic pairing]]
   - [[#automatic-trim-whitespace][Automatic trim whitespace]]
   - [[#automatic-clear-multiple-blank-lines][Automatic clear multiple blank lines]]
+  - [[#automatic-refresh-buffers][Automatic Refresh Buffers]]
   - [[#custom-highlight-color][Custom highlight color]]
   - [[#dired-properties][Dired properties]]
+  - [[#messages-buffer-on-the-right][Messages Buffer on the Right]]
+  - [[#use-short-answers-yes-or-no---y-or-n][Use Short Answers ("yes or no" -> "y or n")]]
   - [[#set-backup-directory-to-one-source][Set backup directory to one source]]
   - [[#increase-gc-threshold][Increase GC Threshold]]
   - [[#minibuffer-escape][Minibuffer escape]]
@@ -36,6 +39,7 @@
   - [[#enabling-toc][Enabling ToC]]
   - [[#disable-electric-indent][Disable Electric Indent]]
   - [[#fix-linting-if-scrolling-from-bottom][Fix Linting if scrolling from bottom]]
+  - [[#collapse-properties-by-default][Collapse Properties by Default]]
   - [[#automatic-code-blocks-per-language][Automatic Code Blocks Per Language]]
   - [[#org-bullets][Org Bullets]]
   - [[#modern-org][Modern Org]]
@@ -53,6 +57,7 @@
   - [[#scroll-on-jump][Scroll on Jump]]
   - [[#modeline][Modeline]]
   - [[#symbol-overlay][Symbol Overlay]]
+  - [[#prettify][Prettify]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -106,59 +111,59 @@
 ** Load Evil Mode
 
 #+begin_src emacs-lisp
-    ;; Expands to: (elpaca evil (use-package evil :demand t))
-    (use-package evil
-      :ensure t
-      :demand t
-      :init
-      (setq evil-want-integration t)
-      (setq evil-want-keybinding nil)
-      (setq evil-vsplit-window-right t)
-      (setq evil-split-window-below t)
-      (evil-mode)
-      :config
-      (evil-select-search-module 'evil-search-module 'evil-search)
-      ;; QoL rebinds
-      (define-key evil-normal-state-map "j" 'evil-next-visual-line)
-      (define-key evil-normal-state-map "k" 'evil-previous-visual-line)
-      (define-key evil-visual-state-map "j" 'evil-next-visual-line)
-      (define-key evil-visual-state-map "k" 'evil-previous-visual-line)
-      (define-key evil-visual-state-map (kbd "x") 'evil-delete)
-      (define-key evil-normal-state-map (kbd "C-d") (lambda () (interactive) (evil-scroll-down nil) (recenter)))
-      (define-key evil-normal-state-map (kbd "C-u") (lambda () (interactive) (evil-scroll-up nil) (recenter)))
-      (define-key evil-normal-state-map "n" (lambda () (interactive) (evil-ex-search-next) (recenter)))
-      (define-key evil-normal-state-map "N" (lambda () (interactive) (evil-ex-search-previous) (recenter)))
-      (define-key evil-normal-state-map (kbd "<escape>") #'evil-ex-nohighlight)
-      (define-key evil-normal-state-map "G" (lambda () (interactive) (evil-goto-line) (recenter)))
-      (define-key evil-normal-state-map (kbd "<up>") (lambda () (interactive) (evil-window-increase-height 2)))
-      (define-key evil-normal-state-map (kbd "<down>") (lambda () (interactive) (evil-window-decrease-height 2)))
-      (define-key evil-normal-state-map (kbd "<left>") (lambda () (interactive) (evil-window-decrease-width 2)))
-      (define-key evil-normal-state-map (kbd "<right>") (lambda () (interactive) (evil-window-increase-width 2)))
-      (define-key evil-visual-state-map "<" (lambda () (interactive) (evil-shift-left (region-beginning) (region-end)) (evil-visual-restore)))
-      (define-key evil-visual-state-map ">" (lambda () (interactive) (evil-shift-right (region-beginning) (region-end)) (evil-visual-restore)))
-      (define-key evil-visual-state-map "p" (lambda () (interactive) (evil-delete (region-beginning) (region-end) 'line ?_) (evil-paste-after nil)))
-      (define-key evil-normal-state-map (kbd "C-k") 'evil-window-up)
-      (define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
-      (define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
-      (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
-      (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
+  ;; Expands to: (elpaca evil (use-package evil :demand t))
+  (use-package evil
+    :ensure t
+    :demand t
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    (setq evil-vsplit-window-right t)
+    (setq evil-split-window-below t)
+    (evil-mode)
+    :config
+    (evil-select-search-module 'evil-search-module 'evil-search)
+    ;; QoL rebinds
+    (define-key evil-normal-state-map "j" 'evil-next-visual-line)
+    (define-key evil-normal-state-map "k" 'evil-previous-visual-line)
+    (define-key evil-visual-state-map "j" 'evil-next-visual-line)
+    (define-key evil-visual-state-map "k" 'evil-previous-visual-line)
+    (define-key evil-visual-state-map (kbd "x") 'evil-delete)
+    (define-key evil-normal-state-map (kbd "C-d") (lambda () (interactive) (evil-scroll-down nil) (recenter)))
+    (define-key evil-normal-state-map (kbd "C-u") (lambda () (interactive) (evil-scroll-up nil) (recenter)))
+    (define-key evil-normal-state-map "n" (lambda () (interactive) (evil-ex-search-next) (recenter)))
+    (define-key evil-normal-state-map "N" (lambda () (interactive) (evil-ex-search-previous) (recenter)))
+    (define-key evil-normal-state-map (kbd "<escape>") #'evil-ex-nohighlight)
+    (define-key evil-normal-state-map "G" (lambda () (interactive) (evil-goto-line) (recenter)))
+    (define-key evil-normal-state-map (kbd "<up>") (lambda () (interactive) (evil-window-increase-height 2)))
+    (define-key evil-normal-state-map (kbd "<down>") (lambda () (interactive) (evil-window-decrease-height 2)))
+    (define-key evil-normal-state-map (kbd "<left>") (lambda () (interactive) (evil-window-decrease-width 2)))
+    (define-key evil-normal-state-map (kbd "<right>") (lambda () (interactive) (evil-window-increase-width 2)))
+    (define-key evil-visual-state-map "<" (lambda () (interactive) (evil-shift-left (region-beginning) (region-end)) (evil-visual-restore)))
+    (define-key evil-visual-state-map ">" (lambda () (interactive) (evil-shift-right (region-beginning) (region-end)) (evil-visual-restore)))
+    (define-key evil-visual-state-map "p" (lambda () (interactive) (evil-delete (region-beginning) (region-end) 'line ?_) (evil-paste-after nil)))
+    (define-key evil-normal-state-map (kbd "C-k") 'evil-window-up)
+    (define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
+    (define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
+    (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
+    (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
 
-    (use-package evil-collection
-      :ensure
-      :demand t
-      :after evil
-      :config
-      (setq evil-collection-mode-list '(dashboard dired ibuffer))
-      (evil-collection-init))
+  (use-package evil-collection
+    :ensure
+    :demand t
+    :after evil
+    :config
+    (setq evil-collection-mode-list '(dashboard dired ibuffer))
+    (evil-collection-init))
 
   (with-eval-after-load 'evil-maps
     (define-key evil-motion-state-map (kbd "RET") nil)
     (define-key evil-motion-state-map (kbd "TAB") nil))
 
-    ;;Turns off elpaca-use-package-mode current declaration
-    ;;Note this will cause evaluate the declaration immediately. It is not deferred.
-    ;;Useful for configuring built-in emacs features.
-    (use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
+  ;;Turns off elpaca-use-package-mode current declaration
+  ;;Note this will cause evaluate the declaration immediately. It is not deferred.
+  ;;Useful for configuring built-in emacs features.
+  (use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
 
 #+end_src
 
@@ -213,13 +218,13 @@
 
     ;; Org Roam
     (amuzak/leader-keys
-	"n"  '(:ignore t :wk "Org-Roam")
-	"n l" '(org-roam-buffer-toggle :wk "Toggle Org Roam Buffer")
-	"n f" '(org-roam-node-find :wk "Find Org Node")
-	"n g" '(org-roam-graph :wk "Open Org Roam Graph")
-	"n i" '(org-roam-node-insert :wk "Link to a Node")
-	"n c" '(org-roam-capture :wk "Org Roam Capture")
-	"n j" '(org-roam-dailies-capture-today :wk "Org Roam Daily Capture Today"))
+      "n"  '(:ignore t :wk "Org-Roam")
+      "n l" '(org-roam-buffer-toggle :wk "Toggle Org Roam Buffer")
+      "n f" '(org-roam-node-find :wk "Find Org Node")
+      "n g" '(org-roam-graph :wk "Open Org Roam Graph")
+      "n i" '(org-roam-node-insert :wk "Link to a Node")
+      "n c" '(org-roam-capture :wk "Org Roam Capture")
+      "n j" '(org-roam-dailies-capture-today :wk "Org Roam Daily Capture Today"))
 
     ;; Misc
     (amuzak/leader-keys
@@ -272,6 +277,14 @@
                   (replace-match "\n")))))
 #+end_src
 
+** Automatic Refresh Buffers
+
+#+begin_src emacs-lisp
+  (global-auto-revert-mode 1)
+  (setq global-auto-revert-non-file-buffers t)
+  (setq auto-revert-verbose nil)
+#+end_src
+
 ** Custom highlight color
 #+begin_src emacs-lisp
   (custom-set-faces
@@ -292,6 +305,25 @@
     (define-key dired-mode-map (kbd "<backspace>") 'dired-up-directory))
 #+end_src
 
+** Messages Buffer on the Right
+
+#+begin_src emacs-lisp
+  (defun open-messages-buffer ()
+    "Open the *Messages* buffer in a vertical split."
+    (interactive)
+    (let ((buf (get-buffer "*Messages*")))
+      (if buf
+          (select-window (split-window-right))
+        (setq buf (get-buffer-create "*Messages*")))
+      (switch-to-buffer buf)))
+#+end_src
+
+** Use Short Answers ("yes or no" -> "y or n")
+
+#+begin_src emacs-lisp
+  (setq use-short-answers t)
+#+end_src
+
 ** Set backup directory to one source
 
 #+begin_src emacs-lisp
@@ -307,13 +339,13 @@
 ** Minibuffer escape
 
 #+begin_src emacs-lisp
-(global-set-key [escape] 'keyboard-escape-quit)
+  (global-set-key [escape] 'keyboard-escape-quit)
 #+end_src
 
 ** Set backup directory
 
 #+begin_src emacs-lisp
-(setq backup-directory-alist '((".*" . "~/.config/emacs/backups/")))
+  (setq backup-directory-alist '((".*" . "~/.config/emacs/backups/")))
 #+end_src
 
 * FONTS
@@ -490,6 +522,12 @@ This doesn't really seem to work consistently, but whatever
   (add-hook 'org-mode-hook #'font-lock-fontify-buffer)
 #+end_src
 
+** Collapse Properties by Default
+
+#+begin_src emacs-lisp
+  (setq org-startup-folded t)
+#+end_src
+
 ** Automatic Code Blocks Per Language
 
 #+begin_src emacs-lisp
@@ -595,12 +633,34 @@ This doesn't really seem to work consistently, but whatever
     :custom
     (org-roam-directory (file-truename "~/Notes/Brain/"))
     :config
-    ;; If you're using a vertical completion framework, you might want a more informative completion interface
+    (setq org-roam-dailies-capture-templates
+    	'(("d" "daily" plain "%?"
+    	   :target (file+head+olp "%<%Y-%m>.org"
+    				  "#+title: %<%Y-%m>\n"
+    				  ("%<%d>" "%<%H:%M>"))
+    	   :unnarrowed t)))
+
+    (setq org-roam-capture-templates
+          '(
+
+            ("d" "default"
+             plain "%?"
+             :if-new (file+head "${slug}.org" "#+title: ${title}\n")
+             :unnarrowed t)
+
+            ("t" "topics" entry
+            "* ${title} :topic:\n:PROPERTIES:\n:ID: %(org-id-new)\n:END:\n%?"
+            :target (file+head "topics.org" "#+title: Topics\n")
+            :unnarrowed t)
+
+            ))
     (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
     (org-roam-db-autosync-mode)
-    ;; If using org-roam-protocol
     (require 'org-roam-protocol))
 #+end_src
+
+#+RESULTS:
+: [nil 27085 44484 35136 nil elpaca-process-queues nil nil 0 nil]
 
 * DASHBOARD
 
@@ -868,4 +928,37 @@ Highlight matching symbols in buffer
     (define-globalized-minor-mode global-symbol-overlay-mode
       symbol-overlay-mode symbol-overlay-mode)
     (global-symbol-overlay-mode 1))
+#+end_src
+
+** Prettify
+
+#+begin_src emacs-lisp
+(defun my/prettify-symbols-setup ()
+
+  ;; Drawers
+  (push '(":PROPERTIES:" . "") prettify-symbols-alist)
+  (push '(":ROAM_ALIASES:" . "") prettify-symbols-alist)
+  (push '(":ID:" . " ") prettify-symbols-alist)
+  (push '(":DATE:" . "") prettify-symbols-alist)
+  (push '(":DATE_PUBLISHED:" . "") prettify-symbols-alist)
+  (push '(":AUTHOR:" . "") prettify-symbols-alist)
+  (push '(":ROAM_REFS:" . " ") prettify-symbols-alist)
+  (push '(":PRIORITY:" . "") prettify-symbols-alist)
+  (push '(":END:" . "") prettify-symbols-alist)
+  (push '(":RESULTS:" . "") prettify-symbols-alist)
+  ;; Tags
+  (push '(":projects:" . "  Projects") prettify-symbols-alist)
+  (push '(":work:"     . "  Work") prettify-symbols-alist)
+  (push '(":inbox:"    . "  Inbox") prettify-symbols-alist)
+  (push '(":task:"     . "  Task") prettify-symbols-alist)
+  (push '(":thesis:"   . "  Thesis") prettify-symbols-alist)
+  (push '(":learn:"    . "  Learn") prettify-symbols-alist)
+  (push '(":code:"     . "  Code") prettify-symbols-alist)
+
+  (set-face-attribute 'org-drawer nil :height 1.3)
+  (set-face-attribute 'org-special-keyword nil :height 1.3)
+  (prettify-symbols-mode))
+
+(add-hook 'org-mode-hook        #'my/prettify-symbols-setup)
+(add-hook 'org-agenda-mode-hook #'my/prettify-symbols-setup)
 #+end_src

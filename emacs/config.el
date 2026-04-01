@@ -86,12 +86,14 @@
   (setq evil-collection-mode-list '(dashboard dired ibuffer))
   (evil-collection-init))
 
+(with-eval-after-load 'evil-maps
+  (define-key evil-motion-state-map (kbd "RET") nil)
+  (define-key evil-motion-state-map (kbd "TAB") nil))
+
 ;;Turns off elpaca-use-package-mode current declaration
 ;;Note this will cause evaluate the declaration immediately. It is not deferred.
 ;;Useful for configuring built-in emacs features.
 (use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
-
-
 
 (use-package general
   :ensure t
@@ -141,13 +143,13 @@
 
   ;; Org Roam
   (amuzak/leader-keys
-	"n"  '(:ignore t :wk "Org-Roam")
-	"n l" '(org-roam-buffer-toggle :wk "Toggle Org Roam Buffer")
-	"n f" '(org-roam-node-find :wk "Find Org Node")
-	"n g" '(org-roam-graph :wk "Open Org Roam Graph")
-	"n i" '(org-roam-node-insert :wk "Link to a Node")
-	"n c" '(org-roam-capture :wk "Org Roam Capture")
-	"n j" '(org-roam-dailies-capture-today :wk "Org Roam Daily Capture Today"))
+    "n"  '(:ignore t :wk "Org-Roam")
+    "n l" '(org-roam-buffer-toggle :wk "Toggle Org Roam Buffer")
+    "n f" '(org-roam-node-find :wk "Find Org Node")
+    "n g" '(org-roam-graph :wk "Open Org Roam Graph")
+    "n i" '(org-roam-node-insert :wk "Link to a Node")
+    "n c" '(org-roam-capture :wk "Org Roam Capture")
+    "n j" '(org-roam-dailies-capture-today :wk "Org Roam Daily Capture Today"))
 
   ;; Misc
   (amuzak/leader-keys
@@ -186,6 +188,10 @@
               (while (re-search-forward "^\n+" nil t)
                 (replace-match "\n")))))
 
+(global-auto-revert-mode 1)
+(setq global-auto-revert-non-file-buffers t)
+(setq auto-revert-verbose nil)
+
 (custom-set-faces
  '(region ((t (:background "#5f695f")))))
 
@@ -197,9 +203,24 @@
 (with-eval-after-load 'dired
   (define-key dired-mode-map (kbd "<backspace>") 'dired-up-directory))
 
+(defun open-messages-buffer ()
+  "Open the *Messages* buffer in a vertical split."
+  (interactive)
+  (let ((buf (get-buffer "*Messages*")))
+    (if buf
+        (select-window (split-window-right))
+      (setq buf (get-buffer-create "*Messages*")))
+    (switch-to-buffer buf)))
+
+(setq use-short-answers t)
+
 (setq backup-directory-alist '((".*" . "~/.config/emacs/backup")))
 
 (setq gc-cons-threshold (* 100 1024 1024)) ; 100MB
+
+(global-set-key [escape] 'keyboard-escape-quit)
+
+(setq backup-directory-alist '((".*" . "~/.config/emacs/backups/")))
 
 ;; Setting the default font
 (set-face-attribute 'default nil
@@ -235,10 +256,6 @@
 
 (setq paragraph-start "\\([ \t]*$\\)\\|\\(^\\s-*$\\)")
 (setq paragraph-separate "\\([ \t]*$\\)\\|\\(^\\s-*$\\)")
-
-(use-package all-the-icons
-  :ensure t
-  :if (display-graphic-p))
 
 (use-package nerd-icons
   :ensure t
@@ -313,6 +330,8 @@
 (electric-indent-mode -1)
 
 (add-hook 'org-mode-hook #'font-lock-fontify-buffer)
+
+(setq org-startup-folded t)
 
 (require 'org-tempo)
 
@@ -396,10 +415,29 @@
   :custom
   (org-roam-directory (file-truename "~/Notes/Brain/"))
   :config
-  ;; If you're using a vertical completion framework, you might want a more informative completion interface
+  (setq org-roam-dailies-capture-templates
+  	'(("d" "daily" plain "%?"
+  	   :target (file+head+olp "%<%Y-%m>.org"
+  				  "#+title: %<%Y-%m>\n"
+  				  ("%<%d>" "%<%H:%M>"))
+  	   :unnarrowed t)))
+
+  (setq org-roam-capture-templates
+        '(
+
+          ("d" "default"
+           plain "%?"
+           :if-new (file+head "${slug}.org" "#+title: ${title}\n")
+           :unnarrowed t)
+
+          ("t" "topics" entry
+          "* ${title} :topic:\n:PROPERTIES:\n:ID: %(org-id-new)\n:END:\n%?"
+          :target (file+head "topics.org" "#+title: Topics\n")
+          :unnarrowed t)
+
+          ))
   (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
   (org-roam-db-autosync-mode)
-  ;; If using org-roam-protocol
   (require 'org-roam-protocol))
 
 (set-language-environment "UTF-8")
@@ -600,3 +638,32 @@
   (define-globalized-minor-mode global-symbol-overlay-mode
     symbol-overlay-mode symbol-overlay-mode)
   (global-symbol-overlay-mode 1))
+
+(defun my/prettify-symbols-setup ()
+
+  ;; Drawers
+  (push '(":PROPERTIES:" . "") prettify-symbols-alist)
+  (push '(":ROAM_ALIASES:" . "") prettify-symbols-alist)
+  (push '(":ID:" . " ") prettify-symbols-alist)
+  (push '(":DATE:" . "") prettify-symbols-alist)
+  (push '(":DATE_PUBLISHED:" . "") prettify-symbols-alist)
+  (push '(":AUTHOR:" . "") prettify-symbols-alist)
+  (push '(":ROAM_REFS:" . " ") prettify-symbols-alist)
+  (push '(":PRIORITY:" . "") prettify-symbols-alist)
+  (push '(":END:" . "") prettify-symbols-alist)
+  (push '(":RESULTS:" . "") prettify-symbols-alist)
+  ;; Tags
+  (push '(":projects:" . "  Projects") prettify-symbols-alist)
+  (push '(":work:"     . "  Work") prettify-symbols-alist)
+  (push '(":inbox:"    . "  Inbox") prettify-symbols-alist)
+  (push '(":task:"     . "  Task") prettify-symbols-alist)
+  (push '(":thesis:"   . "  Thesis") prettify-symbols-alist)
+  (push '(":learn:"    . "  Learn") prettify-symbols-alist)
+  (push '(":code:"     . "  Code") prettify-symbols-alist)
+
+  (set-face-attribute 'org-drawer nil :height 1.3)
+  (set-face-attribute 'org-special-keyword nil :height 1.3)
+  (prettify-symbols-mode))
+
+(add-hook 'org-mode-hook        #'my/prettify-symbols-setup)
+(add-hook 'org-agenda-mode-hook #'my/prettify-symbols-setup)
