@@ -370,9 +370,9 @@
     (set-face-foreground face (face-attribute 'default :background)))
   ;; (set-face-background 'fringe (face-attribute 'default :background))
   (set-face-background 'org-block (color-darken-name (face-attribute 'default :background) 30))
-  (setq org-modern-todo-faces org-todo-keyword-faces)
-  (setq org-modern-todo t)
-  (setq org-modern-tag t)
+  ;; (setq org-todo-keyword-faces)
+  ;; (setq org-modern-todo t)
+  ;; (setq org-modern-tag t)
   (setq org-modern-hide-stars " ")
   (setq org-modern-fold-stars
 	'(("" . "")
@@ -381,9 +381,17 @@
           ("󰮺" . "󰮷")
           ("" . "")))
   (setq ;;org-modern-star '("◉" "○" "✸" "✿")
-   org-modern-table t
+   org-auto-align-tags t
+   org-tags-column 0
+   org-fold-catch-invisible-edits 'show-and-error
+   org-special-ctrl-a/e t
+   org-insert-heading-respect-content t
+   ;; Don't style the following
+   org-modern-tag nil
+   org-modern-priority nil
+   org-modern-todo nil
+   org-modern-table nil
    org-ellipsis " "
-   org-modern-checkbox '((?X . "") (?- . "❍") (\s . "☐"))
    org-modern-block-fringe nil
    org-modern-priority
    '((?A . "󱗗")  ;; High
@@ -420,6 +428,24 @@
 
 ;; (add-hook 'window-configuration-change-hook
 ;;           #'my/olivetti-only-when-single-window)
+
+(use-package org-superstar
+  :ensure t
+  :config
+  (setq org-superstar-leading-bullet " ")
+  (setq org-superstar-special-todo-items t) ;; Makes TODO header bullets into boxes
+  (setq org-superstar-todo-bullet-alist '(("TODO" . 9744)
+                                          ("DONE" . 9744)
+                                          ("IN-PROGRESS" . 9744)
+                                          ("CANCELLED" . 9744))))
+
+(defun my-org-checkbox-symbols ()
+  (setq-local prettify-symbols-alist
+              '(("[ ]" . "☐")
+                ("[X]" . "󰸞")
+                ("[-]" . "󰜥")))
+  (prettify-symbols-mode 1))
+;; (add-hook 'org-mode-hook #'my-org-checkbox-symbols)
 
 (use-package org-roam
   :ensure t
@@ -480,8 +506,8 @@
   (setq dashboard-set-file-icons t)
   (setq dashboard-items '((recents . 5)
                           (agenda . 5)
-                          (bookmarks . 5)
                           (projects . 5)))
+  (setq dashboard-agenda-sort-strategy '(time-up))
   :config
   (add-hook 'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
   (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
@@ -556,6 +582,7 @@
   :init
   (dimmer-configure-posframe)
   (dimmer-configure-which-key)
+  (dimmer-configure-org)
   (dimmer-mode t)
   :config
   (setq dimmer-fraction 0.40))
