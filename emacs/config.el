@@ -151,6 +151,17 @@
     "n c" '(org-roam-capture :wk "Org Roam Capture")
     "n j" '(org-roam-dailies-capture-today :wk "Org Roam Daily Capture Today"))
 
+  ;; Task Management
+  (amuzak/leader-keys
+    "t" '(:ignore t :wk "Task")
+    "t t" '(org-todo :wk "Cycle Org Todo")
+    "t g" '(org-set-tags-command :wk "Set tags")
+    "t p" '(org-priority :wk "Set Priority")
+    "t d" '(org-deadline :wk "Set Deadline")
+    "t c" '(org-update-checkbox :wk "Toggle Checkbox")
+    "t a" '(org-agenda :wk "Org Agenda")
+  )
+
   ;; Misc
   (amuzak/leader-keys
     "SPC" '(project-find-file :wk "Find file")
@@ -439,6 +450,8 @@
   (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
   (org-roam-db-autosync-mode)
   (require 'org-roam-protocol))
+
+(setq org-agenda-files '("~/Notes/Brain/Projects/"))
 
 (set-language-environment "UTF-8")
 (use-package dashboard
