@@ -158,9 +158,9 @@
     "t g" '(org-set-tags-command :wk "Set tags")
     "t p" '(org-priority :wk "Set Priority")
     "t d" '(org-deadline :wk "Set Deadline")
-    "t c" '(org-update-checkbox :wk "Toggle Checkbox")
+    "t c" '(org-toggle-checkbox :wk "Toggle Checkbox")
     "t a" '(org-agenda :wk "Org Agenda")
-  )
+    )
 
   ;; Misc
   (amuzak/leader-keys
@@ -426,6 +426,7 @@
   :custom
   (org-roam-directory (file-truename "~/Notes/Brain/"))
   :config
+  (setq org-roam-dailies-directory "Journal/")
   (setq org-roam-dailies-capture-templates
   	'(("d" "daily" plain "%?"
   	   :target (file+head+olp "%<%Y-%m>.org"
@@ -442,9 +443,14 @@
            :unnarrowed t)
 
           ("t" "topics" entry
-          "* ${title} :topic:\n:PROPERTIES:\n:ID: %(org-id-new)\n:END:\n%?"
-          :target (file+head "topics.org" "#+title: Topics\n")
-          :unnarrowed t)
+           "* ${title} :topic:\n:PROPERTIES:\n:ID: %(org-id-new)\n:END:\n%?"
+           :target (file+head "topics.org" "#+title: Topics\n")
+           :unnarrowed t)
+
+          ("p" "project"
+           plain "%?"
+           :if-new (file+head "Projects/${slug}.org" "#+title: ${title}\n")
+           :unnarrowed t)
 
           ))
   (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
@@ -452,6 +458,15 @@
   (require 'org-roam-protocol))
 
 (setq org-agenda-files '("~/Notes/Brain/Projects/"))
+
+(setq org-todo-keywords
+      '((sequence "TODO(t)" "IN-PROGRESS(i)" "|" "DONE(d)" "CANCELLED(c)")))
+(setq org-todo-keyword-faces
+      '(("TODO"      . (:foreground "white" :background "#FF5964"     :weight bold))
+        ("IN-PROGRESS"   . (:foreground "black" :background "#FFF4AD"           :weight bold))
+        ("DONE"      . (:foreground "white" :background "#33b58e"    :weight bold))
+        ("CANCELLED" . (:foreground "white" :background "DimGray"        :weight bold))
+	))
 
 (set-language-environment "UTF-8")
 (use-package dashboard

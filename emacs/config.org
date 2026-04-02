@@ -233,9 +233,9 @@
       "t g" '(org-set-tags-command :wk "Set tags")
       "t p" '(org-priority :wk "Set Priority")
       "t d" '(org-deadline :wk "Set Deadline")
-      "t c" '(org-update-checkbox :wk "Toggle Checkbox")
+      "t c" '(org-toggle-checkbox :wk "Toggle Checkbox")
       "t a" '(org-agenda :wk "Org Agenda")
-    )
+      )
 
     ;; Misc
     (amuzak/leader-keys
@@ -644,6 +644,7 @@ This doesn't really seem to work consistently, but whatever
     :custom
     (org-roam-directory (file-truename "~/Notes/Brain/"))
     :config
+    (setq org-roam-dailies-directory "Journal/")
     (setq org-roam-dailies-capture-templates
     	'(("d" "daily" plain "%?"
     	   :target (file+head+olp "%<%Y-%m>.org"
@@ -660,9 +661,14 @@ This doesn't really seem to work consistently, but whatever
              :unnarrowed t)
 
             ("t" "topics" entry
-            "* ${title} :topic:\n:PROPERTIES:\n:ID: %(org-id-new)\n:END:\n%?"
-            :target (file+head "topics.org" "#+title: Topics\n")
-            :unnarrowed t)
+             "* ${title} :topic:\n:PROPERTIES:\n:ID: %(org-id-new)\n:END:\n%?"
+             :target (file+head "topics.org" "#+title: Topics\n")
+             :unnarrowed t)
+
+            ("p" "project"
+             plain "%?"
+             :if-new (file+head "Projects/${slug}.org" "#+title: ${title}\n")
+             :unnarrowed t)
 
             ))
     (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
@@ -673,7 +679,20 @@ This doesn't really seem to work consistently, but whatever
 *** Org Agenda Directory
 
 #+begin_src emacs-lisp
-(setq org-agenda-files '("~/Notes/Brain/Projects/"))
+  (setq org-agenda-files '("~/Notes/Brain/Projects/"))
+#+end_src
+
+*** Todo Cycling and Colors
+
+#+begin_src emacs-lisp
+  (setq org-todo-keywords
+        '((sequence "TODO(t)" "IN-PROGRESS(i)" "|" "DONE(d)" "CANCELLED(c)")))
+  (setq org-todo-keyword-faces
+        '(("TODO"      . (:foreground "white" :background "#FF5964"     :weight bold))
+          ("IN-PROGRESS"   . (:foreground "black" :background "#FFF4AD"           :weight bold))
+          ("DONE"      . (:foreground "white" :background "#33b58e"    :weight bold))
+          ("CANCELLED" . (:foreground "white" :background "DimGray"        :weight bold))
+  	))
 #+end_src
 
 * DASHBOARD
@@ -947,32 +966,32 @@ Highlight matching symbols in buffer
 ** Prettify
 
 #+begin_src emacs-lisp
-(defun my/prettify-symbols-setup ()
+  (defun my/prettify-symbols-setup ()
 
-  ;; Drawers
-  (push '(":PROPERTIES:" . "") prettify-symbols-alist)
-  (push '(":ROAM_ALIASES:" . "") prettify-symbols-alist)
-  (push '(":ID:" . " ") prettify-symbols-alist)
-  (push '(":DATE:" . "") prettify-symbols-alist)
-  (push '(":DATE_PUBLISHED:" . "") prettify-symbols-alist)
-  (push '(":AUTHOR:" . "") prettify-symbols-alist)
-  (push '(":ROAM_REFS:" . " ") prettify-symbols-alist)
-  (push '(":PRIORITY:" . "") prettify-symbols-alist)
-  (push '(":END:" . "") prettify-symbols-alist)
-  (push '(":RESULTS:" . "") prettify-symbols-alist)
-  ;; Tags
-  (push '(":projects:" . "  Projects") prettify-symbols-alist)
-  (push '(":work:"     . "  Work") prettify-symbols-alist)
-  (push '(":inbox:"    . "  Inbox") prettify-symbols-alist)
-  (push '(":task:"     . "  Task") prettify-symbols-alist)
-  (push '(":thesis:"   . "  Thesis") prettify-symbols-alist)
-  (push '(":learn:"    . "  Learn") prettify-symbols-alist)
-  (push '(":code:"     . "  Code") prettify-symbols-alist)
+    ;; Drawers
+    (push '(":PROPERTIES:" . "") prettify-symbols-alist)
+    (push '(":ROAM_ALIASES:" . "") prettify-symbols-alist)
+    (push '(":ID:" . " ") prettify-symbols-alist)
+    (push '(":DATE:" . "") prettify-symbols-alist)
+    (push '(":DATE_PUBLISHED:" . "") prettify-symbols-alist)
+    (push '(":AUTHOR:" . "") prettify-symbols-alist)
+    (push '(":ROAM_REFS:" . " ") prettify-symbols-alist)
+    (push '(":PRIORITY:" . "") prettify-symbols-alist)
+    (push '(":END:" . "") prettify-symbols-alist)
+    (push '(":RESULTS:" . "") prettify-symbols-alist)
+    ;; Tags
+    (push '(":projects:" . "  Projects") prettify-symbols-alist)
+    (push '(":work:"     . "  Work") prettify-symbols-alist)
+    (push '(":inbox:"    . "  Inbox") prettify-symbols-alist)
+    (push '(":task:"     . "  Task") prettify-symbols-alist)
+    (push '(":thesis:"   . "  Thesis") prettify-symbols-alist)
+    (push '(":learn:"    . "  Learn") prettify-symbols-alist)
+    (push '(":code:"     . "  Code") prettify-symbols-alist)
 
-  (set-face-attribute 'org-drawer nil :height 1.3)
-  (set-face-attribute 'org-special-keyword nil :height 1.3)
-  (prettify-symbols-mode))
+    (set-face-attribute 'org-drawer nil :height 1.3)
+    (set-face-attribute 'org-special-keyword nil :height 1.3)
+    (prettify-symbols-mode))
 
-(add-hook 'org-mode-hook        #'my/prettify-symbols-setup)
-(add-hook 'org-agenda-mode-hook #'my/prettify-symbols-setup)
+  (add-hook 'org-mode-hook        #'my/prettify-symbols-setup)
+  (add-hook 'org-agenda-mode-hook #'my/prettify-symbols-setup)
 #+end_src
