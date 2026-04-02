@@ -61,6 +61,7 @@
   - [[#symbol-overlay][Symbol Overlay]]
   - [[#prettify][Prettify]]
   - [[#projectile][Projectile]]
+  - [[#flash][Flash]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -248,14 +249,15 @@
       "a" (lambda () (interactive) (evil-goto-first-line) (evil-visual-line) (evil-goto-line))
       "d d" '(dashboard-open :wk "Open Dashboard")
       "l g" '(my/launch-lazygit :wk "Launch LazyGit")
-      "ww" '((lambda () (interactive)
+      "f f" '(flash-jump :wk "Flash to Target")
+      "w w" '((lambda () (interactive)
                (save-some-buffers t (lambda ()
     				    (and (buffer-modified-p)
     					 (not (string-match-p "\\*.*\\*" (buffer-name)))
     					 (not (eq major-mode 'comint-mode)))))
                (message "All files saved"))
     	   :wk "Save file(s)")
-      "qq" '((lambda () (interactive)
+      "q q" '((lambda () (interactive)
                (save-some-buffers t (lambda ()
     				    (and (buffer-modified-p)
     					 (not (string-match-p "\\*.*\\*" (buffer-name)))
@@ -1043,4 +1045,29 @@ Highlight matching symbols in buffer
   :ensure t
   :init
   (projectile-mode +1))
+#+end_src
+
+** Flash
+
+#+begin_src emacs-lisp
+  (use-package flash
+    :ensure t
+    :commands (flash-jump flash-jump-continue
+               flash-treesitter)
+    ;; :bind ("s-j" . flash-jump)
+    :custom
+    (flash-multi-window t)
+    :init
+    ;; Evil integration (simple setup)
+    (with-eval-after-load 'evil
+      (require 'flash-evil)
+      (flash-evil-setup t))  ; t = also set up f/t/F/T char motions
+    :config
+    ;; Search integration (labels during C-s, /, ?)
+    (require 'flash-isearch)
+    (setq flash-rainbow-shade 6)
+    (setq flash-rainbow t)
+    (setq flash-highlight-matches t)
+    (setq flash-label-position 'overlay)
+    (flash-isearch-mode 1))
 #+end_src
