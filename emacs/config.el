@@ -752,3 +752,8 @@
   (setq flash-highlight-matches t)
   (setq flash-label-position 'overlay)
   (flash-isearch-mode 1))
+
+(use-package git-gutter
+  :ensure t
+  :config
+  (global-git-gutter-mode +1))

@@ -62,6 +62,7 @@
   - [[#prettify][Prettify]]
   - [[#projectile][Projectile]]
   - [[#flash][Flash]]
+  - [[#git-gutter][Git Gutter]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -1070,4 +1071,13 @@ Highlight matching symbols in buffer
     (setq flash-highlight-matches t)
     (setq flash-label-position 'overlay)
     (flash-isearch-mode 1))
+#+end_src
+
+** Git Gutter
+
+#+begin_src emacs-lisp
+(use-package git-gutter
+  :ensure t
+  :config
+  (global-git-gutter-mode +1))
 #+end_src
