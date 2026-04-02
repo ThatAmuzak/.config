@@ -159,12 +159,14 @@
     "t p" '(org-priority :wk "Set Priority")
     "t d" '(org-deadline :wk "Set Deadline")
     "t c" '(org-toggle-checkbox :wk "Toggle Checkbox")
-    "t a" '(org-agenda :wk "Org Agenda")
-    )
+    "t a" '(org-agenda :wk "Org Agenda"))
 
   ;; Misc
   (amuzak/leader-keys
-    "SPC" '(project-find-file :wk "Find file")
+    "SPC" '(projectile-find-file :wk "Find file")
+    "s g" '(projectile-ripgrep :wk "Search in file")
+    "p p" '(projectile-switch-project :wk "Switch Projects")
+    "p a" '(projectile-add-known-project :wk "Add Project")
     "a" (lambda () (interactive) (evil-goto-first-line) (evil-visual-line) (evil-goto-line))
     "d d" '(dashboard-open :wk "Open Dashboard")
     "l g" '(my/launch-lazygit :wk "Launch LazyGit")
@@ -504,6 +506,7 @@
   (setq dashboard-display-icons-p t)
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
+  (setq dashboard-projects-backend 'projectile)
   (setq dashboard-items '((recents . 5)
                           (agenda . 5)
                           (projects . 5)))
@@ -722,3 +725,8 @@
 
 (add-hook 'org-mode-hook        #'my/prettify-symbols-setup)
 (add-hook 'org-agenda-mode-hook #'my/prettify-symbols-setup)
+
+(use-package projectile
+  :ensure t
+  :init
+  (projectile-mode +1))
