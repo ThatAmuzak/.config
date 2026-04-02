@@ -136,9 +136,6 @@
 
   ;; Emacs Utils
   (amuzak/leader-keys
-    "d" '(:ignore t :wk "Help")
-    "d f" '(describe-function :wk "Describe Function")
-    "d v" '(describe-variable :wk "Describe Variable")
     "r r" '((lambda () (interactive) (load-file "~/.config/emacs/init.el")) :wk "Reload Emacs Config"))
 
   ;; Org Roam
@@ -757,3 +754,6 @@
   :ensure t
   :config
   (global-git-gutter-mode +1))
+
+(use-package helpful
+  :ensure t)

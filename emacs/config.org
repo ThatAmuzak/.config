@@ -63,6 +63,7 @@
   - [[#projectile][Projectile]]
   - [[#flash][Flash]]
   - [[#git-gutter][Git Gutter]]
+  - [[#helpful][Helpful]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -216,9 +217,6 @@
 
     ;; Emacs Utils
     (amuzak/leader-keys
-      "d" '(:ignore t :wk "Help")
-      "d f" '(describe-function :wk "Describe Function")
-      "d v" '(describe-variable :wk "Describe Variable")
       "r r" '((lambda () (interactive) (load-file "~/.config/emacs/init.el")) :wk "Reload Emacs Config"))
 
     ;; Org Roam
@@ -1080,4 +1078,11 @@ Highlight matching symbols in buffer
   :ensure t
   :config
   (global-git-gutter-mode +1))
+#+end_src
+
+** Helpful
+
+#+begin_src emacs-lisp
+  (use-package helpful
+    :ensure t)
 #+end_src
