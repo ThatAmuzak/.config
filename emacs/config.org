@@ -249,6 +249,7 @@
       "d d" '(dashboard-open :wk "Open Dashboard")
       "l g" '(my/launch-lazygit :wk "Launch LazyGit")
       "f f" '(flash-jump :wk "Flash to Target")
+      "c b" (lambda () (interactive) (let ((vertico-posframe-mode nil)) (call-interactively #'consult-yank-from-kill-ring)))
       "w w" '((lambda () (interactive)
                 (save-some-buffers t (lambda ()
     				     (and (buffer-modified-p)
@@ -580,11 +581,7 @@ This doesn't really seem to work consistently, but whatever
                     window-divider-last-pixel))
       (face-spec-reset-face face)
       (set-face-foreground face (face-attribute 'default :background)))
-    ;; (set-face-background 'fringe (face-attribute 'default :background))
     (set-face-background 'org-block (color-darken-name (face-attribute 'default :background) 30))
-    ;; (setq org-todo-keyword-faces)
-    ;; (setq org-modern-todo t)
-    ;; (setq org-modern-tag t)
     (setq org-modern-hide-stars " ")
     (setq org-modern-fold-stars
   	'(("" . "")
@@ -669,7 +666,7 @@ This doesn't really seem to work consistently, but whatever
                   ("[X]" . "󰸞")
                   ("[-]" . "󰜥")))
     (prettify-symbols-mode 1))
-  ;; (add-hook 'org-mode-hook #'my-org-checkbox-symbols)
+  (add-hook 'org-mode-hook #'my-org-checkbox-symbols)
 #+end_src
 
 * NOTE TAKING
@@ -810,7 +807,8 @@ Better M-x minibuffer
   ;; Persist history across sessions (vertico sorts by recency)
   (use-package savehist
     :init
-    (savehist-mode))
+    (savehist-mode)
+    (add-to-list 'savehist-additional-variables 'kill-ring))
 
   ;; Orderless - fuzzy/flex matching similar to telescope
   (use-package orderless
@@ -852,6 +850,9 @@ Better M-x minibuffer
     :config
     (setq dimmer-fraction 0.40))
 
+  ;; Consult for more functionality and yank ring
+    (use-package consult
+    :ensure t)
 #+end_src
 
 * MISC

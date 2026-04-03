@@ -168,6 +168,7 @@
     "d d" '(dashboard-open :wk "Open Dashboard")
     "l g" '(my/launch-lazygit :wk "Launch LazyGit")
     "f f" '(flash-jump :wk "Flash to Target")
+    "c b" (lambda () (interactive) (let ((vertico-posframe-mode nil)) (call-interactively #'consult-yank-from-kill-ring)))
     "w w" '((lambda () (interactive)
               (save-some-buffers t (lambda ()
   				     (and (buffer-modified-p)
@@ -368,11 +369,7 @@
                   window-divider-last-pixel))
     (face-spec-reset-face face)
     (set-face-foreground face (face-attribute 'default :background)))
-  ;; (set-face-background 'fringe (face-attribute 'default :background))
   (set-face-background 'org-block (color-darken-name (face-attribute 'default :background) 30))
-  ;; (setq org-todo-keyword-faces)
-  ;; (setq org-modern-todo t)
-  ;; (setq org-modern-tag t)
   (setq org-modern-hide-stars " ")
   (setq org-modern-fold-stars
 	'(("" . "")
@@ -445,7 +442,7 @@
                 ("[X]" . "󰸞")
                 ("[-]" . "󰜥")))
   (prettify-symbols-mode 1))
-;; (add-hook 'org-mode-hook #'my-org-checkbox-symbols)
+(add-hook 'org-mode-hook #'my-org-checkbox-symbols)
 
 (use-package org-roam
   :ensure t
@@ -546,7 +543,8 @@
 ;; Persist history across sessions (vertico sorts by recency)
 (use-package savehist
   :init
-  (savehist-mode))
+  (savehist-mode)
+  (add-to-list 'savehist-additional-variables 'kill-ring))
 
 ;; Orderless - fuzzy/flex matching similar to telescope
 (use-package orderless
@@ -587,6 +585,10 @@
   (dimmer-mode t)
   :config
   (setq dimmer-fraction 0.40))
+
+;; Consult for more functionality and yank ring
+  (use-package consult
+  :ensure t)
 
 (use-package grease
   :ensure (:host github :repo "mwac-dev/grease.el")
