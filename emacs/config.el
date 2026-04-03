@@ -169,20 +169,20 @@
     "l g" '(my/launch-lazygit :wk "Launch LazyGit")
     "f f" '(flash-jump :wk "Flash to Target")
     "w w" '((lambda () (interactive)
-             (save-some-buffers t (lambda ()
-  				    (and (buffer-modified-p)
-  					 (not (string-match-p "\\*.*\\*" (buffer-name)))
-  					 (not (eq major-mode 'comint-mode)))))
-             (message "All files saved"))
-  	   :wk "Save file(s)")
+              (save-some-buffers t (lambda ()
+  				     (and (buffer-modified-p)
+  					  (not (string-match-p "\\*.*\\*" (buffer-name)))
+  					  (not (eq major-mode 'comint-mode)))))
+              (message "All files saved"))
+  	    :wk "Save file(s)")
     "q q" '((lambda () (interactive)
-             (save-some-buffers t (lambda ()
-  				    (and (buffer-modified-p)
-  					 (not (string-match-p "\\*.*\\*" (buffer-name)))
-  					 (not (eq major-mode 'comint-mode)))))
-             (message "All files saved, exiting...")
-             (kill-emacs))
-  	   :wk "Save all and quit"))
+              (save-some-buffers t (lambda ()
+  				     (and (buffer-modified-p)
+  					  (not (string-match-p "\\*.*\\*" (buffer-name)))
+  					  (not (eq major-mode 'comint-mode)))))
+              (message "All files saved, exiting...")
+              (kill-emacs))
+  	    :wk "Save all and quit"))
 
   (general-define-key
    :states '(normal visual)
@@ -657,6 +657,7 @@
   ;; ── Evil state tags (no "state" suffix) ────────────────────────────
   (setq doom-modeline-modal t
         doom-modeline-modal-icon nil  ; text only, no icon
+	doom-modeline-keystroke t
         evil-normal-state-tag   " NORMAL "
         evil-insert-state-tag   " INSERT "
         evil-visual-state-tag   " VISUAL "
@@ -674,15 +675,7 @@
   (set-face-attribute 'doom-modeline-evil-motion-state   nil :foreground "#1e1e2e" :background "#89b4fa" :weight 'bold)
   (set-face-attribute 'doom-modeline-evil-emacs-state    nil :foreground "#1e1e2e" :background "#a6adc8" :weight 'bold)
 
-  ;; ── Custom modeline definition ──────────────────────────────────────
-  (doom-modeline-def-modeline 'my-modeline
-    ;; left: state  vcs  filename
-    '(modals vcs buffer-info)
-    ;; right: major-mode  matches  buffer-position (line:col + %)
-    '(matches buffer-position))
-
-  (setq doom-modeline-position-column-line-format '("%l:%c")
-        doom-modeline-percent-position            '(-3 "%p"))
+  (setq doom-modeline-position-column-line-format '("%l:%c"))
 
   (doom-modeline-set-modeline 'my-modeline t))
 
@@ -732,7 +725,7 @@
 (use-package flash
   :ensure t
   :commands (flash-jump flash-jump-continue
-             flash-treesitter)
+			flash-treesitter)
   ;; :bind ("s-j" . flash-jump)
   :custom
   (flash-multi-window t)
@@ -753,7 +746,21 @@
 (use-package git-gutter
   :ensure t
   :config
+  (setq git-gutter:added-sign "+")
+  (setq git-gutter:deleted-sign "-")
+  (setq git-gutter:modified-sign "~")
+
+  (set-face-foreground 'git-gutter:added "green")
+  (set-face-foreground 'git-gutter:deleted "red")
+  (set-face-foreground 'git-gutter:modified "yellow")
   (global-git-gutter-mode +1))
+
+(use-package git-gutter-fringe
+  :ensure t
+  :after git-gutter
+  :config
+  (setq-default fringes-outside-margins t)
+  (fringe-mode '(15 . 15)))
 
 (use-package helpful
   :ensure t)
