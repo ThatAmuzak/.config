@@ -587,8 +587,27 @@
   (setq dimmer-fraction 0.40))
 
 ;; Consult for more functionality and yank ring
-  (use-package consult
+(use-package consult
   :ensure t)
+
+(use-package treesit-auto
+  :ensure t
+  :custom
+  (treesit-auto-install 'prompt)
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode)
+  (setq treesit-language-source-alist
+        '((javascript "https://github.com/tree-sitter/tree-sitter-javascript"))))
+
+(use-package yasnippet
+  :ensure t
+  :config
+  (yas-global-mode 1))
+
+(use-package yasnippet-snippets
+  :ensure (:host github :repo "AndreaCrotti/yasnippet-snippets")
+  :after yasnippet)
 
 (use-package grease
   :ensure (:host github :repo "mwac-dev/grease.el")
