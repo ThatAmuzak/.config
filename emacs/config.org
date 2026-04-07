@@ -22,6 +22,7 @@
   - [[#increase-gc-threshold][Increase GC Threshold]]
   - [[#minibuffer-escape][Minibuffer escape]]
   - [[#set-backup-directory][Set backup directory]]
+  - [[#remove-border][Remove Border]]
 - [[#fonts][FONTS]]
   - [[#default-fonts][Default Fonts]]
   - [[#zooming-inout][Zooming In/Out]]
@@ -369,6 +370,14 @@
   (setq backup-directory-alist '((".*" . "~/.config/emacs/backups/")))
 #+end_src
 
+** Remove Border
+
+#+begin_src emacs-lisp
+  (setq default-frame-alist '((undecorated . t)))
+  (add-to-list 'default-frame-alist '(drag-internal-border . 1))
+  (add-to-list 'default-frame-alist '(internal-border-width . 5))
+#+end_src
+
 * FONTS
 
 ** Default Fonts
@@ -707,7 +716,7 @@ This doesn't really seem to work consistently, but whatever
 
             ("p" "project"
              plain "%?"
-             :if-new (file+head "Projects/${slug}.org" "#+title: ${title}\n")
+             :if-new (file+head "Projects/${slug}.org" "#+title: ${title}\n#STARTUP: showeverything\n")
              :unnarrowed t)
 
             ))
@@ -1094,6 +1103,7 @@ Highlight matching symbols in buffer
     (setq flash-rainbow t)
     (setq flash-highlight-matches t)
     (setq flash-label-position 'overlay)
+    (setq projectile-enable-caching 'persistent)
     (flash-isearch-mode 1))
 #+end_src
 

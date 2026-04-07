@@ -234,6 +234,12 @@
 
 (setq backup-directory-alist '((".*" . "~/.config/emacs/backups/")))
 
+(setq default-frame-alist '((undecorated . t)))
+(add-to-list 'default-frame-alist '(drag-internal-border . 1))
+(add-to-list 'default-frame-alist '(internal-border-width . 5))
+
+(set-frame-parameter nil 'alpha-background 85)
+
 ;; Setting the default font
 (set-face-attribute 'default nil
 		    :font "JetBrainsMono NFM"
@@ -472,7 +478,7 @@
 
           ("p" "project"
            plain "%?"
-           :if-new (file+head "Projects/${slug}.org" "#+title: ${title}\n")
+           :if-new (file+head "Projects/${slug}.org" "#+title: ${title}\n#STARTUP: showeverything\n")
            :unnarrowed t)
 
           ))
@@ -762,6 +768,7 @@
   (setq flash-rainbow t)
   (setq flash-highlight-matches t)
   (setq flash-label-position 'overlay)
+  (setq projectile-enable-caching 'persistent)
   (flash-isearch-mode 1))
 
 (use-package git-gutter

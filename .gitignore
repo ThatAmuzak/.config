@@ -26,3 +26,4 @@ emacs/.org-id-locations
 emacs/bookmarks
 emacs/backups
 emacs/projectile-bookmarks.eld
+.projectile-cache.eld
