@@ -1,3 +1,4 @@
+(setq debug-on-error t)
 (defvar elpaca-installer-version 0.12)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -171,19 +172,19 @@
     "c b" (lambda () (interactive) (let ((vertico-posframe-mode nil)) (call-interactively #'consult-yank-from-kill-ring)))
     "w w" '((lambda () (interactive)
               (save-some-buffers t (lambda ()
-  				     (and (buffer-modified-p)
-  					  (not (string-match-p "\\*.*\\*" (buffer-name)))
-  					  (not (eq major-mode 'comint-mode)))))
+    				     (and (buffer-modified-p)
+    					  (not (string-match-p "\\*.*\\*" (buffer-name)))
+    					  (not (eq major-mode 'comint-mode)))))
               (message "All files saved"))
-  	    :wk "Save file(s)")
+    	    :wk "Save file(s)")
     "q q" '((lambda () (interactive)
               (save-some-buffers t (lambda ()
-  				     (and (buffer-modified-p)
-  					  (not (string-match-p "\\*.*\\*" (buffer-name)))
-  					  (not (eq major-mode 'comint-mode)))))
+    				     (and (buffer-modified-p)
+    					  (not (string-match-p "\\*.*\\*" (buffer-name)))
+    					  (not (eq major-mode 'comint-mode)))))
               (message "All files saved, exiting...")
               (kill-emacs))
-  	    :wk "Save all and quit"))
+    	    :wk "Save all and quit"))
 
   (general-define-key
    :states '(normal visual)
@@ -237,8 +238,6 @@
 (setq default-frame-alist '((undecorated . t)))
 (add-to-list 'default-frame-alist '(drag-internal-border . 1))
 (add-to-list 'default-frame-alist '(internal-border-width . 5))
-
-(set-frame-parameter nil 'alpha-background 85)
 
 ;; Setting the default font
 (set-face-attribute 'default nil
@@ -319,9 +318,38 @@
         (expand-file-name "elpaca/sources/holo-layer/holo_layer.py"
                           user-emacs-directory))
   (setq holo-layer-enable-cursor-animation t)
-  (setq holo-layer-enable-indent-rainbow t)
   :config
   (holo-layer-enable))
+
+(use-package indent-bars
+  :ensure t
+  :custom
+  (indent-bars-no-descend-lists 'skip)
+  (indent-bars-treesit-support t)
+  (indent-bars-treesit-ignore-blank-lines-types '("module"))
+  ;; Add other languages as needed; check the wiki
+  (indent-bars-treesit-scope '((python function_definition class_definition for_statement
+				       if_statement with_statement while_statement)))
+  :hook ((prog-mode) . indent-bars-mode))
+
+(use-package outline-indent
+  :ensure t
+  :commands outline-indent-minor-mode
+  :hook
+  ((python-mode . outline-indent-minor-mode)
+   (python-ts-mode . outline-indent-minor-mode)
+   (emacs-lisp-mode . outline-indent-minor-mode)))
+
+(use-package kirigami
+  :ensure t
+  :config ;; Configure Kirigami to replace the default Evil-mode folding key bindings
+  (with-eval-after-load 'evil
+    (define-key evil-normal-state-map "zo" 'kirigami-open-fold)
+    (define-key evil-normal-state-map "zO" 'kirigami-open-fold-rec)
+    (define-key evil-normal-state-map "zc" 'kirigami-close-fold)
+    (define-key evil-normal-state-map "za" 'kirigami-toggle-fold)
+    (define-key evil-normal-state-map "zr" 'kirigami-open-folds)
+    (define-key evil-normal-state-map "zm" 'kirigami-close-folds)))
 
 (use-package which-key
   :init
@@ -421,7 +449,8 @@
   (olivetti-recall-visual-line-mode-entry-state t)
   :hook
   ((markdown-mode . olivetti-mode)
-   (org-mode . olivetti-mode)))
+   (org-mode . olivetti-mode)
+   (prog-mode . olivetti-mode)))
 
 (defun my/olivetti-only-when-single-window ()
   "Enable Olivetti mode only when there is a single window."
@@ -557,7 +586,8 @@
   :ensure t
   :custom
   (completion-styles '(orderless flex basic))
-  (completion-category-overrides '((file (styles orderless basic partial-completion)))))
+  (completion-category-overrides '((file (styles orderless basic partial-completion))))
+  (completion-ignore-case t))
 
 ;; Marginalia - annotations in the minibuffer (file size, docstrings, etc.)
 (use-package marginalia
@@ -599,12 +629,10 @@
 (use-package treesit-auto
   :ensure t
   :custom
-  (treesit-auto-install 'prompt)
+  (treesit-auto-install 'nil)
   :config
   (treesit-auto-add-to-auto-mode-alist 'all)
-  (global-treesit-auto-mode)
-  (setq treesit-language-source-alist
-        '((javascript "https://github.com/tree-sitter/tree-sitter-javascript"))))
+  (global-treesit-auto-mode))
 
 (use-package yasnippet
   :ensure t
@@ -614,6 +642,36 @@
 (use-package yasnippet-snippets
   :ensure (:host github :repo "AndreaCrotti/yasnippet-snippets")
   :after yasnippet)
+
+(use-package markdown-mode
+  :ensure t
+  :mode ("README\\.md\\'" . gfm-mode)
+  :init (setq markdown-command "multimarkdown")
+  :bind (:map markdown-mode-map
+              ("C-c C-e" . markdown-do)))
+
+(use-package lsp-bridge
+  :ensure '(lsp-bridge :type git
+                       :host github :repo "manateelazycat/lsp-bridge"
+                       :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+                       :build (:not compile))
+  :hook ((prog-mode org-mode org-src-mode LaTeX-mode) . lsp-bridge-mode)
+  :config (setq lsp-bridge-python-command "python")
+  :init (setq lsp-bridge-enable-diagnostics nil
+	      acm-enable-search-file-words t
+              acm-backend-search-sdcv-words-dictionary nil
+	      lsp-bridge-enable-signature-help t
+	      lsp-bridge-enable-hover-diagnostic t
+	      lsp-bridge-enable-auto-format-code nil
+	      lsp-bridge-enable-completion-in-minibuffer nil
+	      lsp-bridge-enable-log t
+	      lsp-bridge-enable-org-babel t
+	      lsp-bridge-use-popup t
+	      lsp-bridge-deferred-tick-time 0.01))
+
+(use-package python
+  :ensure t
+  :mode ("\\.py\\'" . python-mode))
 
 (use-package grease
   :ensure (:host github :repo "mwac-dev/grease.el")

@@ -27,3 +27,5 @@ emacs/bookmarks
 emacs/backups
 emacs/projectile-bookmarks.eld
 .projectile-cache.eld
+emacs/$null
+emacs/tree-sitter
