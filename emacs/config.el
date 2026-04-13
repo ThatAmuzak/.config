@@ -126,15 +126,6 @@
     "se" '(balance-windows :wk "Make splits equal size")
     "xs" '(evil-window-delete :wk "Close current split"))
 
-  ;; Evaluate
-  (amuzak/leader-keys
-    "e" '(:ignore t :wk "Evaluate")
-    "e b" '(eval-buffer :wk "Evaluate elisp in buffer")
-    "e d" '(eval-defun :wk "Evalute defun containing or after point")
-    "e e" '(eval-expression :wk "Evalute an elisp expression")
-    "e l" '(eval-last-sexp :wk "Evaluate elisp expression before point")
-    "e r" '(eval-region :wk "Evaluate elisp in region"))
-
   ;; Emacs Utils
   (amuzak/leader-keys
     "r r" '((lambda () (interactive) (load-file "~/.config/emacs/init.el")) :wk "Reload Emacs Config"))
@@ -148,6 +139,9 @@
     "n i" '(org-roam-node-insert :wk "Link to a Node")
     "n c" '(org-roam-capture :wk "Org Roam Capture")
     "n j" '(org-roam-dailies-capture-today :wk "Org Roam Daily Capture Today"))
+
+  (amuzak/leader-keys
+    "e" '(grease-toggle :wk "Open Grease Here"))
 
   ;; Task Management
   (amuzak/leader-keys
@@ -675,7 +669,9 @@
 
 (use-package grease
   :ensure (:host github :repo "mwac-dev/grease.el")
-  :commands (grease-open grease-toggle grease-here))
+  :commands (grease-open grease-toggle grease-here)
+  :hook (grease-mode . (lambda ()
+                         (define-key grease-mode-map (kbd "<backspace>") #'grease-up-directory))))
 
 (use-package undo-fu
   :elpaca t)
