@@ -29,3 +29,5 @@ emacs/projectile-bookmarks.eld
 .projectile-cache.eld
 emacs/$null
 emacs/tree-sitter
+emacs/.cache/lsp/lua-language-server
+emacs/.lsp-session-v1

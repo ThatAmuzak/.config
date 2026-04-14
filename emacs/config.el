@@ -42,6 +42,8 @@
   ;; Enable use-package :ensure support for Elpaca.
   (elpaca-use-package-mode))
 
+;; (setq use-package-always-ensure t)
+
 ;; Expands to: (elpaca evil (use-package evil :demand t))
 (use-package evil
   :ensure t
@@ -54,14 +56,15 @@
   (evil-mode)
   :config
   (evil-select-search-module 'evil-search-module 'evil-search)
+
   ;; QoL rebinds
   (define-key evil-normal-state-map "j" 'evil-next-visual-line)
   (define-key evil-normal-state-map "k" 'evil-previous-visual-line)
   (define-key evil-visual-state-map "j" 'evil-next-visual-line)
   (define-key evil-visual-state-map "k" 'evil-previous-visual-line)
   (define-key evil-visual-state-map (kbd "x") 'evil-delete)
-  (define-key evil-normal-state-map (kbd "C-d") (lambda () (interactive) (evil-scroll-down nil) (recenter)))
-  (define-key evil-normal-state-map (kbd "C-u") (lambda () (interactive) (evil-scroll-up nil) (recenter)))
+  (define-key evil-normal-state-map (kbd "C-d") (lambda () (interactive) (evil-scroll-down nil)))
+  (define-key evil-normal-state-map (kbd "C-u") (lambda () (interactive) (evil-scroll-up nil)))
   (define-key evil-normal-state-map "n" (lambda () (interactive) (evil-ex-search-next) (recenter)))
   (define-key evil-normal-state-map "N" (lambda () (interactive) (evil-ex-search-previous) (recenter)))
   (define-key evil-normal-state-map (kbd "<escape>") #'evil-ex-nohighlight)
@@ -70,13 +73,22 @@
   (define-key evil-normal-state-map (kbd "<down>") (lambda () (interactive) (evil-window-decrease-height 2)))
   (define-key evil-normal-state-map (kbd "<left>") (lambda () (interactive) (evil-window-decrease-width 2)))
   (define-key evil-normal-state-map (kbd "<right>") (lambda () (interactive) (evil-window-increase-width 2)))
-  (define-key evil-visual-state-map "<" (lambda () (interactive) (evil-shift-left (region-beginning) (region-end)) (evil-visual-restore)))
-  (define-key evil-visual-state-map ">" (lambda () (interactive) (evil-shift-right (region-beginning) (region-end)) (evil-visual-restore)))
+  (define-key evil-visual-state-map "<" 'evil-shift-left-line)
+  (define-key evil-visual-state-map ">" 'evil-shift-right-line)
   (define-key evil-visual-state-map "p" (lambda () (interactive) (evil-delete (region-beginning) (region-end) 'line ?_) (evil-paste-after nil)))
+
+  ;; window management
   (define-key evil-normal-state-map (kbd "C-k") 'evil-window-up)
   (define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
   (define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
   (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
+
+  ;; LSP Stuff
+  (define-key evil-normal-state-map (kbd "K") (lambda () (interactive) (lsp-ui-doc-glance)))
+  (define-key evil-normal-state-map (kbd "E") (lambda () (interactive) (when (bound-and-true-p flycheck-mode) (flycheck-display-error-at-point))))
+  (define-key evil-insert-state-map (kbd "C-k") 'lsp-signature-activate)
+
+  ;; DWIM in org on enter in normal mode
   (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
 
 (use-package evil-collection
@@ -128,7 +140,7 @@
 
   ;; Emacs Utils
   (amuzak/leader-keys
-    "r r" '((lambda () (interactive) (load-file "~/.config/emacs/init.el")) :wk "Reload Emacs Config"))
+    "r r" '(revert-buffer-quick :wk "Refresh Buffer"))
 
   ;; Org Roam
   (amuzak/leader-keys
@@ -139,6 +151,15 @@
     "n i" '(org-roam-node-insert :wk "Link to a Node")
     "n c" '(org-roam-capture :wk "Org Roam Capture")
     "n j" '(org-roam-dailies-capture-today :wk "Org Roam Daily Capture Today"))
+
+  ;; LSP
+  (amuzak/leader-keys
+    "c a" '(lsp-execute-code-action :wk "Code Actions")
+    "x x" '(flycheck-list-errors :wk "Open Quick Fix List")
+    "g d" '(lsp-find-definition :wk "Go to Definitions")
+    "g r" '(lsp-find-references :wk "Find References")
+    "r n" '(lsp-rename :wk "Find References")
+    )
 
   (amuzak/leader-keys
     "e" '(grease-toggle :wk "Open Grease Here"))
@@ -166,19 +187,19 @@
     "c b" (lambda () (interactive) (let ((vertico-posframe-mode nil)) (call-interactively #'consult-yank-from-kill-ring)))
     "w w" '((lambda () (interactive)
               (save-some-buffers t (lambda ()
-    				     (and (buffer-modified-p)
-    					  (not (string-match-p "\\*.*\\*" (buffer-name)))
-    					  (not (eq major-mode 'comint-mode)))))
+                                     (and (buffer-modified-p)
+                                          (not (string-match-p "\\*.*\\*" (buffer-name)))
+                                          (not (eq major-mode 'comint-mode)))))
               (message "All files saved"))
-    	    :wk "Save file(s)")
+            :wk "Save file(s)")
     "q q" '((lambda () (interactive)
               (save-some-buffers t (lambda ()
-    				     (and (buffer-modified-p)
-    					  (not (string-match-p "\\*.*\\*" (buffer-name)))
-    					  (not (eq major-mode 'comint-mode)))))
+                                     (and (buffer-modified-p)
+                                          (not (string-match-p "\\*.*\\*" (buffer-name)))
+                                          (not (eq major-mode 'comint-mode)))))
               (message "All files saved, exiting...")
               (kill-emacs))
-    	    :wk "Save all and quit"))
+            :wk "Save all and quit"))
 
   (general-define-key
    :states '(normal visual)
@@ -571,6 +592,7 @@
 
 ;; Persist history across sessions (vertico sorts by recency)
 (use-package savehist
+  :ensure nil
   :init
   (savehist-mode)
   (add-to-list 'savehist-additional-variables 'kill-ring))
@@ -612,6 +634,7 @@
   (dimmer-configure-posframe)
   (dimmer-configure-which-key)
   (dimmer-configure-org)
+  (dimmer-configure-company-box)
   (dimmer-mode t)
   :config
   (setq dimmer-fraction 0.40))
@@ -623,10 +646,31 @@
 (use-package treesit-auto
   :ensure t
   :custom
-  (treesit-auto-install 'nil)
+  (treesit-auto-install 't)
   :config
+  (setq treesit-auto-langs '(python csharp java lua clojure javascript typescript tsx c cpp bash css go rust yaml))
   (treesit-auto-add-to-auto-mode-alist 'all)
   (global-treesit-auto-mode))
+
+(setq treesit-font-lock-level 4)
+
+(setq treesit-language-source-alist
+      '((python "https://github.com/tree-sitter/tree-sitter-python" "v0.20.4")
+	(javascript "https://github.com/tree-sitter/tree-sitter-javascript" "v0.20.4" "src")
+	(typescript "https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src")
+	(tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src")
+	(csharp "https://github.com/tree-sitter/tree-sitter-c-sharp" "v0.20.0")
+	(elisp "https://github.com/Wilfred/tree-sitter-elisp" "1.5.0")
+	(java "https://github.com/tree-sitter/tree-sitter-java" "v0.20.0")
+	(lua "https://github.com/tree-sitter-grammars/tree-sitter-lua" "v0.3.0")
+	(css "https://github.com/tree-sitter/tree-sitter-css" "v0.21.1")
+	(go "https://github.com/tree-sitter/tree-sitter-go" "v0.21.0")
+	(rust "https://github.com/tree-sitter/tree-sitter-rust" "v0.20.2")
+	(bash "https://github.com/tree-sitter/tree-sitter-bash" "v0.20.2")
+	(c "https://github.com/tree-sitter/tree-sitter-c" "v0.20.6")
+	(cpp "https://github.com/tree-sitter/tree-sitter-cpp" "v0.20.5")
+	(yaml "https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0")
+	(toml "https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1")))
 
 (use-package yasnippet
   :ensure t
@@ -636,6 +680,71 @@
 (use-package yasnippet-snippets
   :ensure (:host github :repo "AndreaCrotti/yasnippet-snippets")
   :after yasnippet)
+
+(use-package lsp-mode
+  :ensure t
+  :commands (lsp lsp-deferred)
+  :hook ((prog-mode . lsp-deferred)) ;; keeping it prog mode enables it to activate for any language
+  :init
+  ;; performance
+  (setq gc-cons-threshold (* 100 1024 1024)
+        read-process-output-max (* 1 1024 1024))
+  :config
+
+  (setq lsp-enable-symbol-highlighting t
+        lsp-enable-on-type-formatting nil   ;; no auto format
+        lsp-idle-delay 0.3
+        lsp-headerline-breadcrumb-enable t)
+
+  ;; diagnostics
+  (setq lsp-diagnostics-provider :flycheck)
+
+  ;; completion
+  (setq lsp-completion-provider :capf))
+
+(use-package lsp-ui
+  :ensure t
+  :after lsp-mode
+  :hook (lsp-mode . lsp-ui-mode)
+  :config
+  (setq lsp-ui-doc-enable nil
+      lsp-signature-auto-activate nil
+      lsp-signature-render-documentation nil
+      lsp-enable-symbol-highlighting nil
+      lsp-ui-doc-show-with-cursor nil
+      lsp-ui-doc-show-with-mouse nil
+      lsp-eldoc-enable-hover nil
+      lsp-ui-sideline-enable nil
+      lsp-headerline-breadcrumb-enable nil
+      lsp-signature-auto-activate nil))
+
+(use-package company
+  :ensure t
+  :hook (after-init . global-company-mode)
+  :config
+  (setq company-minimum-prefix-length 1
+        company-idle-delay 0.0
+        company-tooltip-align-annotations t))
+
+(use-package company-box
+  :ensure t
+  :hook (company-mode . company-box-mode))
+
+(use-package flycheck
+  :ensure t
+  :hook (lsp-mode . flycheck-mode))
+
+(use-package apheleia
+  :ensure t
+  :config
+  (apheleia-global-mode +1)
+
+  ;; formatter definitions
+  (setf (alist-get 'ruff apheleia-formatters)
+        '("ruff" "format" "--stdin-filename" filepath "-"))
+
+  (setf (alist-get 'python-mode apheleia-mode-alist)
+        'ruff))
 
 (use-package markdown-mode
   :ensure t
@@ -649,7 +758,7 @@
                        :host github :repo "manateelazycat/lsp-bridge"
                        :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
                        :build (:not compile))
-  :hook ((prog-mode org-mode org-src-mode LaTeX-mode) . lsp-bridge-mode)
+  :hook ((org-mode org-src-mode LaTeX-mode) . lsp-bridge-mode)
   :config (setq lsp-bridge-python-command "python")
   :init (setq lsp-bridge-enable-diagnostics nil
 	      acm-enable-search-file-words t
@@ -665,7 +774,7 @@
 
 (use-package python
   :ensure t
-  :mode ("\\.py\\'" . python-mode))
+  :mode ("\\.py\\'" . python-ts-mode))
 
 (use-package grease
   :ensure (:host github :repo "mwac-dev/grease.el")
@@ -802,6 +911,9 @@
   :ensure t
   :init
   (projectile-mode +1))
+
+(use-package ripgrep
+  :ensure (:host github :repo "https://github.com/nlamirault/ripgrep.el"))
 
 (use-package flash
   :ensure t
