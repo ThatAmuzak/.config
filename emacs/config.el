@@ -1,4 +1,3 @@
-(setq debug-on-error t)
 (defvar elpaca-installer-version 0.12)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -86,7 +85,7 @@
   ;; LSP Stuff
   (define-key evil-normal-state-map (kbd "K") (lambda () (interactive) (lsp-ui-doc-glance)))
   (define-key evil-normal-state-map (kbd "E") (lambda () (interactive) (when (bound-and-true-p flycheck-mode) (flycheck-display-error-at-point))))
-  (define-key evil-insert-state-map (kbd "C-k") 'lsp-signature-activate)
+  (define-key evil-insert-state-map (kbd "C-k") (lambda () (interactive) (eldoc-box-help-at-point)))
 
   ;; DWIM in org on enter in normal mode
   (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
@@ -256,9 +255,9 @@
 
 ;; Setting the default font
 (set-face-attribute 'default nil
-		    :font "JetBrainsMono NFM"
-		    :height 110
-		    :weight 'medium)
+                    :font "JetBrainsMono NFM"
+                    :height 110
+                    :weight 'medium)
 ;; Setting font for variable pitch
 (set-face-attribute 'variable-pitch nil
                     :family (or (car (seq-filter
@@ -268,15 +267,15 @@
                     :height 140)
 ;;Setting font for fixed pitch
 (set-face-attribute 'fixed-pitch nil
-		    :font "JetBrainsMono NFM"
-		    :height 110
-		    :weight 'medium)
+                    :font "JetBrainsMono NFM"
+                    :height 110
+                    :weight 'medium)
 
 ;; Makes commented text and keywords  italics
 (set-face-attribute 'font-lock-comment-face nil
-		    :slant 'italic)
+                    :slant 'italic)
 (set-face-attribute 'font-lock-keyword-face nil
-		    :slant 'italic)
+                    :slant 'italic)
 
 (add-to-list 'default-frame-alist '(font . "JetBrainsMono NFM-11"))
 (setq-default line-spacing 0.12)
@@ -306,10 +305,22 @@
 (global-display-line-numbers-mode 1)
 (global-visual-line-mode t)
 
-(use-package darktooth-theme
-  :ensure (:host github :repo "emacsfodder/emacs-theme-darktooth")
+;; (use-package darktooth-theme
+;;   :ensure (:host github :repo "emacsfodder/emacs-theme-darktooth")
+;;   :config
+;;   (load-theme 'darktooth t))
+
+(use-package doom-themes
+  :ensure t
+  :custom
+  (doom-themes-enable-bold t)   ; if nil, bold is universally disabled
+  (doom-themes-enable-italic t) ; if nil, italics is universally disabled
   :config
-  (load-theme 'darktooth t))
+  (load-theme 'doom-bluloco-dark t)
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
 
 (use-package evil-goggles
   :ensure t
@@ -551,19 +562,25 @@
   (setq dashboard-display-icons-p t)
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
+  (setq dashboard-startup-banner "~/.config/emacs/EmacsDashboard.gif")
   (setq dashboard-projects-backend 'projectile)
+  (setq dashboard-banner-logo-title "Welcome Back, Boss")
+  (setq dashboard-set-init-info nil)
+  (setq dashboard-footer-icon "")
+  (setq dashboard-footer-messages '("Simplicity is the Ultimate Sophistication. Think Simple."))
   (setq dashboard-items '((recents . 5)
                           (agenda . 5)
                           (projects . 5)))
   (setq dashboard-agenda-sort-strategy '(time-up))
   :config
-  (add-hook 'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
-  (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
+  ;; (add-hook 'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
+  ;; (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
   (dashboard-setup-startup-hook))
 (with-eval-after-load 'dashboard
   (defun my/dashboard-replace-displayable (str)
     str)
-  (advice-add 'dashboard-replace-displayable :override #'my/dashboard-replace-displayable))
+  (advice-add 'dashboard-replace-displayable :override #'my/dashboard-replace-displayable)
+  (advice-add 'dashboard-insert-init-info :override #'ignore))
 
 (global-set-key (kbd "C-/") #'my/launch-shell)
 (defun my/launch-shell ()
@@ -656,21 +673,21 @@
 
 (setq treesit-language-source-alist
       '((python "https://github.com/tree-sitter/tree-sitter-python" "v0.20.4")
-	(javascript "https://github.com/tree-sitter/tree-sitter-javascript" "v0.20.4" "src")
-	(typescript "https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src")
-	(tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src")
-	(csharp "https://github.com/tree-sitter/tree-sitter-c-sharp" "v0.20.0")
-	(elisp "https://github.com/Wilfred/tree-sitter-elisp" "1.5.0")
-	(java "https://github.com/tree-sitter/tree-sitter-java" "v0.20.0")
-	(lua "https://github.com/tree-sitter-grammars/tree-sitter-lua" "v0.3.0")
-	(css "https://github.com/tree-sitter/tree-sitter-css" "v0.21.1")
-	(go "https://github.com/tree-sitter/tree-sitter-go" "v0.21.0")
-	(rust "https://github.com/tree-sitter/tree-sitter-rust" "v0.20.2")
-	(bash "https://github.com/tree-sitter/tree-sitter-bash" "v0.20.2")
-	(c "https://github.com/tree-sitter/tree-sitter-c" "v0.20.6")
-	(cpp "https://github.com/tree-sitter/tree-sitter-cpp" "v0.20.5")
-	(yaml "https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0")
-	(toml "https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1")))
+        (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "v0.20.4" "src")
+        (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src")
+        (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src")
+        (csharp "https://github.com/tree-sitter/tree-sitter-c-sharp" "v0.20.0")
+        (elisp "https://github.com/Wilfred/tree-sitter-elisp" "1.5.0")
+        (java "https://github.com/tree-sitter/tree-sitter-java" "v0.20.0")
+        (lua "https://github.com/tree-sitter-grammars/tree-sitter-lua" "v0.3.0")
+        (css "https://github.com/tree-sitter/tree-sitter-css" "v0.21.1")
+        (go "https://github.com/tree-sitter/tree-sitter-go" "v0.21.0")
+        (rust "https://github.com/tree-sitter/tree-sitter-rust" "v0.20.2")
+        (bash "https://github.com/tree-sitter/tree-sitter-bash" "v0.20.2")
+        (c "https://github.com/tree-sitter/tree-sitter-c" "v0.20.6")
+        (cpp "https://github.com/tree-sitter/tree-sitter-cpp" "v0.20.5")
+        (yaml "https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0")
+        (toml "https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1")))
 
 (use-package yasnippet
   :ensure t
@@ -707,16 +724,24 @@
   :after lsp-mode
   :hook (lsp-mode . lsp-ui-mode)
   :config
-  (setq lsp-ui-doc-enable nil
+  (setq lsp-ui-doc-enable t
       lsp-signature-auto-activate nil
       lsp-signature-render-documentation nil
       lsp-enable-symbol-highlighting nil
+      lsp-ui-doc-position 'at-point   ;; key setting
       lsp-ui-doc-show-with-cursor nil
       lsp-ui-doc-show-with-mouse nil
-      lsp-eldoc-enable-hover nil
+      lsp-eldoc-enable-hover t
       lsp-ui-sideline-enable nil
       lsp-headerline-breadcrumb-enable nil
       lsp-signature-auto-activate nil))
+
+(use-package eldoc-box
+  :ensure t
+  ;; :hook (eldoc-mode . eldoc-box-hover-at-point-mode)
+  :config (setq eldoc-box-max-pixel-width 800
+              eldoc-box-max-pixel-height 600
+              eldoc-box-clear-with-C-g t))
 
 (use-package company
   :ensure t
@@ -733,6 +758,12 @@
 (use-package flycheck
   :ensure t
   :hook (lsp-mode . flycheck-mode))
+
+(use-package flycheck-posframe
+  :ensure t
+  :hook (flycheck-mode . flycheck-posframe-mode)
+  :config
+  (setq flycheck-posframe-border-width 1))
 
 (use-package apheleia
   :ensure t
@@ -758,23 +789,28 @@
                        :host github :repo "manateelazycat/lsp-bridge"
                        :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
                        :build (:not compile))
-  :hook ((org-mode org-src-mode LaTeX-mode) . lsp-bridge-mode)
+  :hook ((org-src-mode LaTeX-mode) . lsp-bridge-mode)
   :config (setq lsp-bridge-python-command "python")
   :init (setq lsp-bridge-enable-diagnostics nil
-	      acm-enable-search-file-words t
+              acm-enable-search-file-words t
               acm-backend-search-sdcv-words-dictionary nil
-	      lsp-bridge-enable-signature-help t
-	      lsp-bridge-enable-hover-diagnostic t
-	      lsp-bridge-enable-auto-format-code nil
-	      lsp-bridge-enable-completion-in-minibuffer nil
-	      lsp-bridge-enable-log t
-	      lsp-bridge-enable-org-babel t
-	      lsp-bridge-use-popup t
-	      lsp-bridge-deferred-tick-time 0.01))
+              lsp-bridge-enable-signature-help t
+              lsp-bridge-enable-hover-diagnostic t
+              lsp-bridge-enable-auto-format-code nil
+              lsp-bridge-enable-completion-in-minibuffer nil
+              lsp-bridge-enable-log t
+              lsp-bridge-enable-org-babel t
+              lsp-bridge-use-popup t
+              lsp-bridge-deferred-tick-time 0.01))
 
-(use-package python
+(use-package lsp-pyright
   :ensure t
-  :mode ("\\.py\\'" . python-ts-mode))
+  :hook (python-mode . (lambda ()
+                         (require 'lsp-pyright)
+                         (lsp-deferred))))
+
+(use-package rust-mode
+  :hook (rust-mode . lsp-deferred))
 
 (use-package grease
   :ensure (:host github :repo "mwac-dev/grease.el")
