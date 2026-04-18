@@ -43,6 +43,7 @@
   - [[#disable-electric-indent][Disable Electric Indent]]
   - [[#fix-linting-if-scrolling-from-bottom][Fix Linting if scrolling from bottom]]
   - [[#collapse-properties-by-default][Collapse Properties by Default]]
+  - [[#better-inline-markers][Better Inline Markers]]
   - [[#automatic-code-blocks-per-language][Automatic Code Blocks Per Language]]
   - [[#org-bullets][Org Bullets]]
   - [[#modern-org][Modern Org]]
@@ -86,6 +87,7 @@
 ** Package Manager
 
 #+begin_src emacs-lisp
+
   (defvar elpaca-installer-version 0.12)
   (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
   (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -198,7 +200,12 @@
   ;;Note this will cause evaluate the declaration immediately. It is not deferred.
   ;;Useful for configuring built-in emacs features.
   (use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
-
+(with-eval-after-load 'evil
+  (advice-add 'forward-evil-paragraph :around
+    (lambda (orig &rest args)
+      (let ((paragraph-start (default-value 'paragraph-start))
+            (paragraph-separate (default-value 'paragraph-separate)))
+        (apply orig args)))))
 #+end_src
 
 ** General Keybindings
@@ -558,7 +565,7 @@ More icons
     (indent-bars-treesit-ignore-blank-lines-types '("module"))
     ;; Add other languages as needed; check the wiki
     (indent-bars-treesit-scope '((python function_definition class_definition for_statement
-  				       if_statement with_statement while_statement)))
+                                         if_statement with_statement while_statement)))
     :hook ((prog-mode) . indent-bars-mode))
 #+end_src
 
@@ -639,6 +646,20 @@ This doesn't really seem to work consistently, but whatever
   (setq org-startup-folded t)
 #+end_src
 
+** Better Inline Markers
+
+#+begin_src emacs-lisp
+  (setq org-hide-emphasis-markers t)
+  (use-package org-appear
+    :ensure t
+    :hook (org-mode . org-appear-mode))
+
+  (setq org-hide-emphasis-markers t)
+  (custom-set-faces
+   '(org-code ((t (:background "#2e3440" :foreground "#d8dee9" :box nil))))
+   '(org-verbatim ((t (:background "#2e3440" :foreground "#d8dee9" :box nil)))))
+#+end_src
+
 ** Automatic Code Blocks Per Language
 
 #+begin_src emacs-lisp
@@ -647,6 +668,7 @@ This doesn't really seem to work consistently, but whatever
   (add-to-list 'org-structure-template-alist '("se" . "src emacs-lisp"))
   (add-to-list 'org-structure-template-alist '("sp" . "src python"))
   (add-to-list 'org-structure-template-alist '("sr" . "src R"))
+  (add-to-list 'org-structure-template-alist '("ss" . "src sh"))
   (add-to-list 'org-structure-template-alist '("sc" . "src clojure"))
 #+end_src
 
@@ -777,11 +799,11 @@ This doesn't really seem to work consistently, but whatever
     :config
     (setq org-roam-dailies-directory "Journal/")
     (setq org-roam-dailies-capture-templates
-    	'(("d" "daily" plain "%?"
-    	   :target (file+head+olp "%<%Y-%m>.org"
-    				  "#+title: %<%Y-%m>\n"
-    				  ("%<%d>" "%<%H:%M>"))
-    	   :unnarrowed t)))
+        '(("d" "daily" plain "%?"
+           :target (file+head+olp "%<%Y-%m>.org"
+                                  "#+title: %<%Y-%m>\n"
+                                  ("%<%d>" "%<%H:%M>"))
+           :unnarrowed t)))
 
     (setq org-roam-capture-templates
           '(
@@ -799,6 +821,11 @@ This doesn't really seem to work consistently, but whatever
             ("p" "project"
              plain "%?"
              :if-new (file+head "Projects/${slug}.org" "#+title: ${title}\n#STARTUP: showeverything\n")
+             :unnarrowed t)
+
+            ("a" "artifact"
+             plain "%?"
+             :if-new (file+head "Artifacts/${slug}.org" "#+title: ${title}\n#STARTUP: showeverything\n")
              :unnarrowed t)
 
             ))

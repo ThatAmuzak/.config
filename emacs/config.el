@@ -44,68 +44,74 @@
 ;; (setq use-package-always-ensure t)
 
 ;; Expands to: (elpaca evil (use-package evil :demand t))
-(use-package evil
-  :ensure t
-  :demand t
-  :init
-  (setq evil-want-integration t)
-  (setq evil-want-keybinding nil)
-  (setq evil-vsplit-window-right t)
-  (setq evil-split-window-below t)
-  (evil-mode)
-  :config
-  (evil-select-search-module 'evil-search-module 'evil-search)
+  (use-package evil
+    :ensure t
+    :demand t
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    (setq evil-vsplit-window-right t)
+    (setq evil-split-window-below t)
+    (evil-mode)
+    :config
+    (evil-select-search-module 'evil-search-module 'evil-search)
 
-  ;; QoL rebinds
-  (define-key evil-normal-state-map "j" 'evil-next-visual-line)
-  (define-key evil-normal-state-map "k" 'evil-previous-visual-line)
-  (define-key evil-visual-state-map "j" 'evil-next-visual-line)
-  (define-key evil-visual-state-map "k" 'evil-previous-visual-line)
-  (define-key evil-visual-state-map (kbd "x") 'evil-delete)
-  (define-key evil-normal-state-map (kbd "C-d") (lambda () (interactive) (evil-scroll-down nil)))
-  (define-key evil-normal-state-map (kbd "C-u") (lambda () (interactive) (evil-scroll-up nil)))
-  (define-key evil-normal-state-map "n" (lambda () (interactive) (evil-ex-search-next) (recenter)))
-  (define-key evil-normal-state-map "N" (lambda () (interactive) (evil-ex-search-previous) (recenter)))
-  (define-key evil-normal-state-map (kbd "<escape>") #'evil-ex-nohighlight)
-  (define-key evil-normal-state-map "G" (lambda () (interactive) (evil-goto-line) (recenter)))
-  (define-key evil-normal-state-map (kbd "<up>") (lambda () (interactive) (evil-window-increase-height 2)))
-  (define-key evil-normal-state-map (kbd "<down>") (lambda () (interactive) (evil-window-decrease-height 2)))
-  (define-key evil-normal-state-map (kbd "<left>") (lambda () (interactive) (evil-window-decrease-width 2)))
-  (define-key evil-normal-state-map (kbd "<right>") (lambda () (interactive) (evil-window-increase-width 2)))
-  (define-key evil-visual-state-map "<" 'evil-shift-left-line)
-  (define-key evil-visual-state-map ">" 'evil-shift-right-line)
-  (define-key evil-visual-state-map "p" (lambda () (interactive) (evil-delete (region-beginning) (region-end) 'line ?_) (evil-paste-after nil)))
+    ;; QoL rebinds
+    (define-key evil-normal-state-map "j" 'evil-next-visual-line)
+    (define-key evil-normal-state-map "k" 'evil-previous-visual-line)
+    (define-key evil-visual-state-map "j" 'evil-next-visual-line)
+    (define-key evil-visual-state-map "k" 'evil-previous-visual-line)
+    (define-key evil-visual-state-map (kbd "x") 'evil-delete)
+    (define-key evil-normal-state-map (kbd "C-d") (lambda () (interactive) (evil-scroll-down nil)))
+    (define-key evil-normal-state-map (kbd "C-u") (lambda () (interactive) (evil-scroll-up nil)))
+    (define-key evil-normal-state-map "n" (lambda () (interactive) (evil-ex-search-next) (recenter)))
+    (define-key evil-normal-state-map "N" (lambda () (interactive) (evil-ex-search-previous) (recenter)))
+    (define-key evil-normal-state-map (kbd "<escape>") #'evil-ex-nohighlight)
+    (define-key evil-normal-state-map "G" (lambda () (interactive) (evil-goto-line) (recenter)))
+    (define-key evil-normal-state-map (kbd "<up>") (lambda () (interactive) (evil-window-increase-height 2)))
+    (define-key evil-normal-state-map (kbd "<down>") (lambda () (interactive) (evil-window-decrease-height 2)))
+    (define-key evil-normal-state-map (kbd "<left>") (lambda () (interactive) (evil-window-decrease-width 2)))
+    (define-key evil-normal-state-map (kbd "<right>") (lambda () (interactive) (evil-window-increase-width 2)))
+    (define-key evil-visual-state-map "<" 'evil-shift-left-line)
+    (define-key evil-visual-state-map ">" 'evil-shift-right-line)
+    (define-key evil-visual-state-map "p" (lambda () (interactive) (evil-delete (region-beginning) (region-end) 'line ?_) (evil-paste-after nil)))
 
-  ;; window management
-  (define-key evil-normal-state-map (kbd "C-k") 'evil-window-up)
-  (define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
-  (define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
-  (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
+    ;; window management
+    (define-key evil-normal-state-map (kbd "C-k") 'evil-window-up)
+    (define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
+    (define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
+    (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
 
-  ;; LSP Stuff
-  (define-key evil-normal-state-map (kbd "K") (lambda () (interactive) (lsp-ui-doc-glance)))
-  (define-key evil-normal-state-map (kbd "E") (lambda () (interactive) (when (bound-and-true-p flycheck-mode) (flycheck-display-error-at-point))))
-  (define-key evil-insert-state-map (kbd "C-k") (lambda () (interactive) (eldoc-box-help-at-point)))
+    ;; LSP Stuff
+    (define-key evil-normal-state-map (kbd "K") (lambda () (interactive) (lsp-ui-doc-glance)))
+    (define-key evil-normal-state-map (kbd "E") (lambda () (interactive) (when (bound-and-true-p flycheck-mode) (flycheck-display-error-at-point))))
+    (define-key evil-insert-state-map (kbd "C-k") (lambda () (interactive) (eldoc-box-help-at-point)))
 
-  ;; DWIM in org on enter in normal mode
-  (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
+    ;; DWIM in org on enter in normal mode
+    (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
 
-(use-package evil-collection
-  :ensure
-  :demand t
-  :after evil
-  :config
-  (setq evil-collection-mode-list '(dashboard dired ibuffer))
-  (evil-collection-init))
+  (use-package evil-collection
+    :ensure
+    :demand t
+    :after evil
+    :config
+    (setq evil-collection-mode-list '(dashboard dired ibuffer))
+    (evil-collection-init))
 
-(with-eval-after-load 'evil-maps
-  (define-key evil-motion-state-map (kbd "RET") nil)
-  (define-key evil-motion-state-map (kbd "TAB") nil))
+  (with-eval-after-load 'evil-maps
+    (define-key evil-motion-state-map (kbd "RET") nil)
+    (define-key evil-motion-state-map (kbd "TAB") nil))
 
-;;Turns off elpaca-use-package-mode current declaration
-;;Note this will cause evaluate the declaration immediately. It is not deferred.
-;;Useful for configuring built-in emacs features.
-(use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
+  ;;Turns off elpaca-use-package-mode current declaration
+  ;;Note this will cause evaluate the declaration immediately. It is not deferred.
+  ;;Useful for configuring built-in emacs features.
+  (use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
+(with-eval-after-load 'evil
+  (advice-add 'forward-evil-paragraph :around
+    (lambda (orig &rest args)
+      (let ((paragraph-start (default-value 'paragraph-start))
+            (paragraph-separate (default-value 'paragraph-separate)))
+        (apply orig args)))))
 
 (use-package general
   :ensure t
@@ -320,7 +326,8 @@
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
   ;; Corrects (and improves) org-mode's native fontification.
-  (doom-themes-org-config))
+  (doom-themes-org-config)
+  (set-face-foreground 'vertical-border "grey80"))
 
 (use-package evil-goggles
   :ensure t
@@ -355,7 +362,7 @@
   (indent-bars-treesit-ignore-blank-lines-types '("module"))
   ;; Add other languages as needed; check the wiki
   (indent-bars-treesit-scope '((python function_definition class_definition for_statement
-				       if_statement with_statement while_statement)))
+                                       if_statement with_statement while_statement)))
   :hook ((prog-mode) . indent-bars-mode))
 
 (use-package outline-indent
@@ -382,17 +389,17 @@
   (which-key-mode 1)
   :config
   (setq which-key-side-window-location 'bottom
-	which-key-sort-order #'which-key-key-order-alpha
-	which-key-sort-uppercase-first nil
-	which-key-add-column-padding 1
-	which-key-max-display-columns nil
-	which-key-min-display-lines 6
-	which-key-side-window-slot -10
-	which-key-side-window-max-height 0.2
-	which-key-idle-delay 0.8
-	which-key-max-description-length 50
-	which-key-allow-imprecise-window-fit nil
-	which-key-separator "  "))
+        which-key-sort-order #'which-key-key-order-alpha
+        which-key-sort-uppercase-first nil
+        which-key-add-column-padding 1
+        which-key-max-display-columns nil
+        which-key-min-display-lines 6
+        which-key-side-window-slot -10
+        which-key-side-window-max-height 0.2
+        which-key-idle-delay 0.8
+        which-key-max-description-length 50
+        which-key-allow-imprecise-window-fit nil
+        which-key-separator "  "))
 
 (use-package toc-org
   :ensure t
@@ -405,11 +412,22 @@
 
 (setq org-startup-folded t)
 
+(setq org-hide-emphasis-markers t)
+(use-package org-appear
+  :ensure t
+  :hook (org-mode . org-appear-mode))
+
+(setq org-hide-emphasis-markers t)
+(custom-set-faces
+ '(org-code ((t (:background "#2e3440" :foreground "#d8dee9" :box nil))))
+ '(org-verbatim ((t (:background "#2e3440" :foreground "#d8dee9" :box nil)))))
+
 (require 'org-tempo)
 
 (add-to-list 'org-structure-template-alist '("se" . "src emacs-lisp"))
 (add-to-list 'org-structure-template-alist '("sp" . "src python"))
 (add-to-list 'org-structure-template-alist '("sr" . "src R"))
+(add-to-list 'org-structure-template-alist '("ss" . "src sh"))
 (add-to-list 'org-structure-template-alist '("sc" . "src clojure"))
 
 (add-hook 'org-mode-hook 'org-indent-mode)
@@ -512,11 +530,11 @@
   :config
   (setq org-roam-dailies-directory "Journal/")
   (setq org-roam-dailies-capture-templates
-  	'(("d" "daily" plain "%?"
-  	   :target (file+head+olp "%<%Y-%m>.org"
-  				  "#+title: %<%Y-%m>\n"
-  				  ("%<%d>" "%<%H:%M>"))
-  	   :unnarrowed t)))
+      '(("d" "daily" plain "%?"
+         :target (file+head+olp "%<%Y-%m>.org"
+                                "#+title: %<%Y-%m>\n"
+                                ("%<%d>" "%<%H:%M>"))
+         :unnarrowed t)))
 
   (setq org-roam-capture-templates
         '(
@@ -534,6 +552,11 @@
           ("p" "project"
            plain "%?"
            :if-new (file+head "Projects/${slug}.org" "#+title: ${title}\n#STARTUP: showeverything\n")
+           :unnarrowed t)
+
+          ("a" "artifact"
+           plain "%?"
+           :if-new (file+head "Artifacts/${slug}.org" "#+title: ${title}\n#STARTUP: showeverything\n")
            :unnarrowed t)
 
           ))
