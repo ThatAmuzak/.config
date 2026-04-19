@@ -885,9 +885,6 @@
     (scroll-on-jump-with-scroll-advice-add evil-scroll-line-to-top)
     (scroll-on-jump-with-scroll-advice-add evil-scroll-line-to-bottom)))
 
-(use-package shrink-path
-  :ensure (:host gitlab :repo "bennya/shrink-path.el"))
-
 ;; Required for search match counts in the modeline
 (use-package anzu
   :ensure t
@@ -898,35 +895,14 @@
   :ensure t
   :after (evil anzu))
 
-(use-package doom-modeline
+(use-package telephone-line
   :ensure t
-  :init (doom-modeline-mode 1)
+  :init
+  (telephone-line-mode 1)
   :config
 
-  ;; ── Evil state tags (no "state" suffix) ────────────────────────────
-  (setq doom-modeline-modal t
-        doom-modeline-modal-icon nil  ; text only, no icon
-	doom-modeline-keystroke t
-        evil-normal-state-tag   " NORMAL "
-        evil-insert-state-tag   " INSERT "
-        evil-visual-state-tag   " VISUAL "
-        evil-replace-state-tag  " REPLACE "
-        evil-operator-state-tag " OPERATOR "
-        evil-motion-state-tag   " MOTION "
-        evil-emacs-state-tag    " EMACS ")
-
-  ;; ── State face colors ───────────────────────────────────────────────
-  (set-face-attribute 'doom-modeline-evil-normal-state   nil :foreground "#1e1e2e" :background "#cba6f7" :weight 'bold)
-  (set-face-attribute 'doom-modeline-evil-insert-state   nil :foreground "#1e1e2e" :background "#a6e3a1" :weight 'bold)
-  (set-face-attribute 'doom-modeline-evil-visual-state   nil :foreground "#1e1e2e" :background "#fab387" :weight 'bold)
-  (set-face-attribute 'doom-modeline-evil-replace-state  nil :foreground "#1e1e2e" :background "#f38ba8" :weight 'bold)
-  (set-face-attribute 'doom-modeline-evil-operator-state nil :foreground "#1e1e2e" :background "#f9e2af" :weight 'bold)
-  (set-face-attribute 'doom-modeline-evil-motion-state   nil :foreground "#1e1e2e" :background "#89b4fa" :weight 'bold)
-  (set-face-attribute 'doom-modeline-evil-emacs-state    nil :foreground "#1e1e2e" :background "#a6adc8" :weight 'bold)
-
-  (setq doom-modeline-position-column-line-format '("%l:%c"))
-
-  (doom-modeline-set-modeline 'my-modeline t))
+  (setq telephone-line-height 24)
+  (setq telephone-line-evil-use-short-tag nil))
 
 (use-package symbol-overlay
   :ensure t
