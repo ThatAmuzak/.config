@@ -23,6 +23,7 @@
   - [[#minibuffer-escape][Minibuffer escape]]
   - [[#set-backup-directory][Set backup directory]]
   - [[#remove-border][Remove Border]]
+  - [[#set-tab-width][Set Tab Width]]
 - [[#fonts][FONTS]]
   - [[#default-fonts][Default Fonts]]
   - [[#zooming-inout][Zooming In/Out]]
@@ -40,7 +41,6 @@
 - [[#which-key][WHICH-KEY]]
 - [[#org-mode][ORG MODE]]
   - [[#enabling-toc][Enabling ToC]]
-  - [[#disable-electric-indent][Disable Electric Indent]]
   - [[#fix-linting-if-scrolling-from-bottom][Fix Linting if scrolling from bottom]]
   - [[#collapse-properties-by-default][Collapse Properties by Default]]
   - [[#better-inline-markers][Better Inline Markers]]
@@ -50,6 +50,7 @@
   - [[#centering-org-mode][Centering Org Mode]]
   - [[#org-superstar][Org Superstar]]
   - [[#nicer-checkboxes][Nicer Checkboxes]]
+  - [[#org-download][Org Download]]
 - [[#note-taking][NOTE TAKING]]
   - [[#thoughs-and-tasks][Thoughs and Tasks]]
 - [[#dashboard][DASHBOARD]]
@@ -285,6 +286,7 @@
       "p a" '(projectile-add-known-project :wk "Add Project")
       "a" (lambda () (interactive) (evil-goto-first-line) (evil-visual-line) (evil-goto-line))
       "d d" '(dashboard-open :wk "Open Dashboard")
+      "i p" '(org-download-clipboard :wk "Paste image from Clipboard")
       "l g" '(my/launch-lazygit :wk "Launch LazyGit")
       "f f" '(flash-jump :wk "Flash to Target")
       "c b" (lambda () (interactive) (let ((vertico-posframe-mode nil)) (call-interactively #'consult-yank-from-kill-ring)))
@@ -410,6 +412,12 @@
   (setq default-frame-alist '((undecorated . t)))
   (add-to-list 'default-frame-alist '(drag-internal-border . 1))
   (add-to-list 'default-frame-alist '(internal-border-width . 5))
+#+end_src
+
+** Set Tab Width
+
+#+begin_src emacs-lisp
+(setq-default tab-width 4)
 #+end_src
 
 * FONTS
@@ -626,12 +634,6 @@ More icons
     :init (add-hook 'org-mode-hook 'toc-org-enable))
 #+end_src
 
-** Disable Electric Indent
-
-#+begin_src emacs-lisp
-  (electric-indent-mode -1)
-#+end_src
-
 ** Fix Linting if scrolling from bottom
 
 This doesn't really seem to work consistently, but whatever
@@ -785,6 +787,39 @@ This doesn't really seem to work consistently, but whatever
   (add-hook 'org-mode-hook #'my-org-checkbox-symbols)
 #+end_src
 
+** Org Download
+
+#+begin_src emacs-lisp
+(setenv "PATH"
+  (concat "C:/Program Files/ImageMagick-7.1.2-Q16-HDRI"
+          ";" (getenv "PATH")))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package org-download
+    :ensure t
+    :after org
+    :custom
+    (org-download-method 'directory)
+    (org-download-image-dir "images")
+    :config
+    (defun my/org-download-clipboard ()
+      "Paste image from clipboard using magick.exe on Windows."
+      (interactive)
+      (let* ((filename (concat (make-temp-name
+                                (concat (file-name-sans-extension (buffer-file-name))
+                                        "_"))
+                               ".png"))
+             (magick "C:/Program Files/ImageMagick-7.1.2-Q16-HDRI/magick.exe"))
+        (call-process magick nil nil nil "clipboard:" filename)
+        (if (file-exists-p filename)
+            (progn
+              (org-download-image filename)
+              (delete-file filename))
+          (user-error "No image in clipboard or magick failed"))))
+    (define-key org-mode-map (kbd "C-c v") #'my/org-download-clipboard))
+#+end_src
+
 * NOTE TAKING
 
 ** Thoughs and Tasks
@@ -820,12 +855,12 @@ This doesn't really seem to work consistently, but whatever
 
             ("p" "project"
              plain "%?"
-             :if-new (file+head "Projects/${slug}.org" "#+title: ${title}\n#STARTUP: showeverything\n")
+             :if-new (file+head "Projects/${slug}.org" "#+title: ${title}\n#+STARTUP: showeverything\n")
              :unnarrowed t)
 
             ("a" "artifact"
              plain "%?"
-             :if-new (file+head "Artifacts/${slug}.org" "#+title: ${title}\n#STARTUP: showeverything\n")
+             :if-new (file+head "Artifacts/${slug}.org" "#+title: ${title}\n#+STARTUP: showeverything\n")
              :unnarrowed t)
 
             ))
@@ -850,7 +885,7 @@ This doesn't really seem to work consistently, but whatever
           ("IN-PROGRESS"   . (:foreground "black" :background "#FFF4AD"           :weight bold))
           ("DONE"      . (:foreground "white" :background "#33b58e"    :weight bold))
           ("CANCELLED" . (:foreground "white" :background "DimGray"        :weight bold))
-  	))
+          ))
 #+end_src
 
 * DASHBOARD
@@ -1004,23 +1039,24 @@ Better M-x minibuffer
 Sources
 
 #+begin_src emacs-lisp
-  (setq treesit-language-source-alist
-        '((python "https://github.com/tree-sitter/tree-sitter-python" "v0.20.4")
-          (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "v0.20.4" "src")
-          (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src")
-          (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src")
-          (csharp "https://github.com/tree-sitter/tree-sitter-c-sharp" "v0.20.0")
-          (elisp "https://github.com/Wilfred/tree-sitter-elisp" "1.5.0")
-          (java "https://github.com/tree-sitter/tree-sitter-java" "v0.20.0")
-          (lua "https://github.com/tree-sitter-grammars/tree-sitter-lua" "v0.3.0")
-          (css "https://github.com/tree-sitter/tree-sitter-css" "v0.21.1")
-          (go "https://github.com/tree-sitter/tree-sitter-go" "v0.21.0")
-          (rust "https://github.com/tree-sitter/tree-sitter-rust" "v0.20.2")
-          (bash "https://github.com/tree-sitter/tree-sitter-bash" "v0.20.2")
-          (c "https://github.com/tree-sitter/tree-sitter-c" "v0.20.6")
-          (cpp "https://github.com/tree-sitter/tree-sitter-cpp" "v0.20.5")
-          (yaml "https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0")
-          (toml "https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1")))
+    (setq treesit-language-source-alist
+          '((python "https://github.com/tree-sitter/tree-sitter-python" "v0.20.4")
+            (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "v0.20.4" "src")
+            (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src")
+            (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src")
+            (csharp "https://github.com/tree-sitter/tree-sitter-c-sharp" "v0.20.0")
+            (elisp "https://github.com/Wilfred/tree-sitter-elisp" "1.5.0")
+            (java "https://github.com/tree-sitter/tree-sitter-java" "v0.20.0")
+            (lua "https://github.com/tree-sitter-grammars/tree-sitter-lua" "v0.3.0")
+            (css "https://github.com/tree-sitter/tree-sitter-css" "v0.21.1")
+            (go "https://github.com/tree-sitter/tree-sitter-go" "v0.21.0")
+            (rust "https://github.com/tree-sitter/tree-sitter-rust" "v0.20.2")
+            (bash "https://github.com/tree-sitter/tree-sitter-bash" "v0.20.2")
+            (c "https://github.com/tree-sitter/tree-sitter-c" "v0.20.6")
+            (cpp "https://github.com/tree-sitter/tree-sitter-cpp" "v0.20.5")
+            (yaml "https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0")
+            (toml "https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1")
+            (json5 "https://github.com/Joakker/tree-sitter-json5")))
 #+end_src
 
 ** Yasnippets

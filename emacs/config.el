@@ -187,6 +187,7 @@
     "p a" '(projectile-add-known-project :wk "Add Project")
     "a" (lambda () (interactive) (evil-goto-first-line) (evil-visual-line) (evil-goto-line))
     "d d" '(dashboard-open :wk "Open Dashboard")
+    "i p" '(org-download-clipboard :wk "Paste image from Clipboard")
     "l g" '(my/launch-lazygit :wk "Launch LazyGit")
     "f f" '(flash-jump :wk "Flash to Target")
     "c b" (lambda () (interactive) (let ((vertico-posframe-mode nil)) (call-interactively #'consult-yank-from-kill-ring)))
@@ -258,6 +259,8 @@
 (setq default-frame-alist '((undecorated . t)))
 (add-to-list 'default-frame-alist '(drag-internal-border . 1))
 (add-to-list 'default-frame-alist '(internal-border-width . 5))
+
+(setq-default tab-width 4)
 
 ;; Setting the default font
 (set-face-attribute 'default nil
@@ -406,8 +409,6 @@
   :commands toc-org-enable
   :init (add-hook 'org-mode-hook 'toc-org-enable))
 
-(electric-indent-mode -1)
-
 (add-hook 'org-mode-hook #'font-lock-fontify-buffer)
 
 (setq org-startup-folded t)
@@ -523,6 +524,33 @@
   (prettify-symbols-mode 1))
 (add-hook 'org-mode-hook #'my-org-checkbox-symbols)
 
+(setenv "PATH"
+  (concat "C:/Program Files/ImageMagick-7.1.2-Q16-HDRI"
+          ";" (getenv "PATH")))
+
+(use-package org-download
+  :ensure t
+  :after org
+  :custom
+  (org-download-method 'directory)
+  (org-download-image-dir "images")
+  :config
+  (defun my/org-download-clipboard ()
+    "Paste image from clipboard using magick.exe on Windows."
+    (interactive)
+    (let* ((filename (concat (make-temp-name
+                              (concat (file-name-sans-extension (buffer-file-name))
+                                      "_"))
+                             ".png"))
+           (magick "C:/Program Files/ImageMagick-7.1.2-Q16-HDRI/magick.exe"))
+      (call-process magick nil nil nil "clipboard:" filename)
+      (if (file-exists-p filename)
+          (progn
+            (org-download-image filename)
+            (delete-file filename))
+        (user-error "No image in clipboard or magick failed"))))
+  (define-key org-mode-map (kbd "C-c v") #'my/org-download-clipboard))
+
 (use-package org-roam
   :ensure t
   :custom
@@ -551,12 +579,12 @@
 
           ("p" "project"
            plain "%?"
-           :if-new (file+head "Projects/${slug}.org" "#+title: ${title}\n#STARTUP: showeverything\n")
+           :if-new (file+head "Projects/${slug}.org" "#+title: ${title}\n#+STARTUP: showeverything\n")
            :unnarrowed t)
 
           ("a" "artifact"
            plain "%?"
-           :if-new (file+head "Artifacts/${slug}.org" "#+title: ${title}\n#STARTUP: showeverything\n")
+           :if-new (file+head "Artifacts/${slug}.org" "#+title: ${title}\n#+STARTUP: showeverything\n")
            :unnarrowed t)
 
           ))
@@ -573,7 +601,7 @@
         ("IN-PROGRESS"   . (:foreground "black" :background "#FFF4AD"           :weight bold))
         ("DONE"      . (:foreground "white" :background "#33b58e"    :weight bold))
         ("CANCELLED" . (:foreground "white" :background "DimGray"        :weight bold))
-	))
+        ))
 
 (set-language-environment "UTF-8")
 (use-package dashboard
@@ -710,7 +738,8 @@
         (c "https://github.com/tree-sitter/tree-sitter-c" "v0.20.6")
         (cpp "https://github.com/tree-sitter/tree-sitter-cpp" "v0.20.5")
         (yaml "https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0")
-        (toml "https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1")))
+        (toml "https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1")
+        (json5 "https://github.com/Joakker/tree-sitter-json5")))
 
 (use-package yasnippet
   :ensure t
