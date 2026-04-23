@@ -286,7 +286,7 @@
       "p a" '(projectile-add-known-project :wk "Add Project")
       "a" (lambda () (interactive) (evil-goto-first-line) (evil-visual-line) (evil-goto-line))
       "d d" '(dashboard-open :wk "Open Dashboard")
-      "i p" '(org-download-clipboard :wk "Paste image from Clipboard")
+      "i p" '(org-download-screenshot :wk "Paste image from Clipboard")
       "l g" '(my/launch-lazygit :wk "Launch LazyGit")
       "f f" '(flash-jump :wk "Flash to Target")
       "c b" (lambda () (interactive) (let ((vertico-posframe-mode nil)) (call-interactively #'consult-yank-from-kill-ring)))
@@ -790,34 +790,17 @@ This doesn't really seem to work consistently, but whatever
 ** Org Download
 
 #+begin_src emacs-lisp
-(setenv "PATH"
-  (concat "C:/Program Files/ImageMagick-7.1.2-Q16-HDRI"
-          ";" (getenv "PATH")))
-#+end_src
-
-#+begin_src emacs-lisp
   (use-package org-download
-    :ensure t
+    :ensure (:host github :repo "abo-abo/org-download")
     :after org
     :custom
     (org-download-method 'directory)
-    (org-download-image-dir "images")
+    (org-download-image-dir "./images")
+    (org-download-screenshot-method
+     "powershell -command \"(Get-Clipboard -Format Image).Save('%s')\"")
+    (org-download-annotate-function (lambda (_link) ""))
     :config
-    (defun my/org-download-clipboard ()
-      "Paste image from clipboard using magick.exe on Windows."
-      (interactive)
-      (let* ((filename (concat (make-temp-name
-                                (concat (file-name-sans-extension (buffer-file-name))
-                                        "_"))
-                               ".png"))
-             (magick "C:/Program Files/ImageMagick-7.1.2-Q16-HDRI/magick.exe"))
-        (call-process magick nil nil nil "clipboard:" filename)
-        (if (file-exists-p filename)
-            (progn
-              (org-download-image filename)
-              (delete-file filename))
-          (user-error "No image in clipboard or magick failed"))))
-    (define-key org-mode-map (kbd "C-c v") #'my/org-download-clipboard))
+    (add-hook 'dired-mode-hook 'org-download-enable))
 #+end_src
 
 * NOTE TAKING
@@ -1318,6 +1301,15 @@ Animated scrolling. Nice when working with others and they need to visually see 
       (scroll-on-jump-with-scroll-advice-add evil-scroll-line-to-center)
       (scroll-on-jump-with-scroll-advice-add evil-scroll-line-to-top)
       (scroll-on-jump-with-scroll-advice-add evil-scroll-line-to-bottom)))
+#+end_src
+
+Also just nicer scroll for normal scrolling
+
+#+begin_src emacs-lisp
+(use-package good-scroll
+  :ensure t
+  :config
+  (good-scroll-mode 1))
 #+end_src
 
 ** Modeline

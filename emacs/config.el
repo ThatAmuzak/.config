@@ -524,32 +524,16 @@
   (prettify-symbols-mode 1))
 (add-hook 'org-mode-hook #'my-org-checkbox-symbols)
 
-(setenv "PATH"
-  (concat "C:/Program Files/ImageMagick-7.1.2-Q16-HDRI"
-          ";" (getenv "PATH")))
-
 (use-package org-download
-  :ensure t
+  :ensure (:host github :repo "abo-abo/org-download")
   :after org
   :custom
   (org-download-method 'directory)
-  (org-download-image-dir "images")
+  (org-download-image-dir "~/org/images")
+  (org-download-screenshot-method
+   "powershell -command \"(Get-Clipboard -Format Image).Save('%s')\"")
   :config
-  (defun my/org-download-clipboard ()
-    "Paste image from clipboard using magick.exe on Windows."
-    (interactive)
-    (let* ((filename (concat (make-temp-name
-                              (concat (file-name-sans-extension (buffer-file-name))
-                                      "_"))
-                             ".png"))
-           (magick "C:/Program Files/ImageMagick-7.1.2-Q16-HDRI/magick.exe"))
-      (call-process magick nil nil nil "clipboard:" filename)
-      (if (file-exists-p filename)
-          (progn
-            (org-download-image filename)
-            (delete-file filename))
-        (user-error "No image in clipboard or magick failed"))))
-  (define-key org-mode-map (kbd "C-c v") #'my/org-download-clipboard))
+  (add-hook 'dired-mode-hook 'org-download-enable))
 
 (use-package org-roam
   :ensure t
