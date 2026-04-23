@@ -187,7 +187,7 @@
     "p a" '(projectile-add-known-project :wk "Add Project")
     "a" (lambda () (interactive) (evil-goto-first-line) (evil-visual-line) (evil-goto-line))
     "d d" '(dashboard-open :wk "Open Dashboard")
-    "i p" '(org-download-clipboard :wk "Paste image from Clipboard")
+    "i p" '(org-download-screenshot :wk "Paste image from Clipboard")
     "l g" '(my/launch-lazygit :wk "Launch LazyGit")
     "f f" '(flash-jump :wk "Flash to Target")
     "c b" (lambda () (interactive) (let ((vertico-posframe-mode nil)) (call-interactively #'consult-yank-from-kill-ring)))
@@ -223,6 +223,7 @@
                 (replace-match "\n")))))
 
 (global-auto-revert-mode 1)
+(setq auto-revert-interval 0.5)
 (setq global-auto-revert-non-file-buffers t)
 (setq auto-revert-verbose nil)
 
@@ -529,11 +530,15 @@
   :after org
   :custom
   (org-download-method 'directory)
-  (org-download-image-dir "~/org/images")
+  (org-download-image-dir "./images")
+  ;; this is specifically a windows only solution
   (org-download-screenshot-method
    "powershell -command \"(Get-Clipboard -Format Image).Save('%s')\"")
+  (org-download-annotate-function (lambda (_link) ""))
   :config
   (add-hook 'dired-mode-hook 'org-download-enable))
+
+(setq org-startup-with-inline-images t)
 
 (use-package org-roam
   :ensure t
@@ -897,6 +902,11 @@
     (scroll-on-jump-with-scroll-advice-add evil-scroll-line-to-center)
     (scroll-on-jump-with-scroll-advice-add evil-scroll-line-to-top)
     (scroll-on-jump-with-scroll-advice-add evil-scroll-line-to-bottom)))
+
+(use-package good-scroll
+  :ensure t
+  :config
+  (good-scroll-mode 1))
 
 ;; Required for search match counts in the modeline
 (use-package anzu

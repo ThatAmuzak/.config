@@ -339,6 +339,7 @@
 
 #+begin_src emacs-lisp
   (global-auto-revert-mode 1)
+  (setq auto-revert-interval 0.5)
   (setq global-auto-revert-non-file-buffers t)
   (setq auto-revert-verbose nil)
 #+end_src
@@ -796,11 +797,18 @@ This doesn't really seem to work consistently, but whatever
     :custom
     (org-download-method 'directory)
     (org-download-image-dir "./images")
+    ;; this is specifically a windows only solution
     (org-download-screenshot-method
      "powershell -command \"(Get-Clipboard -Format Image).Save('%s')\"")
     (org-download-annotate-function (lambda (_link) ""))
     :config
     (add-hook 'dired-mode-hook 'org-download-enable))
+#+end_src
+
+Also enables inline images to be enabled by default
+
+#+begin_src emacs-lisp
+(setq org-startup-with-inline-images t)
 #+end_src
 
 * NOTE TAKING
