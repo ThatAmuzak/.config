@@ -85,6 +85,7 @@
   - [[#flash][Flash]]
   - [[#git-gutter][Git Gutter]]
   - [[#helpful][Helpful]]
+  - [[#multiple-cursors][Multiple Cursors]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
 
@@ -279,6 +280,17 @@
       "t d" '(org-deadline :wk "Set Deadline")
       "t c" '(org-toggle-checkbox :wk "Toggle Checkbox")
       "t a" '(org-agenda :wk "Org Agenda"))
+
+    (amuzak/leader-keys
+      "m" '(:ignore t :wk "Multiple Cursors")
+      "m a" '(evil-mc-make-all-cursors :wk "Cursor at all matches of word")
+      "m m" '(evil-mc-make-and-goto-next-match :wk "Make cursor + Go to next match")
+      "m M" '(evil-mc-make-and-goto-prev-match :wk "Make cursor + Go to prev match")
+      "m s" '(evil-mc-skip-and-goto-next-match :wk "Skip Current + Go to next match")
+      "m S" '(evil-mc-skip-and-goto-prev-match :wk "Skip Current + Go to next match")
+      "m c" '(evil-mc-make-cursor-here :wk "Create cursor at current point")
+      "m u" '(evil-mc-undo-last-added-cursor :wk "Undo last cursor created")
+      "m q" '(evil-mc-undo-all-cursors :wk "Clear all cursors"))
 
     ;; Misc
     (amuzak/leader-keys
@@ -718,9 +730,9 @@ This doesn't really seem to work consistently, but whatever
     (defun svg-progress-percent (value)
       (svg-image (svg-lib-concat
                   (svg-lib-progress-bar (/ (string-to-number value) 100.0)
-                                        nil :margin 0 :stroke 2 :radius 3 :padding 2 :width 11)
+                                        nil :margin 1 :stroke 2 :radius 3 :padding 2 :width 11)
                   (svg-lib-tag (concat value "%")
-                               nil :stroke 0 :margin 0)) :ascent 'center))
+                               nil :stroke 0 :margin 1)) :ascent 'center))
 
     (defun svg-progress-count (value)
       (let* ((seq (mapcar #'string-to-number (split-string value "/")))
@@ -728,9 +740,9 @@ This doesn't really seem to work consistently, but whatever
              (total (float (cadr seq))))
         (svg-image (svg-lib-concat
                     (svg-lib-progress-bar (/ count total) nil
-                                          :margin 0 :stroke 2 :radius 3 :padding 2 :width 11)
+                                          :margin 1 :stroke 2 :radius 3 :padding 2 :width 11)
                     (svg-lib-tag value nil
-                                 :stroke 0 :margin 0)) :ascent 'center)))
+                                 :stroke 0 :margin 1)) :ascent 'center)))
     (setq svg-tag-tags
           `(
             ;; Task priority
@@ -758,26 +770,26 @@ This doesn't really seem to work consistently, but whatever
             ;; Active date (with or without day name, with or without time)
             (,(format "\\(<%s>\\)" date-re) .
              ((lambda (tag)
-                (svg-tag-make tag :beg 1 :end -1 :margin 0))))
+                (svg-tag-make tag :beg 1 :end -1 :margin 1))))
             (,(format "\\(<%s \\)%s>" date-re day-time-re) .
              ((lambda (tag)
-                (svg-tag-make tag :beg 1 :inverse nil :crop-right t :margin 0))))
+                (svg-tag-make tag :beg 1 :inverse nil :crop-right t :margin 1))))
             (,(format "<%s \\(%s>\\)" date-re day-time-re) .
              ((lambda (tag)
-                (svg-tag-make tag :end -1 :inverse t :crop-left t :margin 0))))
+                (svg-tag-make tag :end -1 :inverse t :crop-left t :margin 1))))
 
             ;; Inactive date  (with or without day name, with or without time)
             (,(format "\\(\\[%s\\]\\)" date-re) .
              ((lambda (tag)
-                (svg-tag-make tag :beg 1 :end -1 :margin 0 :face 'org-date))))
+                (svg-tag-make tag :beg 1 :end -1 :margin 1 :face 'org-date))))
             (,(format "\\(\\[%s \\)%s\\]" date-re day-time-re) .
              ((lambda (tag)
                 (svg-tag-make tag :beg 1 :inverse nil
-                              :crop-right t :margin 0 :face 'org-date))))
+                              :crop-right t :margin 1 :face 'org-date))))
             (,(format "\\[%s \\(%s\\]\\)" date-re day-time-re) .
              ((lambda (tag)
                 (svg-tag-make tag :end -1 :inverse t
-                              :crop-left t :margin 0 :face 'org-date)))))))
+                              :crop-left t :margin 1 :face 'org-date)))))))
 
   (add-hook 'org-mode-hook 'svg-tag-mode)
 
@@ -1002,7 +1014,6 @@ Also enables inline images to be enabled by default
 * DASHBOARD
 
 #+begin_src emacs-lisp
-  (set-language-environment "UTF-8")
   (use-package dashboard
     :ensure t
     :after nerd-icons
@@ -1016,6 +1027,9 @@ Also enables inline images to be enabled by default
     (setq dashboard-projects-backend 'projectile)
     (setq dashboard-banner-logo-title "Welcome Back, Boss")
     (setq dashboard-set-init-info nil)
+    (setq dashboard-item-names
+          '(("Agenda for the coming week:" . "Agenda")
+            ("Agenda for today:" . "Agenda")))
     (setq dashboard-footer-icon "")
     (setq dashboard-footer-messages '("Simplicity is the Ultimate Sophistication. Think Simple."))
     (setq dashboard-filter-agenda-entry 'dashboard-no-filter-agenda)
@@ -1032,6 +1046,35 @@ Also enables inline images to be enabled by default
       str)
     (advice-add 'dashboard-replace-displayable :override #'my/dashboard-replace-displayable)
     (advice-add 'dashboard-insert-init-info :override #'ignore))
+  (with-eval-after-load 'dashboard
+    (defface my/dashboard-agenda-date
+      '((t :background "#3d2b5e" :foreground "#e0c0ff" :inherit default))
+      "Face for relative date in dashboard agenda.")
+
+    (defun my/dashboard-agenda--formatted-time ()
+      "Return a relative date string for the current agenda entry."
+      (let* ((ts (or (org-entry-get (point) "SCHEDULED")
+                     (org-entry-get (point) "DEADLINE")))
+             (time   (and ts (org-time-string-to-time ts)))
+             (now    (decode-time (current-time)))
+             (today  (encode-time 0 0 0 (nth 3 now) (nth 4 now) (nth 5 now)))
+             (target (and time
+                          (let ((d (decode-time time)))
+                            (encode-time 0 0 0 (nth 3 d) (nth 4 d) (nth 5 d)))))
+             (diff   (and target
+                          (round (/ (float-time (time-subtract target today))
+                                    86400))))
+             (label  (if (not diff) ""
+                       (cond
+                        ((= diff  0)  "today")
+                        ((= diff  1)  "tomorrow")
+                        ((= diff -1)  "yesterday")
+                        ((> diff  0)  (format "in %d days" diff))
+                        (t            (format "%d days ago" (abs diff)))))))
+        (propertize label 'face 'my/dashboard-agenda-date)))
+
+    (advice-add 'dashboard-agenda--formatted-time
+                :override #'my/dashboard-agenda--formatted-time))
 #+end_src
 
 * TERMINAL
@@ -1586,4 +1629,15 @@ Highlight matching symbols in buffer
 #+begin_src emacs-lisp
   (use-package helpful
     :ensure t)
+#+end_src
+
+** Multiple Cursors
+
+#+begin_src emacs-lisp
+  (use-package evil-mc
+    :ensure (:host github :repo "gabesoft/evil-mc")
+    :after evil
+    :config
+    (global-evil-mc-mode 1)
+    (setq evil-mc-key-map nil))
 #+end_src
