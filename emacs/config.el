@@ -213,6 +213,13 @@
 
 (electric-pair-mode 1)
 
+;; Ignore angular brackets since that helps with code blocks
+(setq electric-pair-inhibit-predicate
+      (lambda (char)
+        (if (char-equal char ?<)
+            t
+          (electric-pair-default-inhibit char))))
+
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
 (add-hook 'before-save-hook
@@ -347,17 +354,6 @@
 (setq scroll-margin 5)
 (pixel-scroll-precision-mode 1)
 
-(use-package holo-layer
-  :ensure (:host github :repo "manateelazycat/holo-layer")
-  :init
-  (setq holo-layer-python-command "~/scoop/apps/python/current/python.exe")
-  (setq holo-layer-python-file
-        (expand-file-name "elpaca/sources/holo-layer/holo_layer.py"
-                          user-emacs-directory))
-  (setq holo-layer-enable-cursor-animation t)
-  :config
-  (holo-layer-enable))
-
 (use-package indent-bars
   :ensure t
   :custom
@@ -415,14 +411,20 @@
 (setq org-startup-folded t)
 
 (setq org-hide-emphasis-markers t)
-(use-package org-appear
-  :ensure t
-  :hook (org-mode . org-appear-mode))
+  (use-package org-appear
+:ensure t
+    :commands (org-appear-mode)
+    :hook     (org-mode . org-appear-mode)
+    :config
+    (setq org-hide-emphasis-markers t)  ; Must be activated for org-appear to work
+    (setq org-appear-autoemphasis   t   ; Show bold, italics, verbatim, etc.
+                org-appear-autolinks      t   ; Show links
+                org-appear-autosubmarkers t))
 
-(setq org-hide-emphasis-markers t)
-(custom-set-faces
- '(org-code ((t (:background "#2e3440" :foreground "#d8dee9" :box nil))))
- '(org-verbatim ((t (:background "#2e3440" :foreground "#d8dee9" :box nil)))))
+  (setq org-hide-emphasis-markers t)
+  (custom-set-faces
+   '(org-code ((t (:background "#2e3440" :foreground "#d8dee9" :box nil))))
+   '(org-verbatim ((t (:background "#2e3440" :foreground "#d8dee9" :box nil)))))
 
 (require 'org-tempo)
 
@@ -436,6 +438,92 @@
 (use-package org-bullets
   :ensure t)
 (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+
+(setq org-log-done                       t
+        org-auto-align-tags                t
+        org-tags-column                    -80
+        org-fold-catch-invisible-edits     'show-and-error
+        org-special-ctrl-a/e               t
+        org-insert-heading-respect-content t)
+
+(plist-put org-format-latex-options :scale 1.35)
+(use-package org-fragtog
+  :ensure t
+  :hook (org-mode-hook . org-fragtog-mode))
+
+(use-package svg-tag-mode
+  :ensure t
+  :config
+  (defconst date-re "[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}")
+  (defconst time-re "[0-9]\\{2\\}:[0-9]\\{2\\}")
+  (defconst day-re "[A-Za-z]\\{3\\}")
+  (defconst day-time-re (format "\\(%s\\)? ?\\(%s\\)?" day-re time-re))
+
+  (defun svg-progress-percent (value)
+    (svg-image (svg-lib-concat
+                (svg-lib-progress-bar (/ (string-to-number value) 100.0)
+                                      nil :margin 0 :stroke 2 :radius 3 :padding 2 :width 11)
+                (svg-lib-tag (concat value "%")
+                             nil :stroke 0 :margin 0)) :ascent 'center))
+
+  (defun svg-progress-count (value)
+    (let* ((seq (mapcar #'string-to-number (split-string value "/")))
+           (count (float (car seq)))
+           (total (float (cadr seq))))
+      (svg-image (svg-lib-concat
+                  (svg-lib-progress-bar (/ count total) nil
+                                        :margin 0 :stroke 2 :radius 3 :padding 2 :width 11)
+                  (svg-lib-tag value nil
+                               :stroke 0 :margin 0)) :ascent 'center)))
+  (setq svg-tag-tags
+        `(
+          ;; Task priority
+          ("\\[#[A-Z]\\]" . ( (lambda (tag)
+                                (svg-tag-make tag :face 'org-priority
+                                              :beg 2 :end -1 :margin 0))))
+
+          ;; Progress
+          ("\\(\\[[0-9]\\{1,3\\}%\\]\\)" . ((lambda (tag)
+                                              (svg-progress-percent (substring tag 1 -2)))))
+          ("\\(\\[[0-9]+/[0-9]+\\]\\)" . ((lambda (tag)
+                                            (svg-progress-count (substring tag 1 -1)))))
+
+          ;; Citation of the form [cite:@Knuth:1984]
+          ("\\(\\[cite:@[A-Za-z]+:\\)" . ((lambda (tag)
+                                            (svg-tag-make tag
+                                                          :inverse t
+                                                          :beg 7 :end -1
+                                                          :crop-right t))))
+          ("\\[cite:@[A-Za-z]+:\\([0-9]+\\]\\)" . ((lambda (tag)
+                                                     (svg-tag-make tag
+                                                                   :end -1
+                                                                   :crop-left t))))
+
+          ;; Active date (with or without day name, with or without time)
+          (,(format "\\(<%s>\\)" date-re) .
+           ((lambda (tag)
+              (svg-tag-make tag :beg 1 :end -1 :margin 0))))
+          (,(format "\\(<%s \\)%s>" date-re day-time-re) .
+           ((lambda (tag)
+              (svg-tag-make tag :beg 1 :inverse nil :crop-right t :margin 0))))
+          (,(format "<%s \\(%s>\\)" date-re day-time-re) .
+           ((lambda (tag)
+              (svg-tag-make tag :end -1 :inverse t :crop-left t :margin 0))))
+
+          ;; Inactive date  (with or without day name, with or without time)
+          (,(format "\\(\\[%s\\]\\)" date-re) .
+           ((lambda (tag)
+              (svg-tag-make tag :beg 1 :end -1 :margin 0 :face 'org-date))))
+          (,(format "\\(\\[%s \\)%s\\]" date-re day-time-re) .
+           ((lambda (tag)
+              (svg-tag-make tag :beg 1 :inverse nil
+                            :crop-right t :margin 0 :face 'org-date))))
+          (,(format "\\[%s \\(%s\\]\\)" date-re day-time-re) .
+           ((lambda (tag)
+              (svg-tag-make tag :end -1 :inverse t
+                            :crop-left t :margin 0 :face 'org-date)))))))
+
+(add-hook 'org-mode-hook 'svg-tag-mode)
 
 (use-package org-modern
   :ensure t
@@ -452,7 +540,7 @@
   (set-face-background 'org-block (color-darken-name (face-attribute 'default :background) 30))
   (setq org-modern-hide-stars " ")
   (setq org-modern-fold-stars
-	'(("" . "")
+      '(("" . "")
           ("" . "")
           ("" . "")
           ("󰮺" . "󰮷")
@@ -467,7 +555,6 @@
    org-modern-tag nil
    org-modern-priority nil
    org-modern-todo nil
-   org-modern-table nil
    org-ellipsis " "
    org-modern-block-fringe nil
    org-modern-priority
@@ -517,13 +604,35 @@
                                           ("IN-PROGRESS" . 9744)
                                           ("CANCELLED" . 9744))))
 
-(defun my-org-checkbox-symbols ()
-  (setq-local prettify-symbols-alist
-              '(("[ ]" . "☐")
-                ("[X]" . "󰸞")
-                ("[-]" . "󰜥")))
-  (prettify-symbols-mode 1))
-(add-hook 'org-mode-hook #'my-org-checkbox-symbols)
+(defun my/prettify-symbols-setup ()
+  (push '("[ ]" . "") prettify-symbols-alist)
+  (push '("[X]" . "") prettify-symbols-alist)
+  (push '("[-]" . "" ) prettify-symbols-alist)
+
+  (push '("#+BEGIN_SRC" . ?≫) prettify-symbols-alist)
+  (push '("#+END_SRC" . ?≫) prettify-symbols-alist)
+  (push '("#+begin_src" . ?≫) prettify-symbols-alist)
+  (push '("#+end_src" . ?≫) prettify-symbols-alist)
+
+  (push '("#+BEGIN_QUOTE" . ?❝) prettify-symbols-alist)
+  (push '("#+END_QUOTE" . ?❞) prettify-symbols-alist)
+
+  (push '(":PROPERTIES:" . "") prettify-symbols-alist)
+
+  (push '(":projects:" . "") prettify-symbols-alist)
+  (push '(":work:"     . "") prettify-symbols-alist)
+  (push '(":inbox:"    . "") prettify-symbols-alist)
+  (push '(":task:"     . "") prettify-symbols-alist)
+  (push '(":thesis:"   . "") prettify-symbols-alist)
+  (push '(":uio:"      . "") prettify-symbols-alist)
+  (push '(":emacs:"    . "") prettify-symbols-alist)
+  (push '(":learn:"    . "") prettify-symbols-alist)
+  (push '(":code:"     . "") prettify-symbols-alist)
+
+  (prettify-symbols-mode))
+
+(add-hook 'org-mode-hook        #'my/prettify-symbols-setup)
+(add-hook 'org-agenda-mode-hook #'my/prettify-symbols-setup)
 
 (use-package org-download
   :ensure (:host github :repo "abo-abo/org-download")
@@ -547,11 +656,11 @@
   :config
   (setq org-roam-dailies-directory "Journal/")
   (setq org-roam-dailies-capture-templates
-      '(("d" "daily" plain "%?"
-         :target (file+head+olp "%<%Y-%m>.org"
-                                "#+title: %<%Y-%m>\n"
-                                ("%<%d>" "%<%H:%M>"))
-         :unnarrowed t)))
+              '(("d" "daily" plain "%?"
+           :target (file+head+olp "%<%Y-%m>.org"
+                                  "#+title: %<%Y-%m>\n"
+                                  ("%<%d>" "%<%H:%M>"))
+           :unnarrowed t)))
 
   (setq org-roam-capture-templates
         '(
@@ -608,6 +717,7 @@
   (setq dashboard-set-init-info nil)
   (setq dashboard-footer-icon "")
   (setq dashboard-footer-messages '("Simplicity is the Ultimate Sophistication. Think Simple."))
+  (setq dashboard-filter-agenda-entry 'dashboard-no-filter-agenda)
   (setq dashboard-items '((recents . 5)
                           (agenda . 5)
                           (projects . 5)))
@@ -853,11 +963,14 @@
 (use-package rust-mode
   :hook (rust-mode . lsp-deferred))
 
+(use-package beacon
+  :ensure t
+  :config
+  (beacon-mode 1))
+
 (use-package grease
   :ensure (:host github :repo "mwac-dev/grease.el")
-  :commands (grease-open grease-toggle grease-here)
-  :hook (grease-mode . (lambda ()
-                         (define-key grease-mode-map (kbd "<backspace>") #'grease-up-directory))))
+  :commands (grease-open grease-toggle grease-here))
 
 (use-package undo-fu
   :elpaca t)
@@ -975,18 +1088,14 @@
 
 (use-package flash
   :ensure t
-  :commands (flash-jump flash-jump-continue
-			flash-treesitter)
-  ;; :bind ("s-j" . flash-jump)
+  :commands (flash-jump flash-jump-continue flash-treesitter)
   :custom
   (flash-multi-window t)
   :init
-  ;; Evil integration (simple setup)
   (with-eval-after-load 'evil
     (require 'flash-evil)
-    (flash-evil-setup t))  ; t = also set up f/t/F/T char motions
+    (flash-evil-setup t))
   :config
-  ;; Search integration (labels during C-s, /, ?)
   (require 'flash-isearch)
   (setq flash-rainbow-shade 6)
   (setq flash-rainbow t)

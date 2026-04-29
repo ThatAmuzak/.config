@@ -35,7 +35,6 @@
   - [[#color-theme][Color Theme]]
   - [[#yank-on-highlight][Yank on highlight]]
   - [[#scroll-behavior][Scroll behavior]]
-  - [[#jelly-cursor][Jelly cursor]]
   - [[#rainbow-indent][Rainbow Indent]]
   - [[#folding][Folding]]
 - [[#which-key][WHICH-KEY]]
@@ -46,10 +45,13 @@
   - [[#better-inline-markers][Better Inline Markers]]
   - [[#automatic-code-blocks-per-language][Automatic Code Blocks Per Language]]
   - [[#org-bullets][Org Bullets]]
+  - [[#minor-org-fixes][Minor Org Fixes]]
+  - [[#latex-preview][Latex Preview]]
+  - [[#svg-elements][SVG Elements]]
   - [[#modern-org][Modern Org]]
   - [[#centering-org-mode][Centering Org Mode]]
   - [[#org-superstar][Org Superstar]]
-  - [[#nicer-checkboxes][Nicer Checkboxes]]
+  - [[#nicer-symbols][Nicer Symbols]]
   - [[#org-download][Org Download]]
 - [[#note-taking][NOTE TAKING]]
   - [[#thoughs-and-tasks][Thoughs and Tasks]]
@@ -69,6 +71,7 @@
   - [[#lsp-bridge][LSP-Bridge]]
   - [[#language-modes][Language Modes]]
 - [[#misc][MISC]]
+  - [[#beacon][Beacon]]
   - [[#grease][Grease]]
   - [[#undo-fu][Undo-Fu]]
   - [[#surround][Surround]]
@@ -88,7 +91,6 @@
 ** Package Manager
 
 #+begin_src emacs-lisp
-
   (defvar elpaca-installer-version 0.12)
   (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
   (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -316,6 +318,13 @@
 ** Automatic pairing
 #+begin_src emacs-lisp
   (electric-pair-mode 1)
+
+  ;; Ignore angular brackets since that helps with code blocks
+  (setq electric-pair-inhibit-predicate
+        (lambda (char)
+          (if (char-equal char ?<)
+              t
+            (electric-pair-default-inhibit char))))
 #+end_src
 
 ** Automatic trim whitespace
@@ -548,21 +557,6 @@ More icons
   (pixel-scroll-precision-mode 1)
 #+end_src
 
-** Jelly cursor
-
-#+begin_src emacs-lisp
-  (use-package holo-layer
-    :ensure (:host github :repo "manateelazycat/holo-layer")
-    :init
-    (setq holo-layer-python-command "~/scoop/apps/python/current/python.exe")
-    (setq holo-layer-python-file
-          (expand-file-name "elpaca/sources/holo-layer/holo_layer.py"
-                            user-emacs-directory))
-    (setq holo-layer-enable-cursor-animation t)
-    :config
-    (holo-layer-enable))
-#+end_src
-
 ** Rainbow Indent
 
 #+begin_src emacs-lisp
@@ -654,8 +648,14 @@ This doesn't really seem to work consistently, but whatever
 #+begin_src emacs-lisp
   (setq org-hide-emphasis-markers t)
   (use-package org-appear
-    :ensure t
-    :hook (org-mode . org-appear-mode))
+:ensure t
+    :commands (org-appear-mode)
+    :hook     (org-mode . org-appear-mode)
+    :config
+    (setq org-hide-emphasis-markers t)  ; Must be activated for org-appear to work
+    (setq org-appear-autoemphasis   t   ; Show bold, italics, verbatim, etc.
+                org-appear-autolinks      t   ; Show links
+                org-appear-autosubmarkers t))
 
   (setq org-hide-emphasis-markers t)
   (custom-set-faces
@@ -684,6 +684,105 @@ This doesn't really seem to work consistently, but whatever
   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 #+end_src
 
+** Minor Org Fixes
+
+#+begin_src emacs-lisp
+  (setq org-log-done                       t
+          org-auto-align-tags                t
+          org-tags-column                    -80
+          org-fold-catch-invisible-edits     'show-and-error
+          org-special-ctrl-a/e               t
+          org-insert-heading-respect-content t)
+#+end_src
+
+** Latex Preview
+
+#+begin_src emacs-lisp
+  (plist-put org-format-latex-options :scale 1.35)
+  (use-package org-fragtog
+    :ensure t
+    :hook (org-mode-hook . org-fragtog-mode))
+#+end_src
+
+** SVG Elements
+
+#+begin_src emacs-lisp
+  (use-package svg-tag-mode
+    :ensure t
+    :config
+    (defconst date-re "[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}")
+    (defconst time-re "[0-9]\\{2\\}:[0-9]\\{2\\}")
+    (defconst day-re "[A-Za-z]\\{3\\}")
+    (defconst day-time-re (format "\\(%s\\)? ?\\(%s\\)?" day-re time-re))
+
+    (defun svg-progress-percent (value)
+      (svg-image (svg-lib-concat
+                  (svg-lib-progress-bar (/ (string-to-number value) 100.0)
+                                        nil :margin 0 :stroke 2 :radius 3 :padding 2 :width 11)
+                  (svg-lib-tag (concat value "%")
+                               nil :stroke 0 :margin 0)) :ascent 'center))
+
+    (defun svg-progress-count (value)
+      (let* ((seq (mapcar #'string-to-number (split-string value "/")))
+             (count (float (car seq)))
+             (total (float (cadr seq))))
+        (svg-image (svg-lib-concat
+                    (svg-lib-progress-bar (/ count total) nil
+                                          :margin 0 :stroke 2 :radius 3 :padding 2 :width 11)
+                    (svg-lib-tag value nil
+                                 :stroke 0 :margin 0)) :ascent 'center)))
+    (setq svg-tag-tags
+          `(
+            ;; Task priority
+            ("\\[#[A-Z]\\]" . ( (lambda (tag)
+                                  (svg-tag-make tag :face 'org-priority
+                                                :beg 2 :end -1 :margin 0))))
+
+            ;; Progress
+            ("\\(\\[[0-9]\\{1,3\\}%\\]\\)" . ((lambda (tag)
+                                                (svg-progress-percent (substring tag 1 -2)))))
+            ("\\(\\[[0-9]+/[0-9]+\\]\\)" . ((lambda (tag)
+                                              (svg-progress-count (substring tag 1 -1)))))
+
+            ;; Citation of the form [cite:@Knuth:1984]
+            ("\\(\\[cite:@[A-Za-z]+:\\)" . ((lambda (tag)
+                                              (svg-tag-make tag
+                                                            :inverse t
+                                                            :beg 7 :end -1
+                                                            :crop-right t))))
+            ("\\[cite:@[A-Za-z]+:\\([0-9]+\\]\\)" . ((lambda (tag)
+                                                       (svg-tag-make tag
+                                                                     :end -1
+                                                                     :crop-left t))))
+
+            ;; Active date (with or without day name, with or without time)
+            (,(format "\\(<%s>\\)" date-re) .
+             ((lambda (tag)
+                (svg-tag-make tag :beg 1 :end -1 :margin 0))))
+            (,(format "\\(<%s \\)%s>" date-re day-time-re) .
+             ((lambda (tag)
+                (svg-tag-make tag :beg 1 :inverse nil :crop-right t :margin 0))))
+            (,(format "<%s \\(%s>\\)" date-re day-time-re) .
+             ((lambda (tag)
+                (svg-tag-make tag :end -1 :inverse t :crop-left t :margin 0))))
+
+            ;; Inactive date  (with or without day name, with or without time)
+            (,(format "\\(\\[%s\\]\\)" date-re) .
+             ((lambda (tag)
+                (svg-tag-make tag :beg 1 :end -1 :margin 0 :face 'org-date))))
+            (,(format "\\(\\[%s \\)%s\\]" date-re day-time-re) .
+             ((lambda (tag)
+                (svg-tag-make tag :beg 1 :inverse nil
+                              :crop-right t :margin 0 :face 'org-date))))
+            (,(format "\\[%s \\(%s\\]\\)" date-re day-time-re) .
+             ((lambda (tag)
+                (svg-tag-make tag :end -1 :inverse t
+                              :crop-left t :margin 0 :face 'org-date)))))))
+
+  (add-hook 'org-mode-hook 'svg-tag-mode)
+
+#+end_src
+
 ** Modern Org
 
 #+begin_src emacs-lisp
@@ -702,7 +801,7 @@ This doesn't really seem to work consistently, but whatever
     (set-face-background 'org-block (color-darken-name (face-attribute 'default :background) 30))
     (setq org-modern-hide-stars " ")
     (setq org-modern-fold-stars
-  	'(("" . "")
+        '(("" . "")
             ("" . "")
             ("" . "")
             ("󰮺" . "󰮷")
@@ -717,7 +816,6 @@ This doesn't really seem to work consistently, but whatever
      org-modern-tag nil
      org-modern-priority nil
      org-modern-todo nil
-     org-modern-table nil
      org-ellipsis " "
      org-modern-block-fringe nil
      org-modern-priority
@@ -776,16 +874,38 @@ This doesn't really seem to work consistently, but whatever
                                             ("CANCELLED" . 9744))))
 #+end_src
 
-** Nicer Checkboxes
+** Nicer Symbols
 
 #+begin_src emacs-lisp
-  (defun my-org-checkbox-symbols ()
-    (setq-local prettify-symbols-alist
-                '(("[ ]" . "☐")
-                  ("[X]" . "󰸞")
-                  ("[-]" . "󰜥")))
-    (prettify-symbols-mode 1))
-  (add-hook 'org-mode-hook #'my-org-checkbox-symbols)
+(defun my/prettify-symbols-setup ()
+  (push '("[ ]" . "") prettify-symbols-alist)
+  (push '("[X]" . "") prettify-symbols-alist)
+  (push '("[-]" . "" ) prettify-symbols-alist)
+
+  (push '("#+BEGIN_SRC" . ?≫) prettify-symbols-alist)
+  (push '("#+END_SRC" . ?≫) prettify-symbols-alist)
+  (push '("#+begin_src" . ?≫) prettify-symbols-alist)
+  (push '("#+end_src" . ?≫) prettify-symbols-alist)
+
+  (push '("#+BEGIN_QUOTE" . ?❝) prettify-symbols-alist)
+  (push '("#+END_QUOTE" . ?❞) prettify-symbols-alist)
+
+  (push '(":PROPERTIES:" . "") prettify-symbols-alist)
+
+  (push '(":projects:" . "") prettify-symbols-alist)
+  (push '(":work:"     . "") prettify-symbols-alist)
+  (push '(":inbox:"    . "") prettify-symbols-alist)
+  (push '(":task:"     . "") prettify-symbols-alist)
+  (push '(":thesis:"   . "") prettify-symbols-alist)
+  (push '(":uio:"      . "") prettify-symbols-alist)
+  (push '(":emacs:"    . "") prettify-symbols-alist)
+  (push '(":learn:"    . "") prettify-symbols-alist)
+  (push '(":code:"     . "") prettify-symbols-alist)
+
+  (prettify-symbols-mode))
+
+(add-hook 'org-mode-hook        #'my/prettify-symbols-setup)
+(add-hook 'org-agenda-mode-hook #'my/prettify-symbols-setup)
 #+end_src
 
 ** Org Download
@@ -825,11 +945,11 @@ Also enables inline images to be enabled by default
     :config
     (setq org-roam-dailies-directory "Journal/")
     (setq org-roam-dailies-capture-templates
-        '(("d" "daily" plain "%?"
-           :target (file+head+olp "%<%Y-%m>.org"
-                                  "#+title: %<%Y-%m>\n"
-                                  ("%<%d>" "%<%H:%M>"))
-           :unnarrowed t)))
+                '(("d" "daily" plain "%?"
+             :target (file+head+olp "%<%Y-%m>.org"
+                                    "#+title: %<%Y-%m>\n"
+                                    ("%<%d>" "%<%H:%M>"))
+             :unnarrowed t)))
 
     (setq org-roam-capture-templates
           '(
@@ -882,35 +1002,36 @@ Also enables inline images to be enabled by default
 * DASHBOARD
 
 #+begin_src emacs-lisp
-    (set-language-environment "UTF-8")
-    (use-package dashboard
-      :ensure t
-      :after nerd-icons
-      :init
-      (setq dashboard-center-content t)
-      (setq dashboard-icon-type 'nerd-icons)
-      (setq dashboard-display-icons-p t)
-      (setq dashboard-set-heading-icons t)
-      (setq dashboard-set-file-icons t)
-      (setq dashboard-startup-banner "~/.config/emacs/EmacsDashboard.gif")
-      (setq dashboard-projects-backend 'projectile)
-      (setq dashboard-banner-logo-title "Welcome Back, Boss")
-      (setq dashboard-set-init-info nil)
-      (setq dashboard-footer-icon "")
-      (setq dashboard-footer-messages '("Simplicity is the Ultimate Sophistication. Think Simple."))
-      (setq dashboard-items '((recents . 5)
-                              (agenda . 5)
-                              (projects . 5)))
-      (setq dashboard-agenda-sort-strategy '(time-up))
-      :config
-      ;; (add-hook 'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
-      ;; (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
-      (dashboard-setup-startup-hook))
-    (with-eval-after-load 'dashboard
-      (defun my/dashboard-replace-displayable (str)
-        str)
-      (advice-add 'dashboard-replace-displayable :override #'my/dashboard-replace-displayable)
-      (advice-add 'dashboard-insert-init-info :override #'ignore))
+  (set-language-environment "UTF-8")
+  (use-package dashboard
+    :ensure t
+    :after nerd-icons
+    :init
+    (setq dashboard-center-content t)
+    (setq dashboard-icon-type 'nerd-icons)
+    (setq dashboard-display-icons-p t)
+    (setq dashboard-set-heading-icons t)
+    (setq dashboard-set-file-icons t)
+    (setq dashboard-startup-banner "~/.config/emacs/EmacsDashboard.gif")
+    (setq dashboard-projects-backend 'projectile)
+    (setq dashboard-banner-logo-title "Welcome Back, Boss")
+    (setq dashboard-set-init-info nil)
+    (setq dashboard-footer-icon "")
+    (setq dashboard-footer-messages '("Simplicity is the Ultimate Sophistication. Think Simple."))
+    (setq dashboard-filter-agenda-entry 'dashboard-no-filter-agenda)
+    (setq dashboard-items '((recents . 5)
+                            (agenda . 5)
+                            (projects . 5)))
+    (setq dashboard-agenda-sort-strategy '(time-up))
+    :config
+    ;; (add-hook 'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
+    ;; (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
+    (dashboard-setup-startup-hook))
+  (with-eval-after-load 'dashboard
+    (defun my/dashboard-replace-displayable (str)
+      str)
+    (advice-add 'dashboard-replace-displayable :override #'my/dashboard-replace-displayable)
+    (advice-add 'dashboard-insert-init-info :override #'ignore))
 #+end_src
 
 * TERMINAL
@@ -1230,6 +1351,15 @@ This is for literate programming
 
 * MISC
 
+** Beacon
+
+#+begin_src emacs-lisp
+  (use-package beacon
+    :ensure t
+    :config
+    (beacon-mode 1))
+#+end_src
+
 ** Grease
 
 The Oil.nvim substitute
@@ -1237,10 +1367,7 @@ The Oil.nvim substitute
 #+begin_src emacs-lisp
   (use-package grease
     :ensure (:host github :repo "mwac-dev/grease.el")
-    :commands (grease-open grease-toggle grease-here)
-    :hook (grease-mode . (lambda ()
-                           (define-key grease-mode-map (kbd "<backspace>") #'grease-up-directory))))
-
+    :commands (grease-open grease-toggle grease-here))
 #+end_src
 
 ** Undo-Fu
@@ -1414,18 +1541,14 @@ Highlight matching symbols in buffer
 #+begin_src emacs-lisp
   (use-package flash
     :ensure t
-    :commands (flash-jump flash-jump-continue
-  			flash-treesitter)
-    ;; :bind ("s-j" . flash-jump)
+    :commands (flash-jump flash-jump-continue flash-treesitter)
     :custom
     (flash-multi-window t)
     :init
-    ;; Evil integration (simple setup)
     (with-eval-after-load 'evil
       (require 'flash-evil)
-      (flash-evil-setup t))  ; t = also set up f/t/F/T char motions
+      (flash-evil-setup t))
     :config
-    ;; Search integration (labels during C-s, /, ?)
     (require 'flash-isearch)
     (setq flash-rainbow-shade 6)
     (setq flash-rainbow t)
