@@ -854,33 +854,67 @@
 
 (use-package treesit-auto
   :ensure t
-  :custom
-  (treesit-auto-install 't)
+  :demand t
   :config
-  (setq treesit-auto-langs '(python csharp java lua clojure javascript typescript tsx c cpp bash css go rust yaml))
-  (treesit-auto-add-to-auto-mode-alist 'all)
+  (setq treesit-auto-install 'prompt)
   (global-treesit-auto-mode))
-
 (setq treesit-font-lock-level 4)
 
 (setq treesit-language-source-alist
-      '((python "https://github.com/tree-sitter/tree-sitter-python" "v0.20.4")
-        (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "v0.20.4" "src")
-        (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "typescript/src")
-        (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "v0.20.3" "tsx/src")
-        (csharp "https://github.com/tree-sitter/tree-sitter-c-sharp" "v0.20.0")
-        (elisp "https://github.com/Wilfred/tree-sitter-elisp" "1.5.0")
-        (java "https://github.com/tree-sitter/tree-sitter-java" "v0.20.0")
-        (lua "https://github.com/tree-sitter-grammars/tree-sitter-lua" "v0.3.0")
-        (css "https://github.com/tree-sitter/tree-sitter-css" "v0.21.1")
-        (go "https://github.com/tree-sitter/tree-sitter-go" "v0.21.0")
-        (rust "https://github.com/tree-sitter/tree-sitter-rust" "v0.20.2")
-        (bash "https://github.com/tree-sitter/tree-sitter-bash" "v0.20.2")
-        (c "https://github.com/tree-sitter/tree-sitter-c" "v0.20.6")
-        (cpp "https://github.com/tree-sitter/tree-sitter-cpp" "v0.20.5")
-        (yaml "https://github.com/ikatyang/tree-sitter-yaml" "v0.5.0")
-        (toml "https://github.com/tree-sitter/tree-sitter-toml" "v0.5.1")
-        (json5 "https://github.com/Joakker/tree-sitter-json5")))
+      '((python
+         . ("https://github.com/tree-sitter/tree-sitter-python"
+            "v0.23.6"))
+        (javascript
+         . ("https://github.com/tree-sitter/tree-sitter-javascript"
+            "v0.23.1" "src"))
+        (typescript
+         . ("https://github.com/tree-sitter/tree-sitter-typescript"
+            "v0.23.2" "typescript/src"))
+        (tsx
+         . ("https://github.com/tree-sitter/tree-sitter-typescript"
+            "v0.23.2" "tsx/src"))
+        (bash
+         . ("https://github.com/tree-sitter/tree-sitter-bash"
+            "v0.23.3"))
+        (c-sharp
+         . ("https://github.com/tree-sitter/tree-sitter-c-sharp"
+            "v0.23.1"))
+        (elisp
+         . ("https://github.com/Wilfred/tree-sitter-elisp"
+            "951d802"))
+        (java
+         . ("https://github.com/tree-sitter/tree-sitter-java"
+            "v0.23.5"))
+        (lua
+         . ("https://github.com/tree-sitter-grammars/tree-sitter-lua"
+            "v0.2.0"))
+        (css
+         . ("https://github.com/tree-sitter/tree-sitter-css"
+            "v0.23.2"))
+        (html
+         . ("https://github.com/tree-sitter/tree-sitter-html"
+            "v0.23.2"))
+        (go
+         . ("https://github.com/tree-sitter/tree-sitter-go"
+            "v0.23.4"))
+        (rust
+         . ("https://github.com/tree-sitter/tree-sitter-rust"
+            "v0.23.2"))
+        (c
+         . ("https://github.com/tree-sitter/tree-sitter-c"
+            "v0.23.5"))
+        (cpp
+         . ("https://github.com/tree-sitter/tree-sitter-cpp"
+            "v0.23.4"))
+        (yaml
+         . ("https://github.com/tree-sitter-grammars/tree-sitter-yaml"
+            "v0.7.2"))
+        (toml
+         . ("https://github.com/tree-sitter-grammars/tree-sitter-toml"
+            "v0.7.0"))
+        (json
+         . ("https://github.com/tree-sitter/tree-sitter-json"
+            "v0.24.8"))))
 
 (use-package yasnippet
   :ensure t
