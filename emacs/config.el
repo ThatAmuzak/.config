@@ -233,12 +233,27 @@
 
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
-(add-hook 'before-save-hook
-          (lambda ()
-            (save-excursion
-              (goto-char (point-min))
-              (while (re-search-forward "^\n+" nil t)
-                (replace-match "\n")))))
+(defvar-local toggle-emptyline-removal nil
+    "Variable to track the state of whitespace cleaning.")
+
+  (defun my-delete-excess-blank-lines ()
+    "Search for and replace multiple consecutive newlines with a single newline."
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "\n\n\n+" nil t)
+        (replace-match "\n\n"))))
+
+  (define-minor-mode toggle-emptyline-removal
+    "Toggle automatic cleaning of excessive blank lines on save."
+    :lighter " CleanWS"
+    (if toggle-emptyline-removal
+        (add-hook 'before-save-hook #'my-delete-excess-blank-lines nil t)
+      (remove-hook 'before-save-hook #'my-delete-excess-blank-lines t)))
+
+(define-globalized-minor-mode global-emptyline-removal
+  toggle-emptyline-removal toggle-emptyline-removal)
+
+(global-emptyline-removal 1)
 
 (global-auto-revert-mode 1)
 (setq auto-revert-interval 0.5)
@@ -861,60 +876,24 @@
 (setq treesit-font-lock-level 4)
 
 (setq treesit-language-source-alist
-      '((python
-         . ("https://github.com/tree-sitter/tree-sitter-python"
-            "v0.23.6"))
-        (javascript
-         . ("https://github.com/tree-sitter/tree-sitter-javascript"
-            "v0.23.1" "src"))
-        (typescript
-         . ("https://github.com/tree-sitter/tree-sitter-typescript"
-            "v0.23.2" "typescript/src"))
-        (tsx
-         . ("https://github.com/tree-sitter/tree-sitter-typescript"
-            "v0.23.2" "tsx/src"))
-        (bash
-         . ("https://github.com/tree-sitter/tree-sitter-bash"
-            "v0.23.3"))
-        (c-sharp
-         . ("https://github.com/tree-sitter/tree-sitter-c-sharp"
-            "v0.23.1"))
-        (elisp
-         . ("https://github.com/Wilfred/tree-sitter-elisp"
-            "951d802"))
-        (java
-         . ("https://github.com/tree-sitter/tree-sitter-java"
-            "v0.23.5"))
-        (lua
-         . ("https://github.com/tree-sitter-grammars/tree-sitter-lua"
-            "v0.2.0"))
-        (css
-         . ("https://github.com/tree-sitter/tree-sitter-css"
-            "v0.23.2"))
-        (html
-         . ("https://github.com/tree-sitter/tree-sitter-html"
-            "v0.23.2"))
-        (go
-         . ("https://github.com/tree-sitter/tree-sitter-go"
-            "v0.23.4"))
-        (rust
-         . ("https://github.com/tree-sitter/tree-sitter-rust"
-            "v0.23.2"))
-        (c
-         . ("https://github.com/tree-sitter/tree-sitter-c"
-            "v0.23.5"))
-        (cpp
-         . ("https://github.com/tree-sitter/tree-sitter-cpp"
-            "v0.23.4"))
-        (yaml
-         . ("https://github.com/tree-sitter-grammars/tree-sitter-yaml"
-            "v0.7.2"))
-        (toml
-         . ("https://github.com/tree-sitter-grammars/tree-sitter-toml"
-            "v0.7.0"))
-        (json
-         . ("https://github.com/tree-sitter/tree-sitter-json"
-            "v0.24.8"))))
+      '((python . ("https://github.com/tree-sitter/tree-sitter-python" "v0.23.6"))
+        (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript" "v0.23.1" "src"))
+        (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.23.2" "typescript/src"))
+        (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "v0.23.2" "tsx/src"))
+        (bash . ("https://github.com/tree-sitter/tree-sitter-bash" "v0.23.3"))
+        (c-sharp . ("https://github.com/tree-sitter/tree-sitter-c-sharp" "v0.23.1"))
+        (elisp . ("https://github.com/Wilfred/tree-sitter-elisp" "main"))
+        (java . ("https://github.com/tree-sitter/tree-sitter-java" "v0.23.5"))
+        (lua . ("https://github.com/tree-sitter-grammars/tree-sitter-lua" "v0.2.0"))
+        (css . ("https://github.com/tree-sitter/tree-sitter-css" "v0.23.2"))
+        (html . ("https://github.com/tree-sitter/tree-sitter-html" "v0.23.2"))
+        (go . ("https://github.com/tree-sitter/tree-sitter-go" "v0.23.4"))
+        (rust . ("https://github.com/tree-sitter/tree-sitter-rust" "v0.23.2"))
+        (c . ("https://github.com/tree-sitter/tree-sitter-c" "v0.23.5"))
+        (cpp . ("https://github.com/tree-sitter/tree-sitter-cpp" "v0.23.4"))
+        (yaml . ("https://github.com/tree-sitter-grammars/tree-sitter-yaml" "v0.7.2"))
+        (toml . ("https://github.com/tree-sitter-grammars/tree-sitter-toml" "v0.7.0"))
+        (json . ("https://github.com/tree-sitter/tree-sitter-json" "v0.24.8"))))
 
 (use-package yasnippet
   :ensure t

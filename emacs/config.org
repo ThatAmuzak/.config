@@ -348,12 +348,27 @@
 ** Automatic clear multiple blank lines
 
 #+begin_src emacs-lisp
-  (add-hook 'before-save-hook
-            (lambda ()
-              (save-excursion
-                (goto-char (point-min))
-                (while (re-search-forward "^\n+" nil t)
-                  (replace-match "\n")))))
+    (defvar-local toggle-emptyline-removal nil
+      "Variable to track the state of whitespace cleaning.")
+
+    (defun my-delete-excess-blank-lines ()
+      "Search for and replace multiple consecutive newlines with a single newline."
+      (save-excursion
+        (goto-char (point-min))
+        (while (re-search-forward "\n\n\n+" nil t)
+          (replace-match "\n\n"))))
+
+    (define-minor-mode toggle-emptyline-removal
+      "Toggle automatic cleaning of excessive blank lines on save."
+      :lighter " CleanWS"
+      (if toggle-emptyline-removal
+          (add-hook 'before-save-hook #'my-delete-excess-blank-lines nil t)
+        (remove-hook 'before-save-hook #'my-delete-excess-blank-lines t)))
+
+  (define-globalized-minor-mode global-emptyline-removal
+    toggle-emptyline-removal toggle-emptyline-removal)
+
+  (global-emptyline-removal 1)
 #+end_src
 
 ** Automatic Refresh Buffers
