@@ -83,8 +83,8 @@
     (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
 
     ;; LSP Stuff
-    (define-key evil-normal-state-map (kbd "K") (lambda () (interactive) (lsp-ui-doc-glance)))
-    (define-key evil-normal-state-map (kbd "E") (lambda () (interactive) (when (bound-and-true-p flycheck-mode) (flycheck-display-error-at-point))))
+    (define-key evil-normal-state-map (kbd "K") (lambda () (interactive) (lsp-ui-doc-show)))
+    (define-key evil-normal-state-map (kbd "E") (lambda () (interactive) (lsp-show-diagnostics-at-point)))
     (define-key evil-insert-state-map (kbd "C-k") (lambda () (interactive) (eldoc-box-help-at-point)))
 
     ;; DWIM in org on enter in normal mode
@@ -161,10 +161,10 @@
   (amuzak/leader-keys
     "c a" '(lsp-execute-code-action :wk "Code Actions")
     "x x" '(flycheck-list-errors :wk "Open Quick Fix List")
-    "g d" '(lsp-find-definition :wk "Go to Definitions")
-    "g r" '(lsp-find-references :wk "Find References")
-    "r n" '(lsp-rename :wk "Find References")
-    )
+    "g d" '(lsp-ui-peek-find-definition :wk "Go to Definitions")
+    "g r" '(lsp-ui-peek-find-references :wk "Find References")
+    "r n" '(lsp-rename :wk "Rename Symbol")
+    "f m" '(apheleia-format-buffer :wk "Rename Symbol"))
 
   (amuzak/leader-keys
     "e" '(grease-toggle :wk "Open Grease Here"))
@@ -906,82 +906,56 @@
 
 (use-package lsp-mode
   :ensure t
-  :commands (lsp lsp-deferred)
-  :hook ((prog-mode . lsp-deferred)) ;; keeping it prog mode enables it to activate for any language
-  :init
-  ;; performance
-  (setq gc-cons-threshold (* 100 1024 1024)
-        read-process-output-max (* 1 1024 1024))
-  :config
-
-  (setq lsp-enable-symbol-highlighting t
-        lsp-enable-on-type-formatting nil   ;; no auto format
-        lsp-idle-delay 0.3
-        lsp-headerline-breadcrumb-enable t)
-
-  ;; diagnostics
-  (setq lsp-diagnostics-provider :flycheck)
-
-  ;; completion
-  (setq lsp-completion-provider :capf))
+  :hook ((python-ts-mode . lsp-deferred)
+         (rust-ts-mode . lsp-deferred)
+         (js-ts-mode . lsp-deferred)
+         (typescript-ts-mode . lsp-deferred)
+         (c-ts-mode . lsp-deferred)
+         (c++-ts-mode . lsp-deferred)
+         (csharp-ts-mode . lsp-deferred))
+  :custom
+  (lsp-completion-provider :company)
+  (lsp-diagnostics-provider :flycheck)
+  (lsp-headerline-breadcrumb-enable t)
+  (lsp-idle-delay 0.1)
+  (lsp-enable-file-watchers nil)
+  :commands (lsp lsp-deferred))
 
 (use-package lsp-ui
   :ensure t
-  :after lsp-mode
   :hook (lsp-mode . lsp-ui-mode)
-  :config
-  (setq lsp-ui-doc-enable t
-      lsp-signature-auto-activate nil
-      lsp-signature-render-documentation nil
-      lsp-enable-symbol-highlighting nil
-      lsp-ui-doc-position 'at-point   ;; key setting
-      lsp-ui-doc-show-with-cursor nil
-      lsp-ui-doc-show-with-mouse nil
-      lsp-eldoc-enable-hover t
-      lsp-ui-sideline-enable nil
-      lsp-headerline-breadcrumb-enable nil
-      lsp-signature-auto-activate nil))
-
-(use-package eldoc-box
-  :ensure t
-  ;; :hook (eldoc-mode . eldoc-box-hover-at-point-mode)
-  :config (setq eldoc-box-max-pixel-width 800
-              eldoc-box-max-pixel-height 600
-              eldoc-box-clear-with-C-g t))
+  :custom
+  (lsp-ui-doc-enable t)
+  (lsp-ui-doc-position 'at-point)
+  (lsp-ui-sideline-enable t)
+  (lsp-ui-sideline-show-diagnostics t)
+  (lsp-ui-sideline-show-hover t)
+  (lsp-ui-peek-enable t))
 
 (use-package company
   :ensure t
-  :hook (after-init . global-company-mode)
-  :config
-  (setq company-minimum-prefix-length 1
-        company-idle-delay 0.0
-        company-tooltip-align-annotations t))
-
-(use-package company-box
-  :ensure t
-  :hook (company-mode . company-box-mode))
+  :hook (lsp-mode . company-mode)
+  :custom
+  (company-minimum-prefix-length 1)
+  (company-idle-delay 0.0)
+  (company-selection-wrap-around t))
 
 (use-package flycheck
   :ensure t
-  :hook (lsp-mode . flycheck-mode))
-
-(use-package flycheck-posframe
-  :ensure t
-  :hook (flycheck-mode . flycheck-posframe-mode)
-  :config
-  (setq flycheck-posframe-border-width 1))
+  :init (global-flycheck-mode 1))
+(with-eval-after-load 'flycheck
+  (set-face-attribute 'flycheck-error nil
+                      :underline '(:color "#e06c75" :style wave))
+  (set-face-attribute 'flycheck-warning nil
+                      :underline '(:color "#e5c07b" :style wave))
+  (set-face-attribute 'flycheck-info nil
+                      :underline '(:color "#61afef" :style wave)))
 
 (use-package apheleia
   :ensure t
   :config
   (apheleia-global-mode +1)
-
-  ;; formatter definitions
-  (setf (alist-get 'ruff apheleia-formatters)
-        '("ruff" "format" "--stdin-filename" filepath "-"))
-
-  (setf (alist-get 'python-mode apheleia-mode-alist)
-        'ruff))
+  (setf (alist-get 'python-ts-mode apheleia-mode-alist) '(ruff)))
 
 (use-package markdown-mode
   :ensure t
@@ -1011,12 +985,10 @@
 
 (use-package lsp-pyright
   :ensure t
-  :hook (python-mode . (lambda ()
-                         (require 'lsp-pyright)
-                         (lsp-deferred))))
-
-(use-package rust-mode
-  :hook (rust-mode . lsp-deferred))
+  :custom
+  (lsp-pyright-langserver-command "basedpyright")
+  :hook ((python-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))
+         (python-ts-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))))
 
 (use-package beacon
   :ensure t

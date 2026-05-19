@@ -33,3 +33,5 @@ emacs/.cache/lsp/lua-language-server
 emacs/.lsp-session-v1
 emacs/.cache/lsp/npm/vscode-langservers-extracted
 emacs/.cache/lsp/clangd
+emacs/.cache/lsp/omnisharp-roslyn/latest
+config.xlaunch
