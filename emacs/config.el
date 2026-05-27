@@ -166,6 +166,15 @@
     "r n" '(lsp-rename :wk "Rename Symbol")
     "f m" '(apheleia-format-buffer :wk "Rename Symbol"))
 
+  ;; Latex
+  (amuzak/leader-keys
+    "c a" '(lsp-execute-code-action :wk "Code Actions")
+    "x x" '(flycheck-list-errors :wk "Open Quick Fix List")
+    "g d" '(lsp-ui-peek-find-definition :wk "Go to Definitions")
+    "g r" '(lsp-ui-peek-find-references :wk "Find References")
+    "r n" '(lsp-rename :wk "Rename Symbol")
+    "f m" '(apheleia-format-buffer :wk "Rename Symbol"))
+
   (amuzak/leader-keys
     "e" '(grease-toggle :wk "Open Grease Here"))
 
@@ -936,8 +945,8 @@
   :ensure t
   :hook (lsp-mode . company-mode)
   :custom
-  (company-minimum-prefix-length 1)
-  (company-idle-delay 0.0)
+  (company-minimum-prefix-length 2)
+  (company-idle-delay 0.1)
   (company-selection-wrap-around t))
 
 (use-package flycheck
@@ -989,6 +998,38 @@
   (lsp-pyright-langserver-command "basedpyright")
   :hook ((python-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))
          (python-ts-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))))
+
+(use-package tex
+  :ensure auctex
+  :defer t
+  :init
+  (setq TeX-auto-save t
+        TeX-parse-self t
+        TeX-master nil
+        TeX-PDF-mode t)
+  :config
+  (add-hook 'LaTeX-mode-hook #'TeX-source-correlate-mode)
+  (add-hook 'LaTeX-mode-hook #'turn-on-reftex)
+
+  (setq TeX-view-program-selection '((output-pdf "Sioyek")))
+
+  (setq TeX-view-program-list
+        '(("Sioyek" "sioyek.exe --reuse-instance --forward-search-file \"%b\" --forward-search-line %n \"%o\""))))
+(server-start)
+
+(use-package evil-tex
+  :ensure t
+  :after tex evil
+  :hook (LaTeX-mode . evil-tex-mode))
+
+(use-package citar
+  :ensure t
+  :after tex
+  :no-require t
+  :config
+  (add-hook 'LaTeX-mode-hook
+            (lambda ()
+              (add-to-list 'completion-at-point-functions #'citar-capf-renderer))))
 
 (use-package beacon
   :ensure t
