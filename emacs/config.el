@@ -83,7 +83,7 @@
     (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
 
     ;; LSP Stuff
-    (define-key evil-normal-state-map (kbd "K") (lambda () (interactive) (lsp-ui-doc-show)))
+    (define-key evil-normal-state-map (kbd "K") (lambda () (interactive) (lsp-ui-doc-toggle)))
     (define-key evil-normal-state-map (kbd "E") (lambda () (interactive) (lsp-show-diagnostics-at-point)))
     (define-key evil-insert-state-map (kbd "C-k") (lambda () (interactive) (eldoc-box-help-at-point)))
 
@@ -167,13 +167,24 @@
     "f m" '(apheleia-format-buffer :wk "Rename Symbol"))
 
   ;; Latex
+
+  (defun clean-latex-project-aux-files ()
+    (interactive)
+    (let* ((root (if (fboundp 'project-root)
+                     (let ((proj (project-current nil)))
+                       (if proj (project-root proj) default-directory))
+                   default-directory))
+           (exts '("aux" "bbl" "bcf" "blg" "brf" "fdb_latexmk" "fls" "idx" "ilg" "ind" "lof" "log" "lot" "nav" "out" "run.xml" "snm" "synctex.gz" "toc"))
+           (regex (concat "\\.\\(" (mapconcat #'identity exts "\\|") "\\)$"))
+           (files (directory-files-recursively root regex)))
+      (mapc #'delete-file files)
+      (message "Cleaned %d auxiliary files." (length files))))
+
   (amuzak/leader-keys
-    "c a" '(lsp-execute-code-action :wk "Code Actions")
-    "x x" '(flycheck-list-errors :wk "Open Quick Fix List")
-    "g d" '(lsp-ui-peek-find-definition :wk "Go to Definitions")
-    "g r" '(lsp-ui-peek-find-references :wk "Find References")
-    "r n" '(lsp-rename :wk "Rename Symbol")
-    "f m" '(apheleia-format-buffer :wk "Rename Symbol"))
+    "l l l" '(TeX-command-master :wk "Compile Latex Project")
+    "l l v" '(TeX-view :wk "View in PDF")
+    "l l k" '(TeX-kill-job :wk "Stop Latex Compilation")
+    "l l c" '(clean-latex-project-aux-files :wk "Full Clean Latex Project"))
 
   (amuzak/leader-keys
     "e" '(grease-toggle :wk "Open Grease Here"))
@@ -921,6 +932,7 @@
          (typescript-ts-mode . lsp-deferred)
          (c-ts-mode . lsp-deferred)
          (c++-ts-mode . lsp-deferred)
+         (LaTeX-mode . lsp-deferred)
          (csharp-ts-mode . lsp-deferred))
   :custom
   (lsp-completion-provider :company)
@@ -928,6 +940,7 @@
   (lsp-headerline-breadcrumb-enable t)
   (lsp-idle-delay 0.1)
   (lsp-enable-file-watchers nil)
+  (setq lsp-tex-server 'digestif)
   :commands (lsp lsp-deferred))
 
 (use-package lsp-ui
@@ -978,7 +991,7 @@
                        :host github :repo "manateelazycat/lsp-bridge"
                        :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
                        :build (:not compile))
-  :hook ((org-src-mode LaTeX-mode) . lsp-bridge-mode)
+  :hook ((org-src-mode) . lsp-bridge-mode)
   :config (setq lsp-bridge-python-command "python")
   :init (setq lsp-bridge-enable-diagnostics nil
               acm-enable-search-file-words t
@@ -1001,20 +1014,25 @@
 
 (use-package tex
   :ensure auctex
-  :defer t
-  :init
-  (setq TeX-auto-save t
-        TeX-parse-self t
-        TeX-master nil
-        TeX-PDF-mode t)
   :config
-  (add-hook 'LaTeX-mode-hook #'TeX-source-correlate-mode)
-  (add-hook 'LaTeX-mode-hook #'turn-on-reftex)
+  (setq-default TeX-command-default "LaTeXMk")
+  (setq TeX-save-query nil)
+  (setq TeX-show-compilation nil)
+  (setq TeX-parse-self t)
+  (setq-default TeX-master nil)
+  (add-to-list 'TeX-view-program-list
+                   '("Sioyek" "sioyek.exe --reuse-window --forward-search-file \"%b\" --forward-search-line %n \"%o\""))
 
-  (setq TeX-view-program-selection '((output-pdf "Sioyek")))
+  (add-to-list 'TeX-view-program-selection '(output-pdf "Sioyek"))
+  (setq TeX-source-correlate-mode t)
+  (setq TeX-source-correlate-start-server t)
+  (setq TeX-source-correlate-method 'synctex)
 
-  (setq TeX-view-program-list
-        '(("Sioyek" "sioyek.exe --reuse-instance --forward-search-file \"%b\" --forward-search-line %n \"%o\""))))
+  (add-hook 'LaTeX-mode-hook
+            (lambda ()
+              (add-hook 'after-save-hook
+                        (lambda () (TeX-command "LaTeXMk" 'TeX-master-file -1))
+                        nil t))))
 (server-start)
 
 (use-package evil-tex
@@ -1022,14 +1040,14 @@
   :after tex evil
   :hook (LaTeX-mode . evil-tex-mode))
 
+;; citar
 (use-package citar
   :ensure t
-  :after tex
-  :no-require t
-  :config
-  (add-hook 'LaTeX-mode-hook
-            (lambda ()
-              (add-to-list 'completion-at-point-functions #'citar-capf-renderer))))
+  :init
+  (put 'citar-bibliography 'safe-local-variable #'listp)
+  :hook
+  (LaTeX-mode . (lambda ()
+                  (add-hook 'completion-at-point-functions 'citar-capf -100 t))))
 
 (use-package beacon
   :ensure t
