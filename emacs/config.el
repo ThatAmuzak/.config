@@ -940,7 +940,7 @@
   (lsp-headerline-breadcrumb-enable t)
   (lsp-idle-delay 0.1)
   (lsp-enable-file-watchers nil)
-  (setq lsp-tex-server 'digestif)
+  (setq lsp-tex-server 'texlab)
   :commands (lsp lsp-deferred))
 
 (use-package lsp-ui
@@ -972,6 +972,10 @@
                       :underline '(:color "#e5c07b" :style wave))
   (set-face-attribute 'flycheck-info nil
                       :underline '(:color "#61afef" :style wave)))
+
+(use-package flycheck-projectile
+  :ensure t
+  :after (flycheck projectile))
 
 (use-package apheleia
   :ensure t
@@ -1021,7 +1025,7 @@
   (setq TeX-parse-self t)
   (setq-default TeX-master nil)
   (add-to-list 'TeX-view-program-list
-                   '("Sioyek" "sioyek.exe --reuse-window --forward-search-file \"%b\" --forward-search-line %n \"%o\""))
+                   '("Sioyek"  "sioyek.exe --reuse-window --forward-search-file \"%b\" --forward-search-line %n --inverse-search \"emacsclient --no-wait +%2:%3 %1\" \"%o\""))
 
   (add-to-list 'TeX-view-program-selection '(output-pdf "Sioyek"))
   (setq TeX-source-correlate-mode t)
@@ -1218,3 +1222,5 @@
   :config
   (global-evil-mc-mode 1)
   (setq evil-mc-key-map nil))
+
+(add-to-list 'exec-path "C:/bin/")
