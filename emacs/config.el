@@ -167,7 +167,6 @@
     "f m" '(apheleia-format-buffer :wk "Rename Symbol"))
 
   ;; Latex
-
   (defun clean-latex-project-aux-files ()
     (interactive)
     (let* ((root (if (fboundp 'project-root)
@@ -186,6 +185,15 @@
     "l l k" '(TeX-kill-job :wk "Stop Latex Compilation")
     "l l c" '(clean-latex-project-aux-files :wk "Full Clean Latex Project"))
 
+  ;; LLM
+  (amuzak/leader-keys
+    "g s" '(gptel-send :wk "Send LLM Query")
+    "g m" '(gptel-menu :wk "Open LLM Menu")
+    "g g" '(gptel :wk "Open LLM Buffer")
+    "g a" '(gptel-add-file :wk "Add File for LLM context")
+    "g t" '(gptel-agent :wk "Invoke LLM Tool Call")
+    "g r" '(gptel-rewrite :wk "Rewrite with LLM"))
+
   (amuzak/leader-keys
     "e" '(grease-toggle :wk "Open Grease Here"))
 
@@ -199,6 +207,7 @@
     "t c" '(org-toggle-checkbox :wk "Toggle Checkbox")
     "t a" '(org-agenda :wk "Org Agenda"))
 
+  ;; Multiple Cursors
   (amuzak/leader-keys
     "m" '(:ignore t :wk "Multiple Cursors")
     "m a" '(evil-mc-make-all-cursors :wk "Cursor at all matches of word")
@@ -828,6 +837,11 @@
                    "--cwd" dir
                    "lazygit")))
 
+(use-package projectile
+  :ensure t
+  :init
+  (projectile-mode +1))
+
 ;; Vertico - vertical completion UI
 (use-package vertico
   :ensure t
@@ -878,6 +892,9 @@
   (dimmer-configure-posframe)
   (dimmer-configure-which-key)
   (dimmer-configure-org)
+  (dimmer-configure-magit)
+  (dimmer-configure-hydra)
+  (dimmer-configure-gnus)
   (dimmer-configure-company-box)
   (dimmer-mode t)
   :config
@@ -1053,6 +1070,24 @@
   (LaTeX-mode . (lambda ()
                   (add-hook 'completion-at-point-functions 'citar-capf -100 t))))
 
+(elpaca compat)
+(elpaca-wait)
+
+(use-package transient :ensure t)
+(elpaca-wait)
+
+(use-package gptel
+  :ensure t
+  :config
+  (setq gptel-api-key #'gptel-api-key-from-auth-source
+        gptel-model 'gpt-5.4))
+
+(use-package gptel-agent
+  :ensure (:host github :repo "karthink/gptel-agent")
+  :after gptel
+  :config
+  (gptel-agent-update))
+
 (use-package beacon
   :ensure t
   :config
@@ -1167,11 +1202,6 @@
 
 (add-hook 'org-mode-hook        #'my/prettify-symbols-setup)
 (add-hook 'org-agenda-mode-hook #'my/prettify-symbols-setup)
-
-(use-package projectile
-  :ensure t
-  :init
-  (projectile-mode +1))
 
 (use-package ripgrep
   :ensure (:host github :repo "https://github.com/nlamirault/ripgrep.el"))
