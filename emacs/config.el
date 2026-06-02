@@ -1073,8 +1073,18 @@
 (use-package gptel
   :ensure t
   :config
-  (setq gptel-api-key #'gptel-api-key-from-auth-source
-        gptel-model 'gpt-5.4))
+  (setf gptel-api-key #'gptel-api-key-from-auth-source
+        gptel-model 'gpt-5.4
+        gptel-use-curl t
+        gptel-default-mode #'org-mode
+        gptel-org-branching-context t
+        gptel-expert-commands t
+        gptel-highlight-methods '(face))
+  (setf (alist-get 'org-mode gptel-prompt-prefix-alist) "@user\n"
+        (alist-get 'org-mode gptel-response-prefix-alist) "@assistant\n")
+  (custom-set-faces
+   '(gptel-response-highlight ((t (:background "#112233" :extend t))))))
+(add-hook 'gptel-mode-hook (lambda () (gptel-highlight-mode +1)))
 
 (use-package gptel-agent
   :ensure (:host github :repo "karthink/gptel-agent")
