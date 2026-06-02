@@ -43,10 +43,8 @@
 
 ;; (setq use-package-always-ensure t)
 
-;; Expands to: (elpaca evil (use-package evil :demand t))
-  (use-package evil
+(use-package evil
     :ensure t
-    :demand t
     :init
     (setq evil-want-integration t)
     (setq evil-want-keybinding nil)
@@ -92,7 +90,6 @@
 
   (use-package evil-collection
     :ensure
-    :demand t
     :after evil
     :config
     (setq evil-collection-mode-list '(dashboard dired ibuffer))
@@ -115,7 +112,6 @@
 
 (use-package general
   :ensure t
-  :demand t
   :config
   (general-evil-setup)
 
@@ -180,7 +176,7 @@
       (message "Cleaned %d auxiliary files." (length files))))
 
   (amuzak/leader-keys
-    "l l l" '(TeX-command-master :wk "Compile Latex Project")
+    "l l l" '(TeX-command-run-all :wk "Compile Latex Project")
     "l l v" '(TeX-view :wk "View in PDF")
     "l l k" '(TeX-kill-job :wk "Stop Latex Compilation")
     "l l c" '(clean-latex-project-aux-files :wk "Full Clean Latex Project"))
@@ -352,8 +348,6 @@
 (add-to-list 'default-frame-alist '(font . "JetBrainsMono NFM-11"))
 (setq-default line-spacing 0.12)
 
-(global-set-key (kbd "C-=") 'text-scale-increase)
-(global-set-key (kbd "C--") 'text-scale-decrease)
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)
 
@@ -906,7 +900,6 @@
 
 (use-package treesit-auto
   :ensure t
-  :demand t
   :config
   (setq treesit-auto-install 'prompt)
   (global-treesit-auto-mode))
@@ -934,8 +927,7 @@
 
 (use-package yasnippet
   :ensure t
-  :config
-  (yas-global-mode 1))
+  :hook ((text-mode lsp-mode prog-mode) . yas-minor-mode))
 
 (use-package yasnippet-snippets
   :ensure (:host github :repo "AndreaCrotti/yasnippet-snippets")
@@ -957,8 +949,9 @@
   (lsp-headerline-breadcrumb-enable t)
   (lsp-idle-delay 0.1)
   (lsp-enable-file-watchers nil)
-  (setq lsp-tex-server 'texlab)
+  (lsp-tex-server 'texlab)
   :commands (lsp lsp-deferred))
+  (setq lsp-tex-server 'texlab)
 
 (use-package lsp-ui
   :ensure t
@@ -981,7 +974,7 @@
 
 (use-package flycheck
   :ensure t
-  :init (global-flycheck-mode 1))
+  :hook (text-mode org-mode lsp-mode prog-mode))
 (with-eval-after-load 'flycheck
   (set-face-attribute 'flycheck-error nil
                       :underline '(:color "#e06c75" :style wave))
@@ -996,8 +989,9 @@
 
 (use-package apheleia
   :ensure t
+  :defer t
+  :hook ((text-mode lsp-mode prog-mode) . apheleia-mode)
   :config
-  (apheleia-global-mode +1)
   (setf (alist-get 'python-ts-mode apheleia-mode-alist) '(ruff)))
 
 (use-package markdown-mode
@@ -1036,7 +1030,7 @@
 (use-package tex
   :ensure auctex
   :config
-  (setq-default TeX-command-default "LaTeXMk")
+  (setq TeX-command-default "LaTeXMk")
   (setq TeX-save-query nil)
   (setq TeX-show-compilation nil)
   (setq TeX-parse-self t)
@@ -1107,8 +1101,7 @@
 
 (use-package evil-surround
   :ensure t
-  :config
-  (global-evil-surround-mode 1))
+  :hook ((text-mode lsp-mode prog-mode) . evil-surround-mode))
 
 (use-package evil-nerd-commenter
   :ensure (:host github :repo "redguardtoo/evil-nerd-commenter"))
@@ -1167,12 +1160,11 @@
 
 (use-package symbol-overlay
   :ensure t
-  :config
+  :init
   (setq symbol-overlay-idle-time 0.2)
+  :config
   (set-face-background 'symbol-overlay-default-face "#694b35")
-  (define-globalized-minor-mode global-symbol-overlay-mode
-    symbol-overlay-mode symbol-overlay-mode)
-  (global-symbol-overlay-mode 1))
+  :hook ((text-mode lsp-mode prog-mode) . symbol-overlay-mode))
 
 (defun my/prettify-symbols-setup ()
 

@@ -38,3 +38,4 @@ config.xlaunch
 emacs/eln-cache/30.2-bf8771d1
 emacs/server
 emacs/transient
+emacs/ielm-history.eld

@@ -149,10 +149,8 @@
 ** Load Evil Mode
 
 #+begin_src emacs-lisp
-  ;; Expands to: (elpaca evil (use-package evil :demand t))
   (use-package evil
     :ensure t
-    :demand t
     :init
     (setq evil-want-integration t)
     (setq evil-want-keybinding nil)
@@ -198,7 +196,6 @@
 
   (use-package evil-collection
     :ensure
-    :demand t
     :after evil
     :config
     (setq evil-collection-mode-list '(dashboard dired ibuffer))
@@ -225,7 +222,6 @@
 #+begin_src emacs-lisp
   (use-package general
     :ensure t
-    :demand t
     :config
     (general-evil-setup)
 
@@ -290,7 +286,7 @@
         (message "Cleaned %d auxiliary files." (length files))))
 
     (amuzak/leader-keys
-      "l l l" '(TeX-command-master :wk "Compile Latex Project")
+      "l l l" '(TeX-command-run-all :wk "Compile Latex Project")
       "l l v" '(TeX-view :wk "View in PDF")
       "l l k" '(TeX-kill-job :wk "Stop Latex Compilation")
       "l l c" '(clean-latex-project-aux-files :wk "Full Clean Latex Project"))
@@ -532,8 +528,6 @@ You might have to ensure these are installed on your system
 ** Zooming In/Out
 
 #+begin_src emacs-lisp
-  (global-set-key (kbd "C-=") 'text-scale-increase)
-  (global-set-key (kbd "C--") 'text-scale-decrease)
   (global-set-key (kbd "C-=") 'text-scale-increase)
   (global-set-key (kbd "C--") 'text-scale-decrease)
 #+end_src
@@ -1246,7 +1240,6 @@ Better M-x minibuffer
 #+begin_src emacs-lisp
   (use-package treesit-auto
     :ensure t
-    :demand t
     :config
     (setq treesit-auto-install 'prompt)
     (global-treesit-auto-mode))
@@ -1282,8 +1275,7 @@ Sources (because emacs 30.1 has not yet gotten treesitter version 15 compatible)
 #+begin_src emacs-lisp
   (use-package yasnippet
     :ensure t
-    :config
-    (yas-global-mode 1))
+    :hook ((text-mode lsp-mode prog-mode) . yas-minor-mode))
 
   (use-package yasnippet-snippets
     :ensure (:host github :repo "AndreaCrotti/yasnippet-snippets")
@@ -1311,8 +1303,9 @@ This will be the main LSP for normal buffers.
     (lsp-headerline-breadcrumb-enable t)
     (lsp-idle-delay 0.1)
     (lsp-enable-file-watchers nil)
-    (setq lsp-tex-server 'texlab)
+    (lsp-tex-server 'texlab)
     :commands (lsp lsp-deferred))
+    (setq lsp-tex-server 'texlab)
 #+end_src
 
 ** LSP-UI
@@ -1349,7 +1342,7 @@ Gives suggestions
 #+begin_src emacs-lisp
   (use-package flycheck
     :ensure t
-    :init (global-flycheck-mode 1))
+    :hook (text-mode org-mode lsp-mode prog-mode))
   (with-eval-after-load 'flycheck
     (set-face-attribute 'flycheck-error nil
                         :underline '(:color "#e06c75" :style wave))
@@ -1368,8 +1361,9 @@ Gives suggestions
 #+begin_src emacs-lisp
   (use-package apheleia
     :ensure t
+    :defer t
+    :hook ((text-mode lsp-mode prog-mode) . apheleia-mode)
     :config
-    (apheleia-global-mode +1)
     (setf (alist-get 'python-ts-mode apheleia-mode-alist) '(ruff)))
 #+end_src
 
@@ -1430,7 +1424,7 @@ This is for literate programming
   (use-package tex
     :ensure auctex
     :config
-    (setq-default TeX-command-default "LaTeXMk")
+    (setq TeX-command-default "LaTeXMk")
     (setq TeX-save-query nil)
     (setq TeX-show-compilation nil)
     (setq TeX-parse-self t)
@@ -1547,8 +1541,7 @@ Nvim Surround Capabilities
 #+begin_src emacs-lisp
   (use-package evil-surround
     :ensure t
-    :config
-    (global-evil-surround-mode 1))
+    :hook ((text-mode lsp-mode prog-mode) . evil-surround-mode))
 #+end_src
 
 ** Commenter
@@ -1636,12 +1629,11 @@ Highlight matching symbols in buffer
 #+begin_src emacs-lisp
   (use-package symbol-overlay
     :ensure t
-    :config
+    :init
     (setq symbol-overlay-idle-time 0.2)
+    :config
     (set-face-background 'symbol-overlay-default-face "#694b35")
-    (define-globalized-minor-mode global-symbol-overlay-mode
-      symbol-overlay-mode symbol-overlay-mode)
-    (global-symbol-overlay-mode 1))
+    :hook ((text-mode lsp-mode prog-mode) . symbol-overlay-mode))
 #+end_src
 
 ** Prettify
