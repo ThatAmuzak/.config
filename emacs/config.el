@@ -315,10 +315,6 @@
 
 (setq backup-directory-alist '((".*" . "~/.config/emacs/backups/")))
 
-(setq default-frame-alist '((undecorated . t)))
-(add-to-list 'default-frame-alist '(drag-internal-border . 1))
-(add-to-list 'default-frame-alist '(internal-border-width . 5))
-
 (setq-default tab-width 4)
 
 ;; Setting the default font
@@ -480,7 +476,7 @@
 (add-to-list 'org-structure-template-alist '("se" . "src emacs-lisp"))
 (add-to-list 'org-structure-template-alist '("sp" . "src python"))
 (add-to-list 'org-structure-template-alist '("sr" . "src R"))
-(add-to-list 'org-structure-template-alist '("ss" . "src sh"))
+(add-to-list 'org-structure-template-alist '("ss" . "srp sh"))
 (add-to-list 'org-structure-template-alist '("sc" . "src clojure"))
 
 (add-hook 'org-mode-hook 'org-indent-mode)
@@ -945,7 +941,7 @@
          (csharp-ts-mode . lsp-deferred))
   :custom
   (lsp-completion-provider :company)
-  (lsp-diagnostics-provider :flycheck)
+  (lsp-diagnostics-provider :auto)
   (lsp-headerline-breadcrumb-enable t)
   (lsp-idle-delay 0.1)
   (lsp-enable-file-watchers nil)
@@ -970,7 +966,9 @@
   :custom
   (company-minimum-prefix-length 2)
   (company-idle-delay 0.1)
-  (company-selection-wrap-around t))
+  (company-selection-wrap-around t)
+  :config
+  (setq company-backends '((company-capf :with company-yasnippet))))
 
 (use-package flycheck
   :ensure t
@@ -988,11 +986,15 @@
   :after (flycheck projectile))
 
 (use-package apheleia
-  :ensure t
-  :defer t
-  :hook ((text-mode lsp-mode prog-mode) . apheleia-mode)
-  :config
-  (setf (alist-get 'python-ts-mode apheleia-mode-alist) '(ruff)))
+    :ensure t
+    :defer t
+    :hook ((text-mode lsp-mode prog-mode) . apheleia-mode)
+    :config
+    (setf (alist-get 'python-ts-mode apheleia-mode-alist) '(ruff))
+    ;; Added csharpier formatter and mode mapping
+    (setf (alist-get 'csharpier apheleia-formatters)
+    '("dotnet" "csharpier" "--write-stdout" "--stdin-filepath" filepath))
+    (setf (alist-get 'csharp-ts-mode apheleia-mode-alist) '(csharpier)))
 
 (use-package markdown-mode
   :ensure t
@@ -1026,6 +1028,10 @@
   (lsp-pyright-langserver-command "basedpyright")
   :hook ((python-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))
          (python-ts-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))))
+
+(use-package unity
+  :ensure (:host github :repo "elizagamedev/unity.el")
+  :commands (unity-mode))
 
 (use-package tex
   :ensure auctex

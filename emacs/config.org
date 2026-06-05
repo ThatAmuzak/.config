@@ -22,7 +22,6 @@
   - [[#increase-gc-threshold][Increase GC Threshold]]
   - [[#minibuffer-escape][Minibuffer escape]]
   - [[#set-backup-directory][Set backup directory]]
-  - [[#remove-border][Remove Border]]
   - [[#set-tab-width][Set Tab Width]]
 - [[#fonts][FONTS]]
   - [[#default-fonts][Default Fonts]]
@@ -476,13 +475,13 @@
   (setq backup-directory-alist '((".*" . "~/.config/emacs/backups/")))
 #+end_src
 
-** Remove Border
+# ** Remove Border
 
-#+begin_src emacs-lisp
-  (setq default-frame-alist '((undecorated . t)))
-  (add-to-list 'default-frame-alist '(drag-internal-border . 1))
-  (add-to-list 'default-frame-alist '(internal-border-width . 5))
-#+end_src
+# #+begin_src emacs-lisp
+#   (setq default-frame-alist '((undecorated . t)))
+#   (add-to-list 'default-frame-alist '(drag-internal-border . 1))
+#   (add-to-list 'default-frame-alist '(internal-border-width . 5))
+# #+end_src
 
 ** Set Tab Width
 
@@ -729,7 +728,7 @@ This doesn't really seem to work consistently, but whatever
   (add-to-list 'org-structure-template-alist '("se" . "src emacs-lisp"))
   (add-to-list 'org-structure-template-alist '("sp" . "src python"))
   (add-to-list 'org-structure-template-alist '("sr" . "src R"))
-  (add-to-list 'org-structure-template-alist '("ss" . "src sh"))
+  (add-to-list 'org-structure-template-alist '("ss" . "srp sh"))
   (add-to-list 'org-structure-template-alist '("sc" . "src clojure"))
 #+end_src
 
@@ -1299,7 +1298,7 @@ This will be the main LSP for normal buffers.
            (csharp-ts-mode . lsp-deferred))
     :custom
     (lsp-completion-provider :company)
-    (lsp-diagnostics-provider :flycheck)
+    (lsp-diagnostics-provider :auto)
     (lsp-headerline-breadcrumb-enable t)
     (lsp-idle-delay 0.1)
     (lsp-enable-file-watchers nil)
@@ -1334,7 +1333,9 @@ Gives suggestions
     :custom
     (company-minimum-prefix-length 2)
     (company-idle-delay 0.1)
-    (company-selection-wrap-around t))
+    (company-selection-wrap-around t)
+    :config
+    (setq company-backends '((company-capf :with company-yasnippet))))
 #+end_src
 
 ** Diagnostics
@@ -1360,11 +1361,15 @@ Gives suggestions
 
 #+begin_src emacs-lisp
   (use-package apheleia
-    :ensure t
-    :defer t
-    :hook ((text-mode lsp-mode prog-mode) . apheleia-mode)
-    :config
-    (setf (alist-get 'python-ts-mode apheleia-mode-alist) '(ruff)))
+      :ensure t
+      :defer t
+      :hook ((text-mode lsp-mode prog-mode) . apheleia-mode)
+      :config
+      (setf (alist-get 'python-ts-mode apheleia-mode-alist) '(ruff))
+      ;; Added csharpier formatter and mode mapping
+      (setf (alist-get 'csharpier apheleia-formatters)
+      '("dotnet" "csharpier" "--write-stdout" "--stdin-filepath" filepath))
+      (setf (alist-get 'csharp-ts-mode apheleia-mode-alist) '(csharpier)))
 #+end_src
 
 ** Markdown Mode
@@ -1414,6 +1419,14 @@ This is for literate programming
     (lsp-pyright-langserver-command "basedpyright")
     :hook ((python-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))
            (python-ts-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))))
+#+end_src
+
+*** Unity Mode
+
+#+begin_src emacs-lisp
+  (use-package unity
+    :ensure (:host github :repo "elizagamedev/unity.el")
+    :commands (unity-mode))
 #+end_src
 
 * LATEX
