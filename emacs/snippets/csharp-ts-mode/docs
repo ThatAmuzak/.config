@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: Documentation Comment
+# key: doc
+# --
+/// <summary>
+/// ${1:Description of the function.}
+/// </summary>
+/// <param name="${2:paramName}">${3:Description of parameter.}</param>
+/// <returns>${4:Description of return value.}</returns>
+$0

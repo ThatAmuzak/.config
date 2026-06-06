@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: TryGetComponent
+# key: trygetcomp
+# --
+if (TryGetComponent<$1>(out var ${2:component}))
+{
+    $0
+}

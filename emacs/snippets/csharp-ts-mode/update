@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: Update Loop
+# key: update
+# --
+private void Update()
+{
+    $0
+}

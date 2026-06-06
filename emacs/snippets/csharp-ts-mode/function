@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: Private Function
+# key: func
+# --
+private ${1:void} ${2:MethodName}($3)
+{
+    $0
+}

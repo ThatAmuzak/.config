@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: debug warn
+# key: dewarn
+# --
+Debug.Warn(\$"$1");

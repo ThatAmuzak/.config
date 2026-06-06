@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: OnTriggerEnter
+# key: ontriggerenter
+# --
+private void OnTriggerEnter(Collider other)
+{
+    if (other.CompareTag("$1"))
+    {
+        $0
+    }
+}

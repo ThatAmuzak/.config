@@ -187,8 +187,6 @@
 
     ;; LSP Stuff
     (define-key evil-normal-state-map (kbd "K") (lambda () (interactive) (lsp-ui-doc-toggle)))
-    (define-key evil-normal-state-map (kbd "E") (lambda () (interactive) (lsp-show-diagnostics-at-point)))
-    (define-key evil-insert-state-map (kbd "C-k") (lambda () (interactive) (eldoc-box-help-at-point)))
 
     ;; DWIM in org on enter in normal mode
     (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
@@ -265,10 +263,12 @@
     ;; LSP
     (amuzak/leader-keys
       "c a" '(lsp-execute-code-action :wk "Code Actions")
-      "x x" '(flycheck-list-errors :wk "Open Quick Fix List")
-      "g d" '(lsp-ui-peek-find-definition :wk "Go to Definitions")
-      "g r" '(lsp-ui-peek-find-references :wk "Find References")
+      "x x" '(flycheck-projectile-list-errors :wk "Open Project Wide Issues")
+      "g d" '(lsp-find-definition :wk "Go to Definitions")
+      "g r" '(lsp-find-references :wk "Find References")
       "r n" '(lsp-rename :wk "Rename Symbol")
+      "r w" '(lsp-restart-workspace :wk "Restart LSP")
+      "k k" '(lsp-disconnect :wk "Stop LSP")
       "f m" '(apheleia-format-buffer :wk "Rename Symbol"))
 
     ;; Latex
@@ -292,12 +292,12 @@
 
     ;; LLM
     (amuzak/leader-keys
-      "g s" '(gptel-send :wk "Send LLM Query")
-      "g m" '(gptel-menu :wk "Open LLM Menu")
-      "g g" '(gptel :wk "Open LLM Buffer")
-      "g a" '(gptel-add-file :wk "Add File for LLM context")
-      "g t" '(gptel-agent :wk "Invoke LLM Tool Call")
-      "g r" '(gptel-rewrite :wk "Rewrite with LLM"))
+      "g g s" '(gptel-send :wk "Send LLM Query")
+      "g g m" '(gptel-menu :wk "Open LLM Menu")
+      "g g g" '(gptel :wk "Open LLM Buffer")
+      "g g a" '(gptel-add-file :wk "Add File for LLM context")
+      "g g t" '(gptel-agent :wk "Invoke LLM Tool Call")
+      "g g r" '(gptel-rewrite :wk "Rewrite with LLM"))
 
     (amuzak/leader-keys
       "e" '(grease-toggle :wk "Open Grease Here"))
@@ -325,6 +325,24 @@
       "m q" '(evil-mc-undo-all-cursors :wk "Clear all cursors"))
 
     ;; Misc
+      (defun amuzak/save-all-buffers ()
+        (interactive)
+        (save-some-buffers
+         t
+         (lambda ()
+           (and (buffer-modified-p)
+                (not (eq major-mode 'comint-mode))
+                (not (derived-mode-p 'grease-mode))
+                (not (string-match-p "\\*.*\\*" (buffer-name))))))
+
+        (dolist (buf (buffer-list))
+          (with-current-buffer buf
+            (when (and (derived-mode-p 'grease-mode)
+                       (buffer-modified-p))
+              (grease-save))))
+
+        (message "All files saved"))
+
     (amuzak/leader-keys
       "SPC" '(projectile-find-file :wk "Find file")
       "s g" '(projectile-ripgrep :wk "Search in file")
@@ -336,18 +354,9 @@
       "l g" '(my/launch-lazygit :wk "Launch LazyGit")
       "f f" '(flash-jump :wk "Flash to Target")
       "c b" (lambda () (interactive) (let ((vertico-posframe-mode nil)) (call-interactively #'consult-yank-from-kill-ring)))
-      "w w" '((lambda () (interactive)
-                (save-some-buffers t (lambda ()
-                                       (and (buffer-modified-p)
-                                            (not (string-match-p "\\*.*\\*" (buffer-name)))
-                                            (not (eq major-mode 'comint-mode)))))
-                (message "All files saved"))
-              :wk "Save file(s)")
+      "w w" '(amuzak/save-all-buffers :wk "Save file(s)")
       "q q" '((lambda () (interactive)
-                (save-some-buffers t (lambda ()
-                                       (and (buffer-modified-p)
-                                            (not (string-match-p "\\*.*\\*" (buffer-name)))
-                                            (not (eq major-mode 'comint-mode)))))
+                (amuzak/save-all-buffers)
                 (message "All files saved, exiting...")
                 (kill-emacs))
               :wk "Save all and quit"))
@@ -1331,8 +1340,8 @@ Gives suggestions
     :ensure t
     :hook (lsp-mode . company-mode)
     :custom
-    (company-minimum-prefix-length 2)
-    (company-idle-delay 0.1)
+    (company-minimum-prefix-length 1)
+    (company-idle-delay 0.02)
     (company-selection-wrap-around t)
     :config
     (setq company-backends '((company-capf :with company-yasnippet))))
@@ -1361,15 +1370,12 @@ Gives suggestions
 
 #+begin_src emacs-lisp
   (use-package apheleia
-      :ensure t
-      :defer t
-      :hook ((text-mode lsp-mode prog-mode) . apheleia-mode)
-      :config
-      (setf (alist-get 'python-ts-mode apheleia-mode-alist) '(ruff))
-      ;; Added csharpier formatter and mode mapping
-      (setf (alist-get 'csharpier apheleia-formatters)
-      '("dotnet" "csharpier" "--write-stdout" "--stdin-filepath" filepath))
-      (setf (alist-get 'csharp-ts-mode apheleia-mode-alist) '(csharpier)))
+    :ensure t
+    :defer t
+    :hook ((text-mode lsp-mode prog-mode) . apheleia-mode)
+    :config
+    (setf (alist-get 'python-ts-mode apheleia-mode-alist) '(ruff))
+    (setf (alist-get 'csharp-ts-mode apheleia-mode-alist) '(csharpier)))
 #+end_src
 
 ** Markdown Mode

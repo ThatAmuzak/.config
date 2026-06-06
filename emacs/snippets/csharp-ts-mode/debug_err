@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: debug err
+# key: deerr
+# --
+Debug.Error(\$"$1");

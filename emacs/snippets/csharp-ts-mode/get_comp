@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: GetComponent
+# key: getcomponent
+# --
+$1 = GetComponent<$2>();

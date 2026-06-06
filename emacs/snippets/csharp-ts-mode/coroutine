@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: Coroutine Method
+# key: coroutine
+# --
+private IEnumerator ${0:RoutineName}()
+{
+    yield return new WaitForSeconds(${2:1f});
+    $1
+}

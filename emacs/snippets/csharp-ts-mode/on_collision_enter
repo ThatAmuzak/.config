@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: OnCollisionEnter
+# key: oncollisionenter
+# --
+private void OnCollisionEnter(Collision collision)
+{
+    if (collision.gameObject.CompareTag("$1"))
+    {
+        $0
+    }
+}

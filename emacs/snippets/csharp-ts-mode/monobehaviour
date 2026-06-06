@@ -1,0 +1,21 @@
+# -*- mode: snippet -*-
+# name: MonoBehaviour Class
+# key: monobehaviour
+# --
+using UnityEngine;
+
+${1:namespace ${2:MyGame}
+{
+    }public class ${3:`(file-name-base (or (buffer-file-name) "NewBehaviourScript"))`} : MonoBehaviour
+    {
+        private void Start()
+        {
+            $0
+        }
+
+        private void Update()
+        {
+
+        }
+    }${1:
+\}}
