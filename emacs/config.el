@@ -79,7 +79,7 @@
     (define-key evil-normal-state-map (kbd "C-j") 'evil-window-down)
     (define-key evil-normal-state-map (kbd "C-h") 'evil-window-left)
     (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
-
+    (evil-set-undo-system 'undo-redo)
     ;; LSP Stuff
     (define-key evil-normal-state-map (kbd "K") (lambda () (interactive) (lsp-ui-doc-toggle)))
 
@@ -236,7 +236,7 @@
 
   (amuzak/leader-keys
     "SPC" '(projectile-find-file :wk "Find file")
-    "s g" '(projectile-ripgrep :wk "Search in file")
+    "s g" '(consult-grep :wk "Search in Project")
     "p p" '(projectile-switch-project :wk "Switch Projects")
     "p a" '(projectile-add-known-project :wk "Add Project")
     "a" (lambda () (interactive) (evil-goto-first-line) (evil-visual-line) (evil-goto-line))
@@ -932,6 +932,11 @@
 
 (use-package yasnippet
   :ensure t
+  :config
+  (setq yas-snippet-dirs
+        (append yas-snippet-dirs
+                `("~/.config/emacs/snippets"))
+              yas-indent-line 'fixed)
   :hook ((text-mode lsp-mode prog-mode) . yas-minor-mode))
 
 (use-package yasnippet-snippets
@@ -1096,6 +1101,34 @@
         (alist-get 'org-mode gptel-response-prefix-alist) "@assistant\n")
   (custom-set-faces
    '(gptel-response-highlight ((t (:background "#112233" :extend t))))))
+(add-hook 'gptel-mode-hook (lambda () (gptel-highlight-mode +1)))
+
+(defvar my/gptel-save-dir
+  (expand-file-name "~/emacs/backups/gptel_conversations/")
+  "Directory for auto-saved gptel buffers.")
+
+(defun my/gptel-auto-save ()
+  "Save the current gptel buffer to `my/gptel-save-dir'."
+  (when gptel-mode
+    (if (buffer-file-name)
+        (save-buffer)
+      (unless (file-directory-p my/gptel-save-dir)
+        (make-directory my/gptel-save-dir t))
+      (let* ((ext (if (eq major-mode 'org-mode) "org" "md"))
+             (slug (replace-regexp-in-string
+                    "[^a-zA-Z0-9_-]" "-"
+                    (downcase (buffer-name))))
+             (timestamp (format-time-string "%Y%m%dT%H%M%S"))
+             (filename (expand-file-name
+                        (format "%s-%s.%s" timestamp slug ext)
+                        my/gptel-save-dir)))
+        (remove-hook 'before-save-hook #'gptel--save-state t)
+        (write-file filename)
+        (add-hook 'before-save-hook #'gptel--save-state nil t)))))
+
+(add-hook 'gptel-post-response-functions
+          (lambda (_ _) (my/gptel-auto-save)))
+
 (add-hook 'gptel-mode-hook (lambda () (gptel-highlight-mode +1)))
 
 (use-package gptel-agent
