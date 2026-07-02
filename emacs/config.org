@@ -1280,6 +1280,14 @@ Sources (because emacs 30.1 has not yet gotten treesitter version 15 compatible)
         (json . ("https://github.com/tree-sitter/tree-sitter-json" "v0.24.8"))))
 #+end_src
 
+Some folding support with treesitter as well
+
+#+begin_src emacs-lisp
+(use-package treesit-fold
+  :ensure t
+  :hook (prog-mode . treesit-fold-indicators-mode))
+#+end_src
+
 ** Yasnippets
 
 #+begin_src emacs-lisp
@@ -1619,7 +1627,8 @@ Nvim Surround Capabilities
 #+begin_src emacs-lisp
   (use-package evil-surround
     :ensure t
-    :hook ((text-mode lsp-mode prog-mode) . evil-surround-mode))
+    :init
+    (global-evil-surround-mode 1))
 #+end_src
 
 ** Commenter

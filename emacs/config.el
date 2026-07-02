@@ -931,6 +931,10 @@
         (toml . ("https://github.com/tree-sitter-grammars/tree-sitter-toml" "v0.7.0"))
         (json . ("https://github.com/tree-sitter/tree-sitter-json" "v0.24.8"))))
 
+(use-package treesit-fold
+  :ensure t
+  :hook (prog-mode . treesit-fold-indicators-mode))
+
 (use-package yasnippet
   :ensure t
   :config
@@ -1163,7 +1167,8 @@
 
 (use-package evil-surround
   :ensure t
-  :hook ((text-mode lsp-mode prog-mode) . evil-surround-mode))
+  :init
+  (global-evil-surround-mode 1))
 
 (use-package evil-nerd-commenter
   :ensure (:host github :repo "redguardtoo/evil-nerd-commenter"))
