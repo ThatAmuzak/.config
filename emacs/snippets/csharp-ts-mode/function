@@ -4,5 +4,5 @@
 # --
 private ${1:void} ${2:MethodName}($3)
 {
-    $0
+    $4
 }

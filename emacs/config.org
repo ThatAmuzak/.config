@@ -92,6 +92,7 @@
   - [[#git-gutter][Git Gutter]]
   - [[#helpful][Helpful]]
   - [[#multiple-cursors][Multiple Cursors]]
+  - [[#pidev-integration][Pi.dev integration]]
   - [[#adding-some-exec-paths][Adding some exec paths]]
 
 * IMPORTANT PROGRAMS TO LOAD FIRST
@@ -1197,7 +1198,8 @@ Better M-x minibuffer
     :ensure t
     :custom
     (completion-styles '(orderless flex basic))
-    (completion-category-overrides '((file (styles orderless basic partial-completion))))
+    ;; (completion-category-overrides '((file (styles orderless basic partial-completion))))
+    (completion-category-overrides '((file (styles orderless))))
     (completion-ignore-case t))
 
   ;; Marginalia - annotations in the minibuffer (file size, docstrings, etc.)
@@ -1281,18 +1283,15 @@ Sources (because emacs 30.1 has not yet gotten treesitter version 15 compatible)
 ** Yasnippets
 
 #+begin_src emacs-lisp
-  (use-package yasnippet
-    :ensure t
-    :config
-    (setq yas-snippet-dirs
-          (append yas-snippet-dirs
-                  `("~/.config/emacs/snippets"))
-                yas-indent-line 'fixed)
-    :hook ((text-mode lsp-mode prog-mode) . yas-minor-mode))
-
-  (use-package yasnippet-snippets
-    :ensure (:host github :repo "AndreaCrotti/yasnippet-snippets")
-    :after yasnippet)
+(use-package yasnippet
+  :ensure t
+  :config
+  (setq yas-snippet-dirs
+        (append '("~/.config/emacs/snippets")
+                yas-snippet-dirs))
+  (setq yas-indent-line 'fixed)
+  (yas-global-mode 1)
+  (yas-reload-all))
 #+end_src
 
 ** LSP-Mode
@@ -1315,6 +1314,7 @@ This will be the main LSP for normal buffers.
     (lsp-diagnostics-provider :auto)
     (lsp-headerline-breadcrumb-enable t)
     (lsp-idle-delay 0.1)
+    (lsp-enable-snippet t)
     (lsp-enable-file-watchers nil)
     (lsp-tex-server 'texlab)
     :commands (lsp lsp-deferred))
@@ -1341,15 +1341,23 @@ This will be the main LSP for normal buffers.
 Gives suggestions
 
 #+begin_src emacs-lisp
-  (use-package company
-    :ensure t
-    :hook (lsp-mode . company-mode)
-    :custom
-    (company-minimum-prefix-length 1)
-    (company-idle-delay 0.02)
-    (company-selection-wrap-around t)
-    :config
-    (setq company-backends '((company-capf :with company-yasnippet))))
+(use-package company
+  :ensure t
+  :hook (lsp-mode . company-mode)
+  :custom
+  (company-minimum-prefix-length 1)
+  (company-idle-delay 0.02)
+  (company-selection-wrap-around t))
+#+end_src
+
+Cuz yassnippets and company doesn't play well easily? Or I just couldn't get them to work properly
+
+#+begin_src emacs-lisp
+(add-hook 'lsp-completion-mode-hook
+          (lambda ()
+            (setq-local company-backends
+                        (cl-substitute '(company-yasnippet :with company-capf :separate)
+                                       'company-capf company-backends))))
 #+end_src
 
 ** Diagnostics
@@ -1583,7 +1591,11 @@ The Oil.nvim substitute
 #+begin_src emacs-lisp
   (use-package grease
     :ensure (:host github :repo "mwac-dev/grease.el")
-    :commands (grease-open grease-toggle grease-here))
+    :commands (grease-open grease-toggle grease-here)
+    :init
+    (setq grease-show-hidden t)
+    (setq grease-skip-confirm-for-simple-edits t)
+    (setq grease-preview-window-width 0.4))
 #+end_src
 
 ** Undo-Fu
@@ -1803,6 +1815,14 @@ Highlight matching symbols in buffer
     :config
     (global-evil-mc-mode 1)
     (setq evil-mc-key-map nil))
+#+end_src
+
+** Pi.dev integration
+
+#+begin_src emacs-lisp
+(use-package pi-coding-agent
+  :ensure t
+  :init (defalias 'pi 'pi-coding-agent))
 #+end_src
 
 ** Adding some exec paths

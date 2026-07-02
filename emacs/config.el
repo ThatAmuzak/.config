@@ -859,7 +859,8 @@
   :ensure t
   :custom
   (completion-styles '(orderless flex basic))
-  (completion-category-overrides '((file (styles orderless basic partial-completion))))
+  ;; (completion-category-overrides '((file (styles orderless basic partial-completion))))
+  (completion-category-overrides '((file (styles orderless))))
   (completion-ignore-case t))
 
 ;; Marginalia - annotations in the minibuffer (file size, docstrings, etc.)
@@ -934,14 +935,11 @@
   :ensure t
   :config
   (setq yas-snippet-dirs
-        (append yas-snippet-dirs
-                `("~/.config/emacs/snippets"))
-              yas-indent-line 'fixed)
-  :hook ((text-mode lsp-mode prog-mode) . yas-minor-mode))
-
-(use-package yasnippet-snippets
-  :ensure (:host github :repo "AndreaCrotti/yasnippet-snippets")
-  :after yasnippet)
+        (append '("~/.config/emacs/snippets")
+                yas-snippet-dirs))
+  (setq yas-indent-line 'fixed)
+  (yas-global-mode 1)
+  (yas-reload-all))
 
 (use-package lsp-mode
   :ensure t
@@ -958,6 +956,7 @@
   (lsp-diagnostics-provider :auto)
   (lsp-headerline-breadcrumb-enable t)
   (lsp-idle-delay 0.1)
+  (lsp-enable-snippet t)
   (lsp-enable-file-watchers nil)
   (lsp-tex-server 'texlab)
   :commands (lsp lsp-deferred))
@@ -980,9 +979,13 @@
   :custom
   (company-minimum-prefix-length 1)
   (company-idle-delay 0.02)
-  (company-selection-wrap-around t)
-  :config
-  (setq company-backends '((company-capf :with company-yasnippet))))
+  (company-selection-wrap-around t))
+
+(add-hook 'lsp-completion-mode-hook
+          (lambda ()
+            (setq-local company-backends
+                        (cl-substitute '(company-yasnippet :with company-capf :separate)
+                                       'company-capf company-backends))))
 
 (use-package flycheck
   :ensure t
@@ -1144,7 +1147,11 @@
 
 (use-package grease
   :ensure (:host github :repo "mwac-dev/grease.el")
-  :commands (grease-open grease-toggle grease-here))
+  :commands (grease-open grease-toggle grease-here)
+  :init
+  (setq grease-show-hidden t)
+  (setq grease-skip-confirm-for-simple-edits t)
+  (setq grease-preview-window-width 0.4))
 
 (use-package undo-fu
   :elpaca t)
@@ -1299,5 +1306,9 @@
   :config
   (global-evil-mc-mode 1)
   (setq evil-mc-key-map nil))
+
+(use-package pi-coding-agent
+  :ensure t
+  :init (defalias 'pi 'pi-coding-agent))
 
 (add-to-list 'exec-path "C:/bin/")

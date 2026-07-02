@@ -2,8 +2,8 @@
 # name: Coroutine Method
 # key: coroutine
 # --
-private IEnumerator ${0:RoutineName}()
+private IEnumerator ${1:RoutineName}()
 {
     yield return new WaitForSeconds(${2:1f});
-    $1
+    $3
 }

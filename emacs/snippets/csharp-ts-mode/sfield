@@ -3,5 +3,5 @@
 # key: sfield
 # --
 [SerializeField]
-[Tooltip("$1")]
-private $2 $3 = $4;
+[Tooltip("${4:foo}")]
+private ${1:int} ${2:var} = ${3:0};

@@ -1,8 +1,8 @@
 # -*- mode: snippet -*-
-# name: Update Loop
+# name: Fixed Update Loop
 # key: fixedupdate
 # --
 private void FixedUpdate()
 {
-    $0
+    $1
 }

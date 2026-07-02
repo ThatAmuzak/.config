@@ -2,4 +2,4 @@
 # name: GetComponent
 # key: getcomponent
 # --
-$1 = GetComponent<$2>();
+GetComponent<${1:GameObject}>();

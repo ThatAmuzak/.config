@@ -6,6 +6,6 @@ private void OnTriggerExit(Collider other)
 {
     if (other.CompareTag("$1"))
     {
-        $0
+        $2
     }
 }

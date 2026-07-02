@@ -6,6 +6,6 @@ private void OnCollisionExit(Collision collision)
 {
     if (collision.gameObject.CompareTag("$1"))
     {
-        $0
+        $2
     }
 }

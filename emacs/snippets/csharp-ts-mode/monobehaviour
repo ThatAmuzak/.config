@@ -10,12 +10,12 @@ ${1:namespace ${2:MyGame}
     {
         private void Start()
         {
-            $0
+
         }
 
         private void Update()
         {
 
         }
-    }${1:
+    }${5:
 \}}
