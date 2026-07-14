@@ -1150,12 +1150,16 @@
   (beacon-mode 1))
 
 (use-package grease
-  :ensure (:host github :repo "mwac-dev/grease.el")
+  :elpaca (:host github :repo "mwac-dev/grease.el")
   :commands (grease-open grease-toggle grease-here)
   :init
-  (setq grease-show-hidden t)
-  (setq grease-skip-confirm-for-simple-edits t)
-  (setq grease-preview-window-width 0.4))
+  (setq grease-skip-confirm-for-simple-edits t
+        grease-show-hidden t
+        grease-preview-writable nil)
+  :hook (grease-mode . (lambda ()
+                          (olivetti-mode 1)
+                          (unless grease--preview-window
+                            (grease-toggle-preview)))))
 
 (use-package undo-fu
   :elpaca t)

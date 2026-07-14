@@ -40,3 +40,5 @@ emacs/server
 emacs/transient
 emacs/ielm-history.eld
 emacs/url
+emacs/.cache/lsp/npm
+lesshst
