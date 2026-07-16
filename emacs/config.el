@@ -1154,6 +1154,7 @@
   :commands (grease-open grease-toggle grease-here)
   :init
   (setq grease-skip-confirm-for-simple-edits t
+        grease-directory-face-foreground "#f8c759"
         grease-show-hidden t
         grease-preview-writable nil)
   :hook (grease-mode . (lambda ()
