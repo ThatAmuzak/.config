@@ -1134,9 +1134,29 @@ Also enables inline images to be enabled by default
 
 * TERMINAL
 
-They are still figuring out terminal support for windows and emacs in the year of our lord 2026
+Remember to update elpaca menus melpa before running this, it's a pretty recent update
 
-In the meantime
+#+begin_src emacs-lisp
+(use-package ghostel
+  :ensure t)
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package evil-ghostel
+    :ensure t
+    :after (ghostel evil)
+    :hook (ghostel-mode . evil-ghostel-mode))
+#+end_src
+
+#+begin_src emacs-lisp
+(setq ghostel-shell "C:/Program Files/PowerShell/7/pwsh.exe")
+#+end_src
+
++They are still figuring out terminal support for windows and emacs in the year of our lord 2026+
+
++In the meantime+
+
+This is still probably worth having
 
 #+begin_src emacs-lisp
   (global-set-key (kbd "C-/") #'my/launch-shell)

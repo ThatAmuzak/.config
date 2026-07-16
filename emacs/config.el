@@ -817,6 +817,16 @@
   (advice-add 'dashboard-agenda--formatted-time
               :override #'my/dashboard-agenda--formatted-time))
 
+(use-package ghostel
+  :ensure t)
+
+(use-package evil-ghostel
+  :ensure t
+  :after (ghostel evil)
+  :hook (ghostel-mode . evil-ghostel-mode))
+
+(setq ghostel-shell "C:/Program Files/PowerShell/7/pwsh.exe")
+
 (global-set-key (kbd "C-/") #'my/launch-shell)
 (defun my/launch-shell ()
   "Launch WezTerm in the project root or current directory."
