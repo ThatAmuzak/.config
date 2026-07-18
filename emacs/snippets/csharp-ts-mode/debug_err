@@ -2,4 +2,4 @@
 # name: debug err
 # key: deerr
 # --
-Debug.Error(\$"$1");
+Debug.LogError(\$"$1");

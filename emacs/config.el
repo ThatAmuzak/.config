@@ -943,7 +943,7 @@
 
 (use-package treesit-fold
   :ensure t
-  :hook (prog-mode . treesit-fold-indicators-mode))
+  :hook (prog-mode . treesit-fold-mode))
 
 (use-package yasnippet
   :ensure t

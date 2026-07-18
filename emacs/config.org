@@ -1305,7 +1305,7 @@ Some folding support with treesitter as well
 #+begin_src emacs-lisp
 (use-package treesit-fold
   :ensure t
-  :hook (prog-mode . treesit-fold-indicators-mode))
+  :hook (prog-mode . treesit-fold-mode))
 #+end_src
 
 ** Yasnippets

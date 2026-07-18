@@ -2,4 +2,4 @@
 # name: debug warn
 # key: dewarn
 # --
-Debug.Warn(\$"$1");
+Debug.LogWarning(\$"$1");
