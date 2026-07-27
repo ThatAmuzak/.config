@@ -160,7 +160,23 @@
     "r n" '(lsp-rename :wk "Rename Symbol")
     "r w" '(lsp-restart-workspace :wk "Restart LSP")
     "k k" '(lsp-disconnect :wk "Stop LSP")
-    "f m" '(apheleia-format-buffer :wk "Rename Symbol"))
+    "f m" '(apheleia-format-buffer :wk "Format Buffer"))
+
+  ;; Rust / Cargo
+  (amuzak/leader-keys
+    "c c" '(:ignore t :wk "Cargo")
+    "c c b" '(rustic-cargo-build :wk "Cargo Build")
+    "c c r" '(rustic-cargo-run :wk "Cargo Run")
+    "c c t" '(rustic-cargo-test :wk "Cargo Test")
+    "c c k" '(rustic-cargo-check :wk "Cargo Check")
+    "c c l" '(rustic-cargo-clippy :wk "Cargo Clippy")
+    "c c f" '(rustic-cargo-fmt :wk "Cargo Fmt")
+    "c c p" '(rustic-popup :wk "Cargo Popup Menu")
+    "c c u" '(rustic-cargo-upgrade :wk "Cargo Upgrade Deps")
+    "c c a" '(rustic-cargo-add :wk "Cargo Add Dependency")
+    "c c m" '(rustic-cargo-rm :wk "Cargo Remove Dependency")
+    "c c d" '(dap-debug :wk "Debug (DAP)")
+    "c c D" '(dap-hydra :wk "Debug Hydra Menu"))
 
   ;; Latex
   (defun clean-latex-project-aux-files ()
@@ -425,6 +441,8 @@
   :hook
   ((python-mode . outline-indent-minor-mode)
    (python-ts-mode . outline-indent-minor-mode)
+   (rustic-mode . outline-indent-minor-mode)
+   (rust-ts-mode . outline-indent-minor-mode)
    (emacs-lisp-mode . outline-indent-minor-mode)))
 
 (use-package kirigami
@@ -958,6 +976,7 @@
 (use-package lsp-mode
   :ensure t
   :hook ((python-ts-mode . lsp-deferred)
+         (rustic-mode . lsp-deferred)
          (rust-ts-mode . lsp-deferred)
          (js-ts-mode . lsp-deferred)
          (typescript-ts-mode . lsp-deferred)
@@ -1022,7 +1041,9 @@
   :hook ((text-mode lsp-mode prog-mode) . apheleia-mode)
   :config
   (setf (alist-get 'python-ts-mode apheleia-mode-alist) '(ruff))
-  (setf (alist-get 'csharp-ts-mode apheleia-mode-alist) '(csharpier)))
+  (setf (alist-get 'csharp-ts-mode apheleia-mode-alist) '(csharpier))
+  (setf (alist-get 'rustic-mode apheleia-mode-alist) '(rustfmt))
+  (setf (alist-get 'rust-ts-mode apheleia-mode-alist) '(rustfmt)))
 
 (use-package markdown-mode
   :ensure t
@@ -1060,6 +1081,42 @@
 (use-package unity
   :ensure (:host github :repo "elizagamedev/unity.el")
   :commands (unity-mode))
+
+(use-package rustic
+  :ensure t
+  :after lsp-mode
+  :custom
+  (rustic-lsp-server 'rust-analyzer)
+  (rustic-analyzer-command '("rust-analyzer"))
+  (rustic-format-on-save t)
+  (rustic-cargo-auto-add-missing-dependencies t)
+  (rustic-compile-command "cargo build")
+  (rustic-compile-backtrace 0)
+  :config
+  ;; Enable rust-analyzer inline type hints
+  (setq lsp-rust-analyzer-display-chaining-hints t)
+  (setq lsp-rust-analyzer-display-parameter-hints t)
+  (setq lsp-rust-analyzer-display-reborrow-hints t)
+  (setq lsp-rust-analyzer-server-display-inlay-hints t)
+  (setq lsp-rust-analyzer-cargo-all-features t)
+  (setq lsp-rust-analyzer-cargo-load-out-dirs-from-check t)
+  (setq lsp-rust-analyzer-proc-macro-enable t))
+
+(use-package dap-mode
+  :ensure t
+  :after lsp-mode
+  :custom
+  (dap-auto-configure-features '(sessions locals controls tooltip))
+  :config
+  (dap-auto-configure-mode))
+
+(with-eval-after-load 'dap-mode
+  (require 'dap-gdb-lldb)
+  (dap-gdb-lldb-setup))
+
+;; Automatically load debug adapter when Rust LSP activates
+(with-eval-after-load 'lsp-rust
+  (require 'dap-gdb-lldb))
 
 (use-package tex
   :ensure auctex

@@ -70,6 +70,7 @@
   - [[#markdown-mode][Markdown Mode]]
   - [[#lsp-bridge][LSP-Bridge]]
   - [[#language-modes][Language Modes]]
+  - [[#debugging-dap][Debugging (DAP)]]
 - [[#latex][LATEX]]
   - [[#auctex][Auctex]]
   - [[#evil-tex][Evil-Tex]]
@@ -270,7 +271,23 @@
       "r n" '(lsp-rename :wk "Rename Symbol")
       "r w" '(lsp-restart-workspace :wk "Restart LSP")
       "k k" '(lsp-disconnect :wk "Stop LSP")
-      "f m" '(apheleia-format-buffer :wk "Rename Symbol"))
+      "f m" '(apheleia-format-buffer :wk "Format Buffer"))
+
+    ;; Rust / Cargo
+    (amuzak/leader-keys
+      "c c" '(:ignore t :wk "Cargo")
+      "c c b" '(rustic-cargo-build :wk "Cargo Build")
+      "c c r" '(rustic-cargo-run :wk "Cargo Run")
+      "c c t" '(rustic-cargo-test :wk "Cargo Test")
+      "c c k" '(rustic-cargo-check :wk "Cargo Check")
+      "c c l" '(rustic-cargo-clippy :wk "Cargo Clippy")
+      "c c f" '(rustic-cargo-fmt :wk "Cargo Fmt")
+      "c c p" '(rustic-popup :wk "Cargo Popup Menu")
+      "c c u" '(rustic-cargo-upgrade :wk "Cargo Upgrade Deps")
+      "c c a" '(rustic-cargo-add :wk "Cargo Add Dependency")
+      "c c m" '(rustic-cargo-rm :wk "Cargo Remove Dependency")
+      "c c d" '(dap-debug :wk "Debug (DAP)")
+      "c c D" '(dap-hydra :wk "Debug Hydra Menu"))
 
     ;; Latex
     (defun clean-latex-project-aux-files ()
@@ -648,6 +665,8 @@ More icons
     :hook
     ((python-mode . outline-indent-minor-mode)
      (python-ts-mode . outline-indent-minor-mode)
+     (rustic-mode . outline-indent-minor-mode)
+     (rust-ts-mode . outline-indent-minor-mode)
      (emacs-lisp-mode . outline-indent-minor-mode)))
 #+end_src
 
@@ -1330,6 +1349,7 @@ This will be the main LSP for normal buffers.
   (use-package lsp-mode
     :ensure t
     :hook ((python-ts-mode . lsp-deferred)
+           (rustic-mode . lsp-deferred)
            (rust-ts-mode . lsp-deferred)
            (js-ts-mode . lsp-deferred)
            (typescript-ts-mode . lsp-deferred)
@@ -1416,7 +1436,9 @@ Cuz yassnippets and company doesn't play well easily? Or I just couldn't get the
     :hook ((text-mode lsp-mode prog-mode) . apheleia-mode)
     :config
     (setf (alist-get 'python-ts-mode apheleia-mode-alist) '(ruff))
-    (setf (alist-get 'csharp-ts-mode apheleia-mode-alist) '(csharpier)))
+    (setf (alist-get 'csharp-ts-mode apheleia-mode-alist) '(csharpier))
+    (setf (alist-get 'rustic-mode apheleia-mode-alist) '(rustfmt))
+    (setf (alist-get 'rust-ts-mode apheleia-mode-alist) '(rustfmt)))
 #+end_src
 
 ** Markdown Mode
@@ -1474,6 +1496,57 @@ This is for literate programming
   (use-package unity
     :ensure (:host github :repo "elizagamedev/unity.el")
     :commands (unity-mode))
+#+end_src
+
+*** Rust Mode
+
+#+begin_src emacs-lisp
+  (use-package rustic
+    :ensure t
+    :after lsp-mode
+    :custom
+    (rustic-lsp-server 'rust-analyzer)
+    (rustic-analyzer-command '("rust-analyzer"))
+    (rustic-format-on-save t)
+    (rustic-cargo-auto-add-missing-dependencies t)
+    (rustic-compile-command "cargo build")
+    (rustic-compile-backtrace 0)
+    :config
+    ;; Enable rust-analyzer inline type hints
+    (setq lsp-rust-analyzer-display-chaining-hints t)
+    (setq lsp-rust-analyzer-display-parameter-hints t)
+    (setq lsp-rust-analyzer-display-reborrow-hints t)
+    (setq lsp-rust-analyzer-server-display-inlay-hints t)
+    (setq lsp-rust-analyzer-cargo-all-features t)
+    (setq lsp-rust-analyzer-cargo-load-out-dirs-from-check t)
+    (setq lsp-rust-analyzer-proc-macro-enable t))
+#+end_src
+
+** Debugging (DAP)
+
+To add support for a new language, require its adapter below and add the relevant
+~debug-template~ entries.
+
+#+begin_src emacs-lisp
+  (use-package dap-mode
+    :ensure t
+    :after lsp-mode
+    :custom
+    (dap-auto-configure-features '(sessions locals controls tooltip))
+    :config
+    (dap-auto-configure-mode))
+#+end_src
+
+*** Rust / C / C++ (native debug)
+Requires GDB 14+ or LLDB.
+#+begin_src emacs-lisp
+  (with-eval-after-load 'dap-mode
+    (require 'dap-gdb-lldb)
+    (dap-gdb-lldb-setup))
+
+  ;; Automatically load debug adapter when Rust LSP activates
+  (with-eval-after-load 'lsp-rust
+    (require 'dap-gdb-lldb))
 #+end_src
 
 * LATEX

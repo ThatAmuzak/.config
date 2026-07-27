@@ -42,3 +42,5 @@ emacs/ielm-history.eld
 emacs/url
 emacs/.cache/lsp/npm
 lesshst
+pi
+emacs/.extension/vscode/webfreak.debug
