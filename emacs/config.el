@@ -175,6 +175,7 @@
     "c c u" '(rustic-cargo-upgrade :wk "Cargo Upgrade Deps")
     "c c a" '(rustic-cargo-add :wk "Cargo Add Dependency")
     "c c m" '(rustic-cargo-rm :wk "Cargo Remove Dependency")
+    "c c n" '(rustic-cargo-run-bin :wk "Cargo Run --bin (from file)")
     "c c d" '(dap-debug :wk "Debug (DAP)")
     "c c D" '(dap-hydra :wk "Debug Hydra Menu"))
 
@@ -1103,6 +1104,25 @@
   (setq lsp-rust-analyzer-cargo-load-out-dirs-from-check t)
   (setq lsp-rust-analyzer-proc-macro-enable t))
 
+(defun rustic-cargo-run-bin (bin-name)
+  (interactive
+   (let* ((file (buffer-file-name))
+          (bin (when file
+                 (save-match-data
+                   (cond
+                    ;; src/bin/foo.rs or src/bin/foo/ (just the bin name)
+                    ((string-match "src/bin/\\([^/]+?\\)\\(\\.rs\\|/main\\.rs\\)?$" file)
+                     (match-string 1 file))
+                    ;; src/main.rs → use package name via cargo metadata
+                    ((string-match "src/main\\.rs$" file)
+                     nil)
+                    (t nil))))))
+     (list (read-from-minibuffer "Cargo run --bin: "
+                                  (or bin "")
+                                  nil nil 'rustic-run-history))))
+  (let ((rustic-run-arguments (format "--bin %s" bin-name)))
+    (rustic-cargo-run-command rustic-run-arguments)))
+
 (use-package dap-mode
   :ensure t
   :after lsp-mode
@@ -1162,11 +1182,25 @@
 (use-package transient :ensure t)
 (elpaca-wait)
 
+(use-package gptel-openrouter
+  :ensure (:host github :repo "bharadswami/gptel-openrouter")
+  :after gptel)
+
 (use-package gptel
   :ensure t
   :config
-  (setf gptel-api-key #'gptel-api-key-from-auth-source
-        gptel-model 'gpt-5.4
+  ;; API key is read from ~/.authinfo (machine openrouter.ai).
+  (setq gptel-backend
+        (gptel-openrouter-make-backend "OpenRouter"
+          :key (lambda ()
+                 (auth-source-pick-first-password
+                  :host "openrouter.ai"
+                  :user "apikey"))
+          :stream t))
+
+  (gptel-openrouter-auto-refresh-mode 1)
+
+  (setq gptel-model 'openrouter/auto
         gptel-use-curl t
         gptel-default-mode #'org-mode
         gptel-org-branching-context t
