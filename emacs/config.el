@@ -502,7 +502,8 @@
 
 (add-to-list 'org-structure-template-alist '("se" . "src emacs-lisp"))
 (add-to-list 'org-structure-template-alist '("sp" . "src python"))
-(add-to-list 'org-structure-template-alist '("sr" . "src R"))
+(add-to-list 'org-structure-template-alist '("sr" . "src r"))
+(add-to-list 'org-structure-template-alist '("sru" . "src rust"))
 (add-to-list 'org-structure-template-alist '("ss" . "srp sh"))
 (add-to-list 'org-structure-template-alist '("sc" . "src clojure"))
 
@@ -730,7 +731,7 @@
   (setq org-roam-dailies-capture-templates
               '(("d" "daily" plain "%?"
            :target (file+head+olp "%<%Y-%m>.org"
-                                  "#+title: %<%Y-%m>\n"
+                              "#+title: %<%Y-%m>\n"
                                   ("%<%d>" "%<%H:%M>"))
            :unnarrowed t)))
 
