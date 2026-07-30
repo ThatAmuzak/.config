@@ -385,6 +385,9 @@
   :ensure t
   :hook (dired-mode . nerd-icons-dired-mode))
 
+(set-fontset-font t 'emoji "Segoe UI Emoji" nil 'prepend)
+(set-fontset-font t 'symbol "Segoe UI Symbol" nil 'prepend)
+
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)

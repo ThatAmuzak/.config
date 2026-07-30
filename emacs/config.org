@@ -28,6 +28,7 @@
   - [[#zooming-inout][Zooming In/Out]]
   - [[#fixing-emacs-paragraphs][Fixing Emacs Paragraphs]]
   - [[#nerd-fonts][Nerd Fonts]]
+  - [[#emoji--symbol-fallback][Emoji & Symbol Fallback]]
 - [[#gui-tweaks][GUI TWEAKS]]
   - [[#disable-menubar-toolbar-scrollbar][Disable Menubar, Toolbar, Scrollbar]]
   - [[#display-line-numbers-truncated-lines][Display Line Numbers, Truncated Lines]]
@@ -578,6 +579,14 @@ More icons
   (use-package nerd-icons-dired
     :ensure t
     :hook (dired-mode . nerd-icons-dired-mode))
+#+end_src
+
+** Emoji & Symbol Fallback
+Fix tofu boxes for emoji and Unicode symbols. Windows doesn't auto-fallback to emoji fonts like fontconfig does on Linux
+
+#+begin_src emacs-lisp
+  (set-fontset-font t 'emoji "Segoe UI Emoji" nil 'prepend)
+  (set-fontset-font t 'symbol "Segoe UI Symbol" nil 'prepend)
 #+end_src
 
 * GUI TWEAKS
