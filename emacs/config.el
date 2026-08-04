@@ -82,6 +82,7 @@
     (evil-set-undo-system 'undo-redo)
     ;; LSP Stuff
     (define-key evil-normal-state-map (kbd "K") #'amuzak/lsp-ui-doc-cycle)
+    (define-key evil-normal-state-map (kbd "E") #'amuzak/lsp-ui-doc-diagnostics-cycle)
 
     ;; DWIM in org on enter in normal mode
     (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
@@ -1006,18 +1007,27 @@
   :custom
   (lsp-ui-doc-enable t)
   (lsp-ui-doc-position 'at-point)
-  (lsp-ui-sideline-enable t)
-  (lsp-ui-sideline-show-diagnostics t)
-  (lsp-ui-sideline-show-hover t)
+  ;; Diagnostics are now shown on demand via Shift-E (see below), so the
+  ;; sideline virtual-text on the right is disabled.
+  (lsp-ui-sideline-enable nil)
+  (lsp-ui-sideline-show-diagnostics nil)
+  (lsp-ui-sideline-show-hover nil)
   (lsp-ui-peek-enable t))
 
-  ;; K now cycles the pinned hover doc:
-  ;;   K ........ pin the hover doc at point
-  ;;   move ...... auto-hide the pinned doc
-  ;;   K again ... move the cursor into the doc frame to read it
-  ;;   K x3 ...... return to the code and remove the doc entirely
+  ;; ----------------------------------------------------------------------
+  ;; Two cycles for the single lsp-ui-doc popup frame:
+  ;;   K .. pin the hover doc at point
+  ;;   E .. pin the diagnostics (error/warning/hint) for the current line
+  ;; For both:
+  ;;   press ... pin the text at point
+  ;;   move ..... auto-hide the pinned text
+  ;;   press .... move the cursor into the popup frame to read it
+  ;;   press .... return to the code and remove the popup entirely
+  ;; ----------------------------------------------------------------------
   (defvar-local amuzak/lsp-doc-shown-point nil
-    "Point where the lsp-ui-doc was pinned, or nil when not pinned.")
+    "Point where the hover lsp-ui-doc was pinned, or nil.")
+  (defvar-local amuzak/lsp-diag-shown-point nil
+    "Point where the diagnostics lsp-ui-doc was pinned, or nil.")
 
   (defun amuzak/lsp-ui-doc-framep ()
     "Return non-nil when the current frame is the lsp-ui-doc child frame."
@@ -1027,8 +1037,21 @@
           (and parent
                (eq f (frame-parameter parent 'lsp-ui-doc-frame))))))
 
+  (defun amuzak/lsp-ui-doc--clear ()
+    "Clear the pinned-doc anchors in the current buffer."
+    (setq amuzak/lsp-doc-shown-point nil
+          amuzak/lsp-diag-shown-point nil))
+
+  (defun amuzak/lsp-ui-doc--exit-focus ()
+    "Return focus to the source buffer and remove the popup."
+    (when-let ((pv (buffer-local-value 'lsp-ui-doc--parent-vars (current-buffer)))
+               (src (plist-get pv :buffer)))
+      (with-current-buffer src
+        (amuzak/lsp-ui-doc--clear)))
+    (lsp-ui-doc-hide))
+
   (defun amuzak/lsp-ui-doc-cycle ()
-    "Cycle the pinned lsp-ui-doc.
+    "Cycle the pinned hover doc.
 
   First press pins the hover doc at point.  A second press moves the
   cursor into the doc frame.  While focused, a third press returns to
@@ -1036,36 +1059,75 @@
     (interactive)
     (cond
      ;; Focused inside the doc frame -> return to code, remove entirely.
-     ((amuzak/lsp-ui-doc-framep)
-      (when-let ((pv (buffer-local-value 'lsp-ui-doc--parent-vars (current-buffer)))
-                 (src (plist-get pv :buffer)))
-        (with-current-buffer src
-          (setq amuzak/lsp-doc-shown-point nil)))
-      (lsp-ui-doc-hide))
+     ((amuzak/lsp-ui-doc-framep) (amuzak/lsp-ui-doc--exit-focus))
      ;; Doc pinned here and cursor still on it -> move into the doc frame.
      ((and amuzak/lsp-doc-shown-point
            (equal (point) amuzak/lsp-doc-shown-point)
            (lsp-ui-doc--visible-p))
       (lsp-ui-doc-focus-frame))
-     ;; Otherwise -> pin the doc at point.
+     ;; Otherwise -> pin the hover doc at point.
      (t
       (lsp-ui-doc-show)
+      (amuzak/lsp-ui-doc--clear)
       (setq amuzak/lsp-doc-shown-point (point)))))
 
+  (defun amuzak/lsp-ui-doc-diagnostics-string ()
+    "Return a formatted string of the flycheck diagnostics on the current line."
+    (when (and (bound-and-true-p flycheck-mode)
+               (fboundp 'flycheck-overlay-errors-in))
+      (let ((errs (flycheck-overlay-errors-in (line-beginning-position)
+                                              (1+ (line-end-position)))))
+        (when errs
+          (mapconcat
+           (lambda (e)
+             (format "[%s] %s"
+                     (flycheck-error-level e)
+                     (flycheck-error-format-message-and-id e)))
+           errs "\n")))))
+
+  (defun amuzak/lsp-ui-doc-diagnostics-cycle ()
+    "Cycle the pinned diagnostics popup.
+
+  First press shows the error/warning/hint info for the current line.
+  A second press moves the cursor into the popup frame.  While focused,
+  a third press returns to the code and removes it."
+    (interactive)
+    (cond
+     ;; Focused inside the doc frame -> return to code, remove entirely.
+     ((amuzak/lsp-ui-doc-framep) (amuzak/lsp-ui-doc--exit-focus))
+     ;; Popup pinned here and cursor still on it -> move into the frame.
+     ((and amuzak/lsp-diag-shown-point
+           (equal (point) amuzak/lsp-diag-shown-point)
+           (lsp-ui-doc--visible-p))
+      (lsp-ui-doc-focus-frame))
+     ;; Otherwise -> pin the diagnostics at point (or clear if none).
+     (t
+      (let ((str (amuzak/lsp-ui-doc-diagnostics-string)))
+        (if str
+            (progn
+              (lsp-ui-doc--display "Diagnostics" str)
+              (amuzak/lsp-ui-doc--clear)
+              (setq amuzak/lsp-diag-shown-point (point)))
+          (amuzak/lsp-ui-doc--clear)
+          (lsp-ui-doc-hide))))))
+
   (defun amuzak/lsp-ui-doc-maybe-hide ()
-    "Hide the pinned lsp-ui-doc once the cursor moves off its anchor."
-    (when (and amuzak/lsp-doc-shown-point
-               (not (equal (point) amuzak/lsp-doc-shown-point)))
-      (setq amuzak/lsp-doc-shown-point nil)
+    "Hide the pinned lsp-ui-doc if the cursor moved off its anchor."
+    (when (or (and amuzak/lsp-doc-shown-point
+                   (not (equal (point) amuzak/lsp-doc-shown-point)))
+              (and amuzak/lsp-diag-shown-point
+                   (not (equal (point) amuzak/lsp-diag-shown-point))))
+      (amuzak/lsp-ui-doc--clear)
       (lsp-ui-doc-hide)))
 
-  ;; Auto-hide the pinned doc as soon as the cursor moves.
+  ;; Auto-hide the pinned popup as soon as the cursor moves.
   (add-hook 'post-command-hook #'amuzak/lsp-ui-doc-maybe-hide)
 
   (with-eval-after-load 'lsp-ui-doc
-    ;; K also works while focused inside the doc frame, and make sure
+    ;; K / E also work while focused inside the doc frame, and make sure
     ;; evil is in normal state there so the binding actually fires.
     (define-key lsp-ui-doc-frame-mode-map (kbd "K") #'amuzak/lsp-ui-doc-cycle)
+    (define-key lsp-ui-doc-frame-mode-map (kbd "E") #'amuzak/lsp-ui-doc-diagnostics-cycle)
     (with-eval-after-load 'evil
       (advice-add 'lsp-ui-doc-focus-frame :after
                   (lambda (&rest _)
