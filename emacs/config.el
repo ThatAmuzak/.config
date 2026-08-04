@@ -1263,9 +1263,7 @@
         grease-show-hidden t
         grease-preview-writable nil)
   :hook (grease-mode . (lambda ()
-                          (olivetti-mode 1)
-                          (unless grease--preview-window
-                            (grease-toggle-preview)))))
+                          (olivetti-mode 1))))
 
 (use-package undo-fu
   :elpaca t)

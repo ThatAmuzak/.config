@@ -1734,19 +1734,6 @@ Auto save gptel buffers, incase I need to revisit them later on
 
 The Oil.nvim substitute
 
-# #+begin_src emacs-lisp
-#   (use-package grease
-#     :elpaca (:host github :repo "mwac-dev/grease.el")
-#     :commands (grease-open grease-toggle grease-here)
-#     :init
-#     (setq grease-skip-confirm-for-simple-edits t
-#           grease-directory-face-foreground "#f8c759"
-#           grease-show-hidden t
-#           grease-preview-writable nil)
-#     :hook (grease-mode . (lambda ()
-#                             (olivetti-mode 1))))
-# #+end_src
-
 #+begin_src emacs-lisp
   (use-package grease
     :elpaca (:host github :repo "mwac-dev/grease.el")
@@ -1757,9 +1744,7 @@ The Oil.nvim substitute
           grease-show-hidden t
           grease-preview-writable nil)
     :hook (grease-mode . (lambda ()
-                            (olivetti-mode 1)
-                            (unless grease--preview-window
-                              (grease-toggle-preview)))))
+                            (olivetti-mode 1))))
 #+end_src
 
 ** Undo-Fu
