@@ -172,7 +172,7 @@
     (define-key evil-normal-state-map (kbd "C-u") (lambda () (interactive) (evil-scroll-up nil) (beacon-blink)))
     (define-key evil-normal-state-map "n" (lambda () (interactive) (evil-ex-search-next) (recenter)))
     (define-key evil-normal-state-map "N" (lambda () (interactive) (evil-ex-search-previous) (recenter)))
-    (define-key evil-normal-state-map (kbd "<escape>") #'evil-ex-nohighlight)
+    (define-key evil-normal-state-map (kbd "<escape>") #'amuzak/lsp-ui-escape)
     (define-key evil-normal-state-map "G" (lambda () (interactive) (evil-goto-line) (recenter)))
     (define-key evil-normal-state-map (kbd "<up>") (lambda () (interactive) (evil-window-increase-height 2)))
     (define-key evil-normal-state-map (kbd "<down>") (lambda () (interactive) (evil-window-decrease-height 2)))
@@ -1491,6 +1491,25 @@ This will be the main LSP for normal buffers.
                 (setq amuzak/lsp-diag-shown-point (point)))
             (amuzak/lsp-ui-doc--clear)
             (lsp-ui-doc-hide))))))
+
+    (defun amuzak/lsp-ui-escape ()
+      "Close any open lsp-ui doc/diagnostics popup.
+
+If the popup frame is focused, return to the source buffer and remove
+the popup.  If a pinned (or plain hover) popup is showing at point, hide
+it.  Otherwise fall back to the default escape action and just clear the
+search highlight.  Pressing escape always closes the popup when it is
+open."
+      (interactive)
+      (cond
+       ;; Focused inside the popup frame -> return to code and remove popup.
+       ((amuzak/lsp-ui-doc-framep) (amuzak/lsp-ui-doc--exit-focus))
+       ;; Some popup (pinned doc/diag, or the plain hover doc) is visible -> close it.
+       ((lsp-ui-doc--visible-p)
+        (amuzak/lsp-ui-doc--clear)
+        (lsp-ui-doc-hide))
+       ;; Nothing open -> default escape action.
+       (t (evil-ex-nohighlight))))
 
     (defun amuzak/lsp-ui-doc-maybe-hide ()
       "Hide the pinned lsp-ui-doc if the cursor moved off its anchor."
