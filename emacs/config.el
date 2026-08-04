@@ -993,6 +993,9 @@
   :custom
   (lsp-completion-provider :company)
   (lsp-diagnostics-provider :auto)
+  (lsp-eldoc-enable-hover nil)
+  (lsp-signature-auto-activate nil)
+  (lsp-signature-render-documentation nil)
   (lsp-headerline-breadcrumb-enable t)
   (lsp-idle-delay 0.1)
   (lsp-enable-snippet t)
@@ -1167,7 +1170,9 @@ open."
 
 (use-package flycheck
   :ensure t
-  :hook (text-mode org-mode lsp-mode prog-mode))
+  :hook (text-mode org-mode lsp-mode prog-mode)
+  :custom
+  (flycheck-display-errors-function nil))
 (with-eval-after-load 'flycheck
   (set-face-attribute 'flycheck-error nil
                       :underline '(:color "#e06c75" :style wave))
