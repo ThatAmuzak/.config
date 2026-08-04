@@ -189,7 +189,7 @@
     (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
     (evil-set-undo-system 'undo-redo)
     ;; LSP Stuff
-    (define-key evil-normal-state-map (kbd "K") (lambda () (interactive) (lsp-ui-doc-toggle)))
+    (define-key evil-normal-state-map (kbd "K") #'amuzak/lsp-ui-doc-cycle)
 
     ;; DWIM in org on enter in normal mode
     (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
@@ -409,22 +409,22 @@
 ** Automatic clear multiple blank lines
 
 #+begin_src emacs-lisp
-    (defvar-local toggle-emptyline-removal nil
-      "Variable to track the state of whitespace cleaning.")
+  (defvar-local toggle-emptyline-removal nil
+    "Variable to track the state of whitespace cleaning.")
 
-    (defun my-delete-excess-blank-lines ()
-      "Search for and replace multiple consecutive newlines with a single newline."
-      (save-excursion
-        (goto-char (point-min))
-        (while (re-search-forward "\n\n\n+" nil t)
-          (replace-match "\n\n"))))
+  (defun my-delete-excess-blank-lines ()
+    "Search for and replace multiple consecutive newlines with a single newline."
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "\n\n\n+" nil t)
+        (replace-match "\n\n"))))
 
-    (define-minor-mode toggle-emptyline-removal
-      "Toggle automatic cleaning of excessive blank lines on save."
-      :lighter " CleanWS"
-      (if toggle-emptyline-removal
-          (add-hook 'before-save-hook #'my-delete-excess-blank-lines nil t)
-        (remove-hook 'before-save-hook #'my-delete-excess-blank-lines t)))
+  (define-minor-mode toggle-emptyline-removal
+    "Toggle automatic cleaning of excessive blank lines on save."
+    :lighter " CleanWS"
+    (if toggle-emptyline-removal
+        (add-hook 'before-save-hook #'my-delete-excess-blank-lines nil t)
+      (remove-hook 'before-save-hook #'my-delete-excess-blank-lines t)))
 
   (define-globalized-minor-mode global-emptyline-removal
     toggle-emptyline-removal toggle-emptyline-removal)
@@ -1393,6 +1393,67 @@ This will be the main LSP for normal buffers.
     (lsp-ui-sideline-show-diagnostics t)
     (lsp-ui-sideline-show-hover t)
     (lsp-ui-peek-enable t))
+
+    ;; K now cycles the pinned hover doc:
+    ;;   K ........ pin the hover doc at point
+    ;;   move ...... auto-hide the pinned doc
+    ;;   K again ... move the cursor into the doc frame to read it
+    ;;   K x3 ...... return to the code and remove the doc entirely
+    (defvar-local amuzak/lsp-doc-shown-point nil
+      "Point where the lsp-ui-doc was pinned, or nil when not pinned.")
+
+    (defun amuzak/lsp-ui-doc-framep ()
+      "Return non-nil when the current frame is the lsp-ui-doc child frame."
+      (or (string-prefix-p lsp-ui-doc--buffer-prefix (buffer-name))
+          (let* ((f (selected-frame))
+                 (parent (and (frame-live-p f) (frame-parent f))))
+            (and parent
+                 (eq f (frame-parameter parent 'lsp-ui-doc-frame))))))
+
+    (defun amuzak/lsp-ui-doc-cycle ()
+      "Cycle the pinned lsp-ui-doc.
+
+    First press pins the hover doc at point.  A second press moves the
+    cursor into the doc frame.  While focused, a third press returns to
+    the code and removes the doc entirely."
+      (interactive)
+      (cond
+       ;; Focused inside the doc frame -> return to code, remove entirely.
+       ((amuzak/lsp-ui-doc-framep)
+        (when-let ((pv (buffer-local-value 'lsp-ui-doc--parent-vars (current-buffer)))
+                   (src (plist-get pv :buffer)))
+          (with-current-buffer src
+            (setq amuzak/lsp-doc-shown-point nil)))
+        (lsp-ui-doc-hide))
+       ;; Doc pinned here and cursor still on it -> move into the doc frame.
+       ((and amuzak/lsp-doc-shown-point
+             (equal (point) amuzak/lsp-doc-shown-point)
+             (lsp-ui-doc--visible-p))
+        (lsp-ui-doc-focus-frame))
+       ;; Otherwise -> pin the doc at point.
+       (t
+        (lsp-ui-doc-show)
+        (setq amuzak/lsp-doc-shown-point (point)))))
+
+    (defun amuzak/lsp-ui-doc-maybe-hide ()
+      "Hide the pinned lsp-ui-doc once the cursor moves off its anchor."
+      (when (and amuzak/lsp-doc-shown-point
+                 (not (equal (point) amuzak/lsp-doc-shown-point)))
+        (setq amuzak/lsp-doc-shown-point nil)
+        (lsp-ui-doc-hide)))
+
+    ;; Auto-hide the pinned doc as soon as the cursor moves.
+    (add-hook 'post-command-hook #'amuzak/lsp-ui-doc-maybe-hide)
+
+    (with-eval-after-load 'lsp-ui-doc
+      ;; K also works while focused inside the doc frame, and make sure
+      ;; evil is in normal state there so the binding actually fires.
+      (define-key lsp-ui-doc-frame-mode-map (kbd "K") #'amuzak/lsp-ui-doc-cycle)
+      (with-eval-after-load 'evil
+        (advice-add 'lsp-ui-doc-focus-frame :after
+                    (lambda (&rest _)
+                      (when (bound-and-true-p evil-mode)
+                        (evil-normal-state))))))
 #+end_src
 
 ** Company
