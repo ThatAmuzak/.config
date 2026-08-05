@@ -851,15 +851,41 @@
 
 (setq ghostel-shell "C:/Program Files/PowerShell/7/pwsh.exe")
 
-(global-set-key (kbd "C-/") #'my/launch-shell)
-(defun my/launch-shell ()
+(defun amuzak/toggle-ghostel ()
+  "Toggle a Ghostel terminal in a vertical split to the right.
+  If any Ghostel buffer is currently displayed in a window, hide it by
+  closing that window.  Otherwise split the current window to the right
+  and start (or reuse) a Ghostel terminal."
+  (interactive)
+  (require 'ghostel)
+  (let ((win (seq-some
+              (lambda (buf)
+                (when (with-current-buffer buf (derived-mode-p 'ghostel-mode))
+                  (get-buffer-window buf t)))
+              (buffer-list))))
+    (if win
+        (delete-window win)
+      (select-window (split-window-right))
+      (ghostel))))
+
+(defun amuzak/ghostel-new ()
+  "Start a brand-new Ghostel terminal (like \\[universal-argument] \\[ghostel])."
+  (interactive)
+  (require 'ghostel)
+  (ghostel t))
+
+(global-set-key (kbd "C-/")   #'amuzak/toggle-ghostel)
+(global-set-key (kbd "C-S-/") #'amuzak/ghostel-new)
+
+(defun my/launch-wezterm ()
   "Launch WezTerm in the project root or current directory."
   (interactive)
   (let ((dir (or (project-root (project-current)) default-directory)))
     (call-process "wezterm" nil 0 nil
                   "start" "--cwd" (expand-file-name dir)
                   "pwsh" "-NoLogo")))
-(global-set-key (kbd "C-/") #'my/launch-shell)
+;; Note: C-/ is now bound to `amuzak/toggle-ghostel' above, so WezTerm
+;; is left unbound rather than clobbering the Ghostel toggle.
 
 (defun my/launch-lazygit ()
   "Launch lazygit in WezTerm from the current buffer's directory."
@@ -916,23 +942,6 @@
   :ensure t
   :init
   (vertico-posframe-mode 1))
-
-;; Darken background when using posframe
-;; Also works amazingly well when searching
-;; And when alt tabbed out of emacs
-(use-package dimmer
-  :ensure t
-  :init
-  (dimmer-configure-posframe)
-  (dimmer-configure-which-key)
-  (dimmer-configure-org)
-  (dimmer-configure-magit)
-  (dimmer-configure-hydra)
-  (dimmer-configure-gnus)
-  (dimmer-configure-company-box)
-  (dimmer-mode t)
-  :config
-  (setq dimmer-fraction 0.40))
 
 ;; Consult for more functionality and yank ring
 (use-package consult
