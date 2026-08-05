@@ -172,7 +172,40 @@
     (define-key evil-normal-state-map (kbd "C-u") (lambda () (interactive) (evil-scroll-up nil) (beacon-blink)))
     (define-key evil-normal-state-map "n" (lambda () (interactive) (evil-ex-search-next) (recenter)))
     (define-key evil-normal-state-map "N" (lambda () (interactive) (evil-ex-search-previous) (recenter)))
-    (define-key evil-normal-state-map (kbd "<escape>") #'amuzak/lsp-ui-escape)
+    ;; ------------------------------------------------------------------
+    ;; Robust wrappers for closing lsp-ui popups.
+    ;; The real `amuzak/lsp-ui-*' commands live in the *deferred*
+    ;; `use-package lsp-ui' block, which only loads once an LSP buffer
+    ;; first activates.  These stable wrappers bind here at startup and
+    ;; fall back gracefully when lsp-ui isn't loaded yet, so that
+    ;; ESC / K / E never throw "void-function" outside an LSP session.
+    (defun amuzak/escape ()
+      "Close any open lsp-ui doc popup, else clear the search highlight.
+Only touches lsp-ui when the lsp-ui-doc machinery is loaded, so it works
+both in an LSP buffer and from inside the doc child frame, and stays a
+harmless no-op in every other buffer."
+      (interactive)
+      (if (fboundp 'lsp-ui-doc-hide)   ; lsp-ui-doc usable => safe to call in
+          (amuzak/lsp-ui-escape)       ; LSP buffers AND the doc child frame
+        (evil-ex-nohighlight)))
+
+    (defun amuzak/lsp-doc-cycle-safe ()
+      "Cycle the pinned lsp-ui hover doc (see `amuzak/lsp-ui-doc-cycle')."
+      (interactive)
+      (if (and (fboundp 'lsp-ui-doc-hide)
+               (fboundp 'amuzak/lsp-ui-doc-cycle))
+          (amuzak/lsp-ui-doc-cycle)
+        (user-error "lsp-ui isn't active; open an LSP buffer first")))
+
+    (defun amuzak/lsp-doc-diag-cycle-safe ()
+      "Cycle the pinned lsp-ui diagnostics popup."
+      (interactive)
+      (if (and (fboundp 'lsp-ui-doc-hide)
+               (fboundp 'amuzak/lsp-ui-doc-diagnostics-cycle))
+          (amuzak/lsp-ui-doc-diagnostics-cycle)
+        (user-error "lsp-ui isn't active; open an LSP buffer first")))
+
+    (define-key evil-normal-state-map (kbd "<escape>") #'amuzak/escape)
     (define-key evil-normal-state-map "G" (lambda () (interactive) (evil-goto-line) (recenter)))
     (define-key evil-normal-state-map (kbd "<up>") (lambda () (interactive) (evil-window-increase-height 2)))
     (define-key evil-normal-state-map (kbd "<down>") (lambda () (interactive) (evil-window-decrease-height 2)))
@@ -189,8 +222,8 @@
     (define-key evil-normal-state-map (kbd "C-l") 'evil-window-right)
     (evil-set-undo-system 'undo-redo)
     ;; LSP Stuff
-    (define-key evil-normal-state-map (kbd "K") #'amuzak/lsp-ui-doc-cycle)
-    (define-key evil-normal-state-map (kbd "E") #'amuzak/lsp-ui-doc-diagnostics-cycle)
+    (define-key evil-normal-state-map (kbd "K") #'amuzak/lsp-doc-cycle-safe)
+    (define-key evil-normal-state-map (kbd "E") #'amuzak/lsp-doc-diag-cycle-safe)
 
     ;; DWIM in org on enter in normal mode
     (evil-define-key 'normal org-mode-map (kbd "RET") 'org-open-at-point))
@@ -1171,6 +1204,14 @@ Remember to update elpaca menus melpa before running this, it's a pretty recent 
   (use-package ghostel
     :ensure t)
 
+  ;; Let C-/ reach Emacs (for `amuzak/toggle-ghostel') from inside the
+  ;; terminal instead of being forwarded to the shell (which saw it as
+  ;; ^_).  `setopt' runs the custom :set, which rebuilds the semi-char
+  ;; keymap so the exception actually takes effect.  (Caveat: any key
+  ;; in this list stops working as terminal input — C-/ now toggles.)
+  (setopt ghostel-keymap-exceptions
+          '("C-c" "C-x" "C-u" "C-h" "M-x" "M-:" "C-\\" "C-/"))
+
   (use-package evil-ghostel
     :ensure t
     :after (ghostel evil)
@@ -1202,7 +1243,6 @@ Remember to update elpaca menus melpa before running this, it's a pretty recent 
     (ghostel t))
 
   (global-set-key (kbd "C-/")   #'amuzak/toggle-ghostel)
-  (global-set-key (kbd "C-S-/") #'amuzak/ghostel-new)
 #+end_src
 
 +They are still figuring out terminal support for windows and emacs in the year of our lord 2026+
@@ -1219,8 +1259,6 @@ This is still probably worth having
       (call-process "wezterm" nil 0 nil
                     "start" "--cwd" (expand-file-name dir)
                     "pwsh" "-NoLogo")))
-  ;; Note: C-/ is now bound to `amuzak/toggle-ghostel' above, so WezTerm
-  ;; is left unbound rather than clobbering the Ghostel toggle.
 #+end_src
 
 Also magit is way too slow on Windows, so I'm sticking with lazygit for now
