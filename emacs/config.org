@@ -158,6 +158,7 @@
     (setq evil-want-keybinding nil)
     (setq evil-vsplit-window-right t)
     (setq evil-split-window-below t)
+    (setq evil-kill-on-visual-paste nil)
     (evil-mode)
     :config
     (evil-select-search-module 'evil-search-module 'evil-search)
@@ -172,13 +173,15 @@
     (define-key evil-normal-state-map (kbd "C-u") (lambda () (interactive) (evil-scroll-up nil) (beacon-blink)))
     (define-key evil-normal-state-map "n" (lambda () (interactive) (evil-ex-search-next) (recenter)))
     (define-key evil-normal-state-map "N" (lambda () (interactive) (evil-ex-search-previous) (recenter)))
-    ;; ------------------------------------------------------------------
-    ;; Robust wrappers for closing lsp-ui popups.
-    ;; The real `amuzak/lsp-ui-*' commands live in the *deferred*
-    ;; `use-package lsp-ui' block, which only loads once an LSP buffer
-    ;; first activates.  These stable wrappers bind here at startup and
-    ;; fall back gracefully when lsp-ui isn't loaded yet, so that
-    ;; ESC / K / E never throw "void-function" outside an LSP session.
+
+    (defun amuzak/evil-x-no-yank ()
+      "Delete character(s) forward like \\=`x' without touching the kill ring.
+    Sends the deleted text to the black-hole register ?_ so it never becomes
+    the top of the kill ring / default for the next paste."
+      (interactive)
+      (let ((evil-this-register ?_))
+        (call-interactively #'evil-delete-char)))
+    (define-key evil-normal-state-map "x" #'amuzak/evil-x-no-yank)
     (defun amuzak/escape ()
       "Close any open lsp-ui doc popup, else clear the search highlight.
 Only touches lsp-ui when the lsp-ui-doc machinery is loaded, so it works
@@ -213,7 +216,6 @@ harmless no-op in every other buffer."
     (define-key evil-normal-state-map (kbd "<right>") (lambda () (interactive) (evil-window-increase-width 2)))
     (define-key evil-visual-state-map "<" 'evil-shift-left-line)
     (define-key evil-visual-state-map ">" 'evil-shift-right-line)
-    (define-key evil-visual-state-map "p" (lambda () (interactive) (evil-delete (region-beginning) (region-end) 'line ?_) (evil-paste-after nil)))
 
     ;; window management
     (define-key evil-normal-state-map (kbd "C-k") 'evil-window-up)
@@ -239,9 +241,6 @@ harmless no-op in every other buffer."
     (define-key evil-motion-state-map (kbd "RET") nil)
     (define-key evil-motion-state-map (kbd "TAB") nil))
 
-  ;;Turns off elpaca-use-package-mode current declaration
-  ;;Note this will cause evaluate the declaration immediately. It is not deferred.
-  ;;Useful for configuring built-in emacs features.
   (use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
 (with-eval-after-load 'evil
   (advice-add 'forward-evil-paragraph :around
@@ -407,7 +406,7 @@ harmless no-op in every other buffer."
       "i p" '(org-download-screenshot :wk "Paste image from Clipboard")
       "l g" '(my/launch-lazygit :wk "Launch LazyGit")
       "f f" '(flash-jump :wk "Flash to Target")
-      "c b" (lambda () (interactive) (let ((vertico-posframe-mode nil)) (call-interactively #'consult-yank-from-kill-ring)))
+      "c p" (lambda () (interactive) (let ((vertico-posframe-mode nil)) (call-interactively #'consult-yank-from-kill-ring)) :wk "Clipboard")
       "w w" '(amuzak/save-all-buffers :wk "Save file(s)")
       "q q" '((lambda () (interactive)
                 (amuzak/save-all-buffers)
