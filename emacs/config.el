@@ -265,6 +265,23 @@ harmless no-op in every other buffer."
     "m u" '(evil-mc-undo-last-added-cursor :wk "Undo last cursor created")
     "m q" '(evil-mc-undo-all-cursors :wk "Clear all cursors"))
 
+  ;; Literate Programming Support
+  (amuzak/leader-keys
+    "j" '(:ignore t :wk "Jupyter/Notebook")
+    "j p" '(my/babel-insert-python  :wk "Insert Python cell")
+    "j r" '(my/babel-insert-r       :wk "Insert R cell")
+    "j l" '(my/babel-insert-lisp    :wk "Insert emacs-lisp cell")
+    "j s" '(my/babel-insert-sh      :wk "Insert shell cell")
+    "j e" '(org-ctrl-c-ctrl-c       :wk "Execute block")
+    "j a" '(my/babel-execute-buffer :wk "Run all blocks (till error)")
+    "j f" '(my/babel-execute-from-point :wk "Run blocks from here")
+    "j n" '(org-next-block          :wk "Next code block")
+    "j N" '(org-previous-block      :wk "Previous code block")
+    "j x" '(my/babel-toggle-output-and-src :wk "Toggle output/src")
+    "j i" '(org-toggle-inline-images :wk "Toggle inline images")
+    "j o" '(org-babel-jupyter-scratch-buffer :wk "Session scratch/REPL")
+    "j d" '(org-edit-special        :wk "Edit src natively"))
+
   ;; Misc
     (defun amuzak/save-all-buffers ()
       (interactive)
@@ -1332,6 +1349,105 @@ open."
 ;; Automatically load debug adapter when Rust LSP activates
 (with-eval-after-load 'lsp-rust
   (require 'dap-gdb-lldb))
+
+(use-package jupyter
+  :ensure (:host github :repo "emacs-jupyter/jupyter")
+  :config
+  (require 'jupyter-R)
+
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (shell . t)
+     (python . t)
+     (jupyter . t)))
+
+  (setq org-babel-default-header-args:jupyter-python
+        '((:session . "py") (:kernel . "python")))
+  (setq org-babel-default-header-args:jupyter-R
+        '((:session . "r") (:kernel . "ir")
+          (:display . "plain")))
+
+  (org-babel-jupyter-override-src-block "python")
+  (org-babel-jupyter-override-src-block "R"))
+
+(defun my/babel-insert (lang &optional session)
+    "Insert a #+BEGIN_SRC block for LANG, leaving point inside it.
+  SESSION, when given, becomes the `:session' header arg."
+    (let* ((sess (if session (format " :session %s" session) ""))
+           (header (format "#+begin_src %s%s\n" lang sess)))
+      (unless (bolp) (newline))
+      (insert header)
+      (let ((pt (point)))
+        (insert "#+end_src")
+        (goto-char pt))))
+
+  (defun my/babel-insert-python () (interactive) (my/babel-insert "python" "py"))
+  (defun my/babel-insert-r      () (interactive) (my/babel-insert "R" "r"))
+  (defun my/babel-insert-lisp   () (interactive) (my/babel-insert "emacs-lisp" nil))
+  (defun my/babel-insert-sh     () (interactive) (my/babel-insert "sh" nil))
+
+  (defvar my/babel-src-regexp "^#\\+begin_src\\|^#\\+BEGIN_SRC"
+    "Regexp matching a #+begin_src line (either case).")
+
+  (defun my/babel-toggle-output-and-src ()
+    "Jump between a code block and its results.
+    In a src block: move to its #+RESULTS.  In a result:
+    move back to the source block above."
+    (interactive)
+    (if (org-in-src-block-p)
+        (let ((pos (org-babel-where-is-src-block-result)))
+          (if pos
+              (goto-char pos)
+            (message "This block has no results yet")))
+      (org-previous-block 1 my/babel-src-regexp)))
+
+  (defun my/babel-src-positions (beg end)
+    "Return positions of #+begin_src header lines between BEG and END."
+    (let (positions)
+      (save-excursion
+        (goto-char beg)
+        (while (re-search-forward my/babel-src-regexp end t)
+          (push (match-beginning 0) positions)))
+      (nreverse positions)))
+
+  (defun my/babel-execute-region (beg end)
+    "Run every src block whose header line lies in BEG..END; stop on error."
+    (let ((blocks (my/babel-src-positions beg end))
+          (count 0))
+      (condition-case err
+          (progn
+            (dolist (pos blocks)
+              (save-excursion
+                (goto-char pos)
+                (org-babel-execute-src-block))
+              (setq count (1+ count)))
+            (message "Ran %d blocks" count))
+        (error
+         (message "Stopped after %d blocks: %s" count (error-message-string err))))))
+
+  (defun my/babel-execute-buffer ()
+    "Run every src block in the buffer, stopping at the first error."
+    (interactive)
+    (my/babel-execute-region (point-min) (point-max)))
+
+  (defun my/babel-execute-from-point ()
+    "Run src blocks from the block at point (or the next one) to the end.
+Stops at the first error."
+    (interactive)
+    (let ((beg (save-excursion
+                 (goto-char (point))
+                 (if (re-search-backward my/babel-src-regexp nil t)
+                     (match-beginning 0)
+                   (point)))))
+      (my/babel-execute-region beg (point-max))))
+
+(with-eval-after-load 'general
+    (setq org-src-tab-acts-natively t
+          org-src-fontify-natively t)
+    (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
+    (setq org-image-actual-width 800))
+(setq flycheck-disabled-checkers '(org-lint))
 
 (use-package tex
   :ensure auctex

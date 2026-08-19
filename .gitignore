@@ -48,3 +48,4 @@ emacs/gptel-openrouter
 rustfinity-cloud
 emacs/.dap-breakpoints
 yasb
+emacs/tramp
