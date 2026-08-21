@@ -383,6 +383,8 @@ harmless no-op in every other buffer."
 
 (setq use-short-answers t)
 
+(setq org-confirm-babel-evaluate nil)
+
 (setq backup-directory-alist '((".*" . "~/.config/emacs/backup")))
 
 (setq gc-cons-threshold (* 100 1024 1024)) ; 100MB

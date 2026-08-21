@@ -18,6 +18,7 @@
   - [[#dired-properties][Dired properties]]
   - [[#messages-buffer-on-the-right][Messages Buffer on the Right]]
   - [[#use-short-answers-yes-or-no---y-or-n][Use Short Answers ("yes or no" -> "y or n")]]
+  - [[#disable-confirmation-for-code-block-execution-in-org][Disable confirmation for code block execution in org]]
   - [[#set-backup-directory-to-one-source][Set backup directory to one source]]
   - [[#increase-gc-threshold][Increase GC Threshold]]
   - [[#minibuffer-escape][Minibuffer escape]]
@@ -532,6 +533,12 @@ harmless no-op in every other buffer."
 
 #+begin_src emacs-lisp
   (setq use-short-answers t)
+#+end_src
+
+** Disable confirmation for code block execution in org
+
+#+begin_src emacs-lisp
+(setq org-confirm-babel-evaluate nil)
 #+end_src
 
 ** Set backup directory to one source
