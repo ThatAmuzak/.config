@@ -67,25 +67,17 @@
     (define-key evil-normal-state-map "N" (lambda () (interactive) (evil-ex-search-previous) (recenter)))
 
     (defun amuzak/evil-x-no-yank ()
-      "Delete character(s) forward like \\=`x' without touching the kill ring.
-    Sends the deleted text to the black-hole register ?_ so it never becomes
-    the top of the kill ring / default for the next paste."
       (interactive)
       (let ((evil-this-register ?_))
         (call-interactively #'evil-delete-char)))
     (define-key evil-normal-state-map "x" #'amuzak/evil-x-no-yank)
     (defun amuzak/escape ()
-      "Close any open lsp-ui doc popup, else clear the search highlight.
-Only touches lsp-ui when the lsp-ui-doc machinery is loaded, so it works
-both in an LSP buffer and from inside the doc child frame, and stays a
-harmless no-op in every other buffer."
       (interactive)
       (if (fboundp 'lsp-ui-doc-hide)   ; lsp-ui-doc usable => safe to call in
           (amuzak/lsp-ui-escape)       ; LSP buffers AND the doc child frame
         (evil-ex-nohighlight)))
 
     (defun amuzak/lsp-doc-cycle-safe ()
-      "Cycle the pinned lsp-ui hover doc (see `amuzak/lsp-ui-doc-cycle')."
       (interactive)
       (if (and (fboundp 'lsp-ui-doc-hide)
                (fboundp 'amuzak/lsp-ui-doc-cycle))
@@ -93,7 +85,6 @@ harmless no-op in every other buffer."
         (user-error "lsp-ui isn't active; open an LSP buffer first")))
 
     (defun amuzak/lsp-doc-diag-cycle-safe ()
-      "Cycle the pinned lsp-ui diagnostics popup."
       (interactive)
       (if (and (fboundp 'lsp-ui-doc-hide)
                (fboundp 'amuzak/lsp-ui-doc-diagnostics-cycle))
@@ -106,8 +97,18 @@ harmless no-op in every other buffer."
     (define-key evil-normal-state-map (kbd "<down>") (lambda () (interactive) (evil-window-decrease-height 2)))
     (define-key evil-normal-state-map (kbd "<left>") (lambda () (interactive) (evil-window-decrease-width 2)))
     (define-key evil-normal-state-map (kbd "<right>") (lambda () (interactive) (evil-window-increase-width 2)))
-    (define-key evil-visual-state-map "<" 'evil-shift-left-line)
-    (define-key evil-visual-state-map ">" 'evil-shift-right-line)
+    (define-key evil-visual-state-map "<" 'evil-shift-left)
+    (define-key evil-visual-state-map ">" 'evil-shift-right)
+
+    (defun amuzak/evil-shift-keep-visual-line (orig beg end &optional count preserve-empty)
+      (if (and (evil-visual-state-p)
+               (eq evil-visual-selection 'line))
+          (let ((m evil-visual-mark)
+                (p evil-visual-point))
+            (prog1 (funcall orig beg end count preserve-empty)
+              (evil-visual-make-selection m p 'line)))
+        (funcall orig beg end count preserve-empty)))
+    (advice-add 'evil-shift-right :around #'amuzak/evil-shift-keep-visual-line)
 
     ;; window management
     (define-key evil-normal-state-map (kbd "C-k") 'evil-window-up)
@@ -448,11 +449,6 @@ harmless no-op in every other buffer."
 (global-display-line-numbers-mode 1)
 (global-visual-line-mode t)
 
-;; (use-package darktooth-theme
-;;   :ensure (:host github :repo "emacsfodder/emacs-theme-darktooth")
-;;   :config
-;;   (load-theme 'darktooth t))
-
 (use-package doom-themes
   :ensure t
   :custom
@@ -460,9 +456,7 @@ harmless no-op in every other buffer."
   (doom-themes-enable-italic t) ; if nil, italics is universally disabled
   :config
   (load-theme 'doom-bluloco-dark t)
-  ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
-  ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config)
   (set-face-foreground 'vertical-border "grey80"))
 
@@ -539,20 +533,20 @@ harmless no-op in every other buffer."
 (setq org-startup-folded t)
 
 (setq org-hide-emphasis-markers t)
-  (use-package org-appear
-:ensure t
-    :commands (org-appear-mode)
-    :hook     (org-mode . org-appear-mode)
-    :config
-    (setq org-hide-emphasis-markers t)  ; Must be activated for org-appear to work
-    (setq org-appear-autoemphasis   t   ; Show bold, italics, verbatim, etc.
-                org-appear-autolinks      t   ; Show links
-                org-appear-autosubmarkers t))
+(use-package org-appear
+  :ensure t
+  :commands (org-appear-mode)
+  :hook     (org-mode . org-appear-mode)
+  :config
+  (setq org-hide-emphasis-markers t)  ; Must be activated for org-appear to work
+  (setq org-appear-autoemphasis   t   ; Show bold, italics, verbatim, etc.
+              org-appear-autolinks      t   ; Show links
+              org-appear-autosubmarkers t))
 
-  (setq org-hide-emphasis-markers t)
-  (custom-set-faces
-   '(org-code ((t (:background "#2e3440" :foreground "#d8dee9" :box nil))))
-   '(org-verbatim ((t (:background "#2e3440" :foreground "#d8dee9" :box nil)))))
+(setq org-hide-emphasis-markers t)
+(custom-set-faces
+ '(org-code ((t (:background "#2e3440" :foreground "#d8dee9" :box nil))))
+ '(org-verbatim ((t (:background "#2e3440" :foreground "#d8dee9" :box nil)))))
 
 (require 'org-tempo)
 
@@ -568,12 +562,12 @@ harmless no-op in every other buffer."
   :ensure t)
 (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 
-(setq org-log-done                       t
-        org-auto-align-tags                t
-        org-tags-column                    -80
-        org-fold-catch-invisible-edits     'show-and-error
-        org-special-ctrl-a/e               t
-        org-insert-heading-respect-content t)
+(setq org-log-done t
+      org-auto-align-tags t
+      org-tags-column -80
+      org-fold-catch-invisible-edits 'show-and-error
+      org-special-ctrl-a/e t
+      org-insert-heading-respect-content t)
 
 (plist-put org-format-latex-options :scale 1.35)
 (use-package org-fragtog
@@ -894,12 +888,6 @@ harmless no-op in every other buffer."
 
 (use-package ghostel
   :ensure t)
-
-;; Let C-/ reach Emacs (for `amuzak/toggle-ghostel') from inside the
-;; terminal instead of being forwarded to the shell (which saw it as
-;; ^_).  `setopt' runs the custom :set, which rebuilds the semi-char
-;; keymap so the exception actually takes effect.  (Caveat: any key
-;; in this list stops working as terminal input — C-/ now toggles.)
 (setopt ghostel-keymap-exceptions
         '("C-c" "C-x" "C-u" "C-h" "M-x" "M-:" "C-\\" "C-/"))
 
@@ -911,10 +899,6 @@ harmless no-op in every other buffer."
 (setq ghostel-shell "C:/Program Files/PowerShell/7/pwsh.exe")
 
 (defun amuzak/toggle-ghostel ()
-  "Toggle a Ghostel terminal in a vertical split to the right.
-  If any Ghostel buffer is currently displayed in a window, hide it by
-  closing that window.  Otherwise split the current window to the right
-  and start (or reuse) a Ghostel terminal."
   (interactive)
   (require 'ghostel)
   (let ((win (seq-some
@@ -928,7 +912,6 @@ harmless no-op in every other buffer."
       (ghostel))))
 
 (defun amuzak/ghostel-new ()
-  "Start a brand-new Ghostel terminal (like \\[universal-argument] \\[ghostel])."
   (interactive)
   (require 'ghostel)
   (ghostel t))
@@ -1070,154 +1053,121 @@ harmless no-op in every other buffer."
   (setq lsp-tex-server 'texlab)
 
 (use-package lsp-ui
-    :ensure t
-    :hook (lsp-mode . lsp-ui-mode)
-    :custom
-    (lsp-ui-doc-enable t)
-    (lsp-ui-doc-position 'at-point)
-    (lsp-ui-sideline-enable nil)
-    (lsp-ui-sideline-show-diagnostics nil)
-    (lsp-ui-sideline-show-hover nil)
-    (lsp-ui-peek-enable t))
+  :ensure t
+  :hook (lsp-mode . lsp-ui-mode)
+  :custom
+  (lsp-ui-doc-enable t)
+  (lsp-ui-doc-position 'at-point)
+  (lsp-ui-sideline-enable nil)
+  (lsp-ui-sideline-show-diagnostics nil)
+  (lsp-ui-sideline-show-hover nil)
+  (lsp-ui-peek-enable t))
+  (defvar-local amuzak/lsp-doc-shown-point nil)
+  (defvar-local amuzak/lsp-diag-shown-point nil)
 
-    ;; ----------------------------------------------------------------------
-    ;; Two cycles for the single lsp-ui-doc popup frame:
-    ;;   K .. pin the hover doc at point
-    ;;   E .. pin the diagnostics (error/warning/hint) for the current line
-    ;; For both:
-    ;;   press ... pin the text at point
-    ;;   move ..... auto-hide the pinned text
-    ;;   press .... move the cursor into the popup frame to read it
-    ;;   press .... return to the code and remove the popup entirely
-    ;; ----------------------------------------------------------------------
-    (defvar-local amuzak/lsp-doc-shown-point nil
-      "Point where the hover lsp-ui-doc was pinned, or nil.")
-    (defvar-local amuzak/lsp-diag-shown-point nil
-      "Point where the diagnostics lsp-ui-doc was pinned, or nil.")
+  (defun amuzak/lsp-ui-doc-framep ()
+    (or (string-prefix-p lsp-ui-doc--buffer-prefix (buffer-name))
+        (let* ((f (selected-frame))
+               (parent (and (frame-live-p f) (frame-parent f))))
+          (and parent
+               (eq f (frame-parameter parent 'lsp-ui-doc-frame))))))
 
-    (defun amuzak/lsp-ui-doc-framep ()
-      "Return non-nil when the current frame is the lsp-ui-doc child frame."
-      (or (string-prefix-p lsp-ui-doc--buffer-prefix (buffer-name))
-          (let* ((f (selected-frame))
-                 (parent (and (frame-live-p f) (frame-parent f))))
-            (and parent
-                 (eq f (frame-parameter parent 'lsp-ui-doc-frame))))))
+  (defun amuzak/lsp-ui-doc--clear ()
+    (setq amuzak/lsp-doc-shown-point nil
+          amuzak/lsp-diag-shown-point nil))
 
-    (defun amuzak/lsp-ui-doc--clear ()
-      "Clear the pinned-doc anchors in the current buffer."
-      (setq amuzak/lsp-doc-shown-point nil
-            amuzak/lsp-diag-shown-point nil))
+  (defun amuzak/lsp-ui-doc--exit-focus ()
+    (when-let ((pv (buffer-local-value 'lsp-ui-doc--parent-vars (current-buffer)))
+               (src (plist-get pv :buffer)))
+      (with-current-buffer src
+        (amuzak/lsp-ui-doc--clear)))
+    (lsp-ui-doc-hide))
 
-    (defun amuzak/lsp-ui-doc--exit-focus ()
-      "Return focus to the source buffer and remove the popup."
-      (when-let ((pv (buffer-local-value 'lsp-ui-doc--parent-vars (current-buffer)))
-                 (src (plist-get pv :buffer)))
-        (with-current-buffer src
-          (amuzak/lsp-ui-doc--clear)))
+  (defun amuzak/lsp-ui-doc-cycle ()
+    (interactive)
+    (cond
+     ;; Focused inside the doc frame -> return to code, remove entirely.
+     ((amuzak/lsp-ui-doc-framep) (amuzak/lsp-ui-doc--exit-focus))
+     ;; Doc pinned here and cursor still on it -> move into the doc frame.
+     ((and amuzak/lsp-doc-shown-point
+           (equal (point) amuzak/lsp-doc-shown-point)
+           (lsp-ui-doc--visible-p))
+      (lsp-ui-doc-focus-frame))
+     ;; Otherwise -> pin the hover doc at point.
+     (t
+      (lsp-ui-doc-show)
+      (amuzak/lsp-ui-doc--clear)
+      (setq amuzak/lsp-doc-shown-point (point)))))
+
+  (defun amuzak/lsp-ui-doc-diagnostics-string ()
+    "Return a formatted string of the flycheck diagnostics on the current line."
+    (when (and (bound-and-true-p flycheck-mode)
+               (fboundp 'flycheck-overlay-errors-in))
+      (let ((errs (flycheck-overlay-errors-in (line-beginning-position)
+                                              (1+ (line-end-position)))))
+        (when errs
+          (mapconcat
+           (lambda (e)
+             (format "[%s] %s"
+                     (flycheck-error-level e)
+                     (flycheck-error-format-message-and-id e)))
+           errs "\n")))))
+
+  (defun amuzak/lsp-ui-doc-diagnostics-cycle ()
+    (interactive)
+    (cond
+     ;; Focused inside the doc frame -> return to code, remove entirely.
+     ((amuzak/lsp-ui-doc-framep) (amuzak/lsp-ui-doc--exit-focus))
+     ;; Popup pinned here and cursor still on it -> move into the frame.
+     ((and amuzak/lsp-diag-shown-point
+           (equal (point) amuzak/lsp-diag-shown-point)
+           (lsp-ui-doc--visible-p))
+      (lsp-ui-doc-focus-frame))
+     ;; Otherwise -> pin the diagnostics at point (or clear if none).
+     (t
+      (let ((str (amuzak/lsp-ui-doc-diagnostics-string)))
+        (if str
+            (progn
+              (lsp-ui-doc--display "Diagnostics" str)
+              (amuzak/lsp-ui-doc--clear)
+              (setq amuzak/lsp-diag-shown-point (point)))
+          (amuzak/lsp-ui-doc--clear)
+          (lsp-ui-doc-hide))))))
+
+  (defun amuzak/lsp-ui-escape ()
+    (interactive)
+    (cond
+     ;; Focused inside the popup frame -> return to code and remove popup.
+     ((amuzak/lsp-ui-doc-framep) (amuzak/lsp-ui-doc--exit-focus))
+     ;; Some popup (pinned doc/diag, or the plain hover doc) is visible -> close it.
+     ((lsp-ui-doc--visible-p)
+      (amuzak/lsp-ui-doc--clear)
       (lsp-ui-doc-hide))
+     ;; Nothing open -> default escape action.
+     (t (evil-ex-nohighlight))))
 
-    (defun amuzak/lsp-ui-doc-cycle ()
-      "Cycle the pinned hover doc.
+  (defun amuzak/lsp-ui-doc-maybe-hide ()
+    "Hide the pinned lsp-ui-doc if the cursor moved off its anchor."
+    (when (or (and amuzak/lsp-doc-shown-point
+                   (not (equal (point) amuzak/lsp-doc-shown-point)))
+              (and amuzak/lsp-diag-shown-point
+                   (not (equal (point) amuzak/lsp-diag-shown-point))))
+      (amuzak/lsp-ui-doc--clear)
+      (lsp-ui-doc-hide)))
 
-    First press pins the hover doc at point.  A second press moves the
-    cursor into the doc frame.  While focused, a third press returns to
-    the code and removes the doc entirely."
-      (interactive)
-      (cond
-       ;; Focused inside the doc frame -> return to code, remove entirely.
-       ((amuzak/lsp-ui-doc-framep) (amuzak/lsp-ui-doc--exit-focus))
-       ;; Doc pinned here and cursor still on it -> move into the doc frame.
-       ((and amuzak/lsp-doc-shown-point
-             (equal (point) amuzak/lsp-doc-shown-point)
-             (lsp-ui-doc--visible-p))
-        (lsp-ui-doc-focus-frame))
-       ;; Otherwise -> pin the hover doc at point.
-       (t
-        (lsp-ui-doc-show)
-        (amuzak/lsp-ui-doc--clear)
-        (setq amuzak/lsp-doc-shown-point (point)))))
+  ;; Auto-hide the pinned popup as soon as the cursor moves.
+  (add-hook 'post-command-hook #'amuzak/lsp-ui-doc-maybe-hide)
 
-    (defun amuzak/lsp-ui-doc-diagnostics-string ()
-      "Return a formatted string of the flycheck diagnostics on the current line."
-      (when (and (bound-and-true-p flycheck-mode)
-                 (fboundp 'flycheck-overlay-errors-in))
-        (let ((errs (flycheck-overlay-errors-in (line-beginning-position)
-                                                (1+ (line-end-position)))))
-          (when errs
-            (mapconcat
-             (lambda (e)
-               (format "[%s] %s"
-                       (flycheck-error-level e)
-                       (flycheck-error-format-message-and-id e)))
-             errs "\n")))))
-
-    (defun amuzak/lsp-ui-doc-diagnostics-cycle ()
-      "Cycle the pinned diagnostics popup.
-
-    First press shows the error/warning/hint info for the current line.
-    A second press moves the cursor into the popup frame.  While focused,
-    a third press returns to the code and removes it."
-      (interactive)
-      (cond
-       ;; Focused inside the doc frame -> return to code, remove entirely.
-       ((amuzak/lsp-ui-doc-framep) (amuzak/lsp-ui-doc--exit-focus))
-       ;; Popup pinned here and cursor still on it -> move into the frame.
-       ((and amuzak/lsp-diag-shown-point
-             (equal (point) amuzak/lsp-diag-shown-point)
-             (lsp-ui-doc--visible-p))
-        (lsp-ui-doc-focus-frame))
-       ;; Otherwise -> pin the diagnostics at point (or clear if none).
-       (t
-        (let ((str (amuzak/lsp-ui-doc-diagnostics-string)))
-          (if str
-              (progn
-                (lsp-ui-doc--display "Diagnostics" str)
-                (amuzak/lsp-ui-doc--clear)
-                (setq amuzak/lsp-diag-shown-point (point)))
-            (amuzak/lsp-ui-doc--clear)
-            (lsp-ui-doc-hide))))))
-
-    (defun amuzak/lsp-ui-escape ()
-      "Close any open lsp-ui doc/diagnostics popup.
-
-If the popup frame is focused, return to the source buffer and remove
-the popup.  If a pinned (or plain hover) popup is showing at point, hide
-it.  Otherwise fall back to the default escape action and just clear the
-search highlight.  Pressing escape always closes the popup when it is
-open."
-      (interactive)
-      (cond
-       ;; Focused inside the popup frame -> return to code and remove popup.
-       ((amuzak/lsp-ui-doc-framep) (amuzak/lsp-ui-doc--exit-focus))
-       ;; Some popup (pinned doc/diag, or the plain hover doc) is visible -> close it.
-       ((lsp-ui-doc--visible-p)
-        (amuzak/lsp-ui-doc--clear)
-        (lsp-ui-doc-hide))
-       ;; Nothing open -> default escape action.
-       (t (evil-ex-nohighlight))))
-
-    (defun amuzak/lsp-ui-doc-maybe-hide ()
-      "Hide the pinned lsp-ui-doc if the cursor moved off its anchor."
-      (when (or (and amuzak/lsp-doc-shown-point
-                     (not (equal (point) amuzak/lsp-doc-shown-point)))
-                (and amuzak/lsp-diag-shown-point
-                     (not (equal (point) amuzak/lsp-diag-shown-point))))
-        (amuzak/lsp-ui-doc--clear)
-        (lsp-ui-doc-hide)))
-
-    ;; Auto-hide the pinned popup as soon as the cursor moves.
-    (add-hook 'post-command-hook #'amuzak/lsp-ui-doc-maybe-hide)
-
-    (with-eval-after-load 'lsp-ui-doc
-      ;; K / E also work while focused inside the doc frame, and make sure
-      ;; evil is in normal state there so the binding actually fires.
-      (define-key lsp-ui-doc-frame-mode-map (kbd "K") #'amuzak/lsp-ui-doc-cycle)
-      (define-key lsp-ui-doc-frame-mode-map (kbd "E") #'amuzak/lsp-ui-doc-diagnostics-cycle)
-      (with-eval-after-load 'evil
-        (advice-add 'lsp-ui-doc-focus-frame :after
-                    (lambda (&rest _)
-                      (when (bound-and-true-p evil-mode)
-                        (evil-normal-state))))))
+  (with-eval-after-load 'lsp-ui-doc
+    ;; K / E also work while focused inside the doc frame, and make sure
+    ;; evil is in normal state there so the binding actually fires.
+    (define-key lsp-ui-doc-frame-mode-map (kbd "K") #'amuzak/lsp-ui-doc-cycle)
+    (define-key lsp-ui-doc-frame-mode-map (kbd "E") #'amuzak/lsp-ui-doc-diagnostics-cycle)
+    (with-eval-after-load 'evil
+      (advice-add 'lsp-ui-doc-focus-frame :after
+                  (lambda (&rest _)
+                    (when (bound-and-true-p evil-mode)
+                      (evil-normal-state))))))
 
 (use-package company
   :ensure t
