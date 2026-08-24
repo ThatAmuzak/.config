@@ -1448,7 +1448,7 @@ Stops at the first error."
     (setq org-src-tab-acts-natively t
           org-src-fontify-natively t)
     (add-hook 'org-babel-after-execute-hook #'org-redisplay-inline-images)
-    (setq org-image-actual-width 800))
+    (setq org-image-actual-width '(800)))
 (setq flycheck-disabled-checkers '(org-lint))
 
 (use-package tex
