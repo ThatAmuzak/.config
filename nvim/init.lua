@@ -1,61 +1,63 @@
-require("core.options")
-require("core.keymaps")
+--[[
+=====================================================================
+======================== READ THIS FIRST ============================
+=====================================================================
+==========                              LazyVim                   =====
+==========  1. Modify lua/config/options.lua                       ====
+==========  2. Modify lua/config/keymaps.lua                       ====
+==========  3. Modify lua/config/autocmds.lua                      ====
+==========  4. Add plugins inside lua/plugins/                     ====
+==========  5. Run :Lazy restore to re-install from lazy-lock      ====
+=====================================================================
+]]
 
+-- Set <space> as the leader key
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
+
+-- Install package manager
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
-	local lazyrepo = "https://github.com/folke/lazy.nvim.git"
-	local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
-	if vim.v.shell_error ~= 0 then
-		error("Error cloning lazy.nvim:\n" .. out)
-	end
+  local repo = "https://github.com/folke/lazy.nvim.git"
+  vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", repo, lazypath })
 end
 vim.opt.rtp:prepend(lazypath)
 
-require("lazy").setup({
-	require("plugins.catppuccin"),
-	require("plugins.lualine"),
-	require("plugins.treesitter"),
-	require("plugins.telescope"),
-	-- require("plugins.lsp"),
-	require("plugins.autocompletion"),
-	-- require("plugins.none-ls"),
-	require("plugins.gitsigns"),
-	require("plugins.alpha"),
-	-- require("plugins.harpoon"),
-	require("plugins.surround"),
-	require("plugins.which-key"),
-	require("plugins.lazygit"),
-	require("plugins.ibl"),
-	require("plugins.autopairs"),
-	require("plugins.colorizer"),
-	require("plugins.git-integration"),
-	-- require("plugins.todo-comments"),
-	require("plugins.vim-sleuth"),
-	require("plugins.oil"),
-	-- require("plugins.gitblame"),
-	require("plugins.flash"),
-	require("plugins.markdown"),
-	require("plugins.smearcursor"),
-	-- require("plugins.trouble"),
-	-- require("plugins.avante"),
-	-- require("plugins.vimtex"),
-	require("plugins.yanky"),
-	require("plugins.ltex-extras"),
-	require("plugins.local-highlight"),
-	require("plugins.trim"),
-	require("plugins.ufo"),
-	-- require("plugins.neorg"),
-	require("plugins.no-neck-pain"),
-	require("plugins.csvview"),
-	-- require("plugins.nfnl"),
-	require("plugins.ghost"),
-	-- require("plugins.projectmgr"),
-	-- require("plugins.conjure"),
-	-- require("plugins.jack-in"),
-	require("plugins.sexp"),
-})
+-- Make sure to setup `mapleader` and `maplocalleader` before
+-- loading lazy.nvim so that mappings are correct.
+require("config.options")
+require("config.keymaps")
+require("config.autocmds")
 
--- require("plugins.terminal")
--- require("plugins.research-paper-manager")
--- require("plugins.pdf-to-text")
--- require("plugins.neorg-filelink")
+-- Setup lazy.nvim
+require("lazy").setup({
+  spec = {
+    -- import LazyVim plugins
+    { "LazyVim/LazyVim", import = "lazyvim.plugins" },
+    -- import any extras modules here
+    { import = "lazyvim.plugins.extras.coding.yanky" },
+    { import = "lazyvim.plugins.extras.util.mini-hipatterns" },
+    { import = "lazyvim.plugins.extras.ui.indent-blankline" },
+    { import = "lazyvim.plugins.extras.lang.clojure" },
+    { import = "lazyvim.plugins.extras.lang.markdown" },
+    -- import/override with your plugins
+    { import = "plugins" },
+  },
+  defaults = {
+    lazy = false,
+    version = false,
+  },
+  install = { colorscheme = { "catppuccin", "tokyonight", "habamax" } },
+  checker = { enabled = true },
+  performance = {
+    rtp = {
+      disabled_plugins = {
+        "gzip",
+        "tarPlugin",
+        "tohtml",
+        "tutor",
+        "zipPlugin",
+      },
+    },
+  },
+})
