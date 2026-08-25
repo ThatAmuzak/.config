@@ -1711,7 +1711,18 @@ Stops at real text. Elsewhere: org-shifttab."
   (set-face-foreground 'git-gutter:added "green")
   (set-face-foreground 'git-gutter:deleted "red")
   (set-face-foreground 'git-gutter:modified "yellow")
+  (setq-default git-gutter:start-revision "HEAD")
   (global-git-gutter-mode +1))
+
+(defun amuzak/git-gutter-refresh ()
+  "Refresh git-gutter for the current buffer if enabled."
+  (when (bound-and-true-p git-gutter-mode)
+    (git-gutter)))
+
+(add-hook 'focus-in-hook #'amuzak/git-gutter-refresh)
+
+(add-function :before window-buffer-change-functions
+              #'amuzak/git-gutter-refresh)
 
 (use-package git-gutter-fringe
   :ensure t
