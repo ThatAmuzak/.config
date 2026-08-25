@@ -87,6 +87,11 @@ map("n", "<leader>xs", ":close<CR>", { desc = "Close current split" })
 -- Clear search highlight
 map("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search highlight" })
 
+-- Open dashboard
+map("n", "<leader>dd", function()
+  Snacks.dashboard.open()
+end, { desc = "Open dashboard" })
+
 -- Search word under cursor
 map("n", "<leader>sif", function()
   vim.fn.setreg("/", "\\<" .. vim.fn.expand("<cword>") .. "\\>")
