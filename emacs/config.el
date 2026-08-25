@@ -959,8 +959,10 @@ Stops at real text. Elsewhere: org-shifttab."
   :after (ghostel evil)
   :hook (ghostel-mode . evil-ghostel-mode))
 
-(when (eq system-type 'windows-nt)
-  (setq ghostel-shell "C:/Program Files/PowerShell/7/pwsh.exe"))
+(setq ghostel-shell
+      (pcase system-type
+        ('windows-nt "C:/Program Files/PowerShell/7/pwsh.exe")
+        ('gnu/linux "zsh")))
 
 (defun amuzak/toggle-ghostel ()
   (interactive)
@@ -982,24 +984,40 @@ Stops at real text. Elsewhere: org-shifttab."
 
 (global-set-key (kbd "C-/")   #'amuzak/toggle-ghostel)
 
-;; Windows-only: spawns pwsh inside WezTerm
-(when (eq system-type 'windows-nt)
-  (defun my/launch-wezterm ()
-    "Launch WezTerm in the project root or current directory."
-    (interactive)
-    (let ((dir (or (project-root (project-current)) default-directory)))
-      (call-process "wezterm" nil 0 nil
-                    "start" "--cwd" (expand-file-name dir)
-                    "pwsh" "-NoLogo")))
+;; Windows: WezTerm + pwsh. Linux: Kitty + zsh.
+(pcase system-type
+  ('windows-nt
+   (defun my/launch-shell ()
+     "Launch WezTerm in the project root or current directory."
+     (interactive)
+     (let ((dir (or (project-root (project-current)) default-directory)))
+       (call-process "wezterm" nil 0 nil
+                     "start" "--cwd" (expand-file-name dir)
+                     "pwsh" "-NoLogo")))
 
-  (defun my/launch-lazygit ()
-    "Launch lazygit in WezTerm from the current buffer's directory."
-    (interactive)
-    (let ((dir (expand-file-name default-directory)))
-      (start-process "wezterm-lazygit" nil
-                     "wezterm" "start"
-                     "--cwd" dir
-                     "lazygit"))))
+   (defun my/launch-lazygit ()
+     "Launch lazygit in WezTerm from the current buffer's directory."
+     (interactive)
+     (let ((dir (expand-file-name default-directory)))
+       (start-process "wezterm-lazygit" nil
+                      "wezterm" "start"
+                      "--cwd" dir
+                      "lazygit"))))
+  ('gnu/linux
+   (defun my/launch-shell ()
+     "Launch Kitty in the project root or current directory."
+     (interactive)
+     (let ((dir (or (project-root (project-current)) default-directory)))
+       (call-process "kitty" nil 0 nil
+                     "--directory" (expand-file-name dir))))
+
+   (defun my/launch-lazygit ()
+     "Launch lazygit in Kitty from the current buffer's directory."
+     (interactive)
+     (let ((dir (expand-file-name default-directory)))
+       (start-process "kitty-lazygit" nil
+                      "kitty" "--directory" dir
+                      "lazygit")))))
 
 (use-package projectile
   :ensure t
@@ -1465,12 +1483,16 @@ Stops at real text. Elsewhere: org-shifttab."
   (setq TeX-show-compilation nil)
   (setq TeX-parse-self t)
   (setq-default TeX-master nil)
-  ;; Windows-only viewer setup for now
-  (when (eq system-type 'windows-nt)
-    (add-to-list 'TeX-view-program-list
-                 '("Sioyek"  "sioyek.exe --reuse-window --forward-search-file \"%b\" --forward-search-line %n --inverse-search \"emacsclient --no-wait +%2:%3 %1\" \"%o\""))
-
-    (add-to-list 'TeX-view-program-selection '(output-pdf "Sioyek")))
+  ;; Sioyek PDF viewer with SyncTeX/inverse search (same flags on both OSes)
+  (pcase system-type
+    ('windows-nt
+     (add-to-list 'TeX-view-program-list
+                  '("Sioyek"  "sioyek.exe --reuse-window --forward-search-file \"%b\" --forward-search-line %n --inverse-search \"emacsclient --no-wait +%2:%3 %1\" \"%o\""))
+     (add-to-list 'TeX-view-program-selection '(output-pdf "Sioyek")))
+    ('gnu/linux
+     (add-to-list 'TeX-view-program-list
+                  '("Sioyek"  "sioyek --reuse-window --forward-search-file \"%b\" --forward-search-line %n --inverse-search \"emacsclient --no-wait +%2:%3 %1\" \"%o\""))
+     (add-to-list 'TeX-view-program-selection '(output-pdf "Sioyek"))))
   (setq TeX-source-correlate-mode t)
   (setq TeX-source-correlate-start-server t)
   (setq TeX-source-correlate-method 'synctex)
