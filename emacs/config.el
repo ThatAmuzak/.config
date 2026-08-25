@@ -386,8 +386,6 @@
 
 (setq org-confirm-babel-evaluate nil)
 
-(setq backup-directory-alist '((".*" . "~/.config/emacs/backup")))
-
 (setq gc-cons-threshold (* 100 1024 1024)) ; 100MB
 
 (global-set-key [escape] 'keyboard-escape-quit)
@@ -438,8 +436,10 @@
   :ensure t
   :hook (dired-mode . nerd-icons-dired-mode))
 
-(set-fontset-font t 'emoji "Segoe UI Emoji" nil 'prepend)
-(set-fontset-font t 'symbol "Segoe UI Symbol" nil 'prepend)
+;; Windows doesn't auto-fallback to emoji fonts like fontconfig does on Linux
+(when (eq system-type 'windows-nt)
+  (set-fontset-font t 'emoji "Segoe UI Emoji" nil 'prepend)
+  (set-fontset-font t 'symbol "Segoe UI Symbol" nil 'prepend))
 
 (menu-bar-mode -1)
 (tool-bar-mode -1)
@@ -824,10 +824,12 @@ Stops at real text. Elsewhere: org-shifttab."
   :custom
   (org-download-method 'directory)
   (org-download-image-dir "./images")
-  ;; this is specifically a windows only solution
-  (org-download-screenshot-method
-   "powershell -command \"(Get-Clipboard -Format Image).Save('%s')\"")
   (org-download-annotate-function (lambda (_link) ""))
+  ;; this is specifically a windows only solution
+  :init
+  (when (eq system-type 'windows-nt)
+    (setq org-download-screenshot-method
+          "powershell -command \"(Get-Clipboard -Format Image).Save('%s')\""))
   :config
   (add-hook 'dired-mode-hook 'org-download-enable))
 
@@ -957,7 +959,8 @@ Stops at real text. Elsewhere: org-shifttab."
   :after (ghostel evil)
   :hook (ghostel-mode . evil-ghostel-mode))
 
-(setq ghostel-shell "C:/Program Files/PowerShell/7/pwsh.exe")
+(when (eq system-type 'windows-nt)
+  (setq ghostel-shell "C:/Program Files/PowerShell/7/pwsh.exe"))
 
 (defun amuzak/toggle-ghostel ()
   (interactive)
@@ -979,22 +982,24 @@ Stops at real text. Elsewhere: org-shifttab."
 
 (global-set-key (kbd "C-/")   #'amuzak/toggle-ghostel)
 
-(defun my/launch-wezterm ()
-  "Launch WezTerm in the project root or current directory."
-  (interactive)
-  (let ((dir (or (project-root (project-current)) default-directory)))
-    (call-process "wezterm" nil 0 nil
-                  "start" "--cwd" (expand-file-name dir)
-                  "pwsh" "-NoLogo")))
+;; Windows-only: spawns pwsh inside WezTerm
+(when (eq system-type 'windows-nt)
+  (defun my/launch-wezterm ()
+    "Launch WezTerm in the project root or current directory."
+    (interactive)
+    (let ((dir (or (project-root (project-current)) default-directory)))
+      (call-process "wezterm" nil 0 nil
+                    "start" "--cwd" (expand-file-name dir)
+                    "pwsh" "-NoLogo")))
 
-(defun my/launch-lazygit ()
-  "Launch lazygit in WezTerm from the current buffer's directory."
-  (interactive)
-  (let ((dir (expand-file-name default-directory)))
-    (start-process "wezterm-lazygit" nil
-                   "wezterm" "start"
-                   "--cwd" dir
-                   "lazygit")))
+  (defun my/launch-lazygit ()
+    "Launch lazygit in WezTerm from the current buffer's directory."
+    (interactive)
+    (let ((dir (expand-file-name default-directory)))
+      (start-process "wezterm-lazygit" nil
+                     "wezterm" "start"
+                     "--cwd" dir
+                     "lazygit"))))
 
 (use-package projectile
   :ensure t
@@ -1460,10 +1465,12 @@ Stops at real text. Elsewhere: org-shifttab."
   (setq TeX-show-compilation nil)
   (setq TeX-parse-self t)
   (setq-default TeX-master nil)
-  (add-to-list 'TeX-view-program-list
-                   '("Sioyek"  "sioyek.exe --reuse-window --forward-search-file \"%b\" --forward-search-line %n --inverse-search \"emacsclient --no-wait +%2:%3 %1\" \"%o\""))
+  ;; Windows-only viewer setup for now
+  (when (eq system-type 'windows-nt)
+    (add-to-list 'TeX-view-program-list
+                 '("Sioyek"  "sioyek.exe --reuse-window --forward-search-file \"%b\" --forward-search-line %n --inverse-search \"emacsclient --no-wait +%2:%3 %1\" \"%o\""))
 
-  (add-to-list 'TeX-view-program-selection '(output-pdf "Sioyek"))
+    (add-to-list 'TeX-view-program-selection '(output-pdf "Sioyek")))
   (setq TeX-source-correlate-mode t)
   (setq TeX-source-correlate-start-server t)
   (setq TeX-source-correlate-method 'synctex)
@@ -1526,7 +1533,7 @@ Stops at real text. Elsewhere: org-shifttab."
 (add-hook 'gptel-mode-hook (lambda () (gptel-highlight-mode +1)))
 
 (defvar my/gptel-save-dir
-  (expand-file-name "~/emacs/backups/gptel_conversations/")
+  (expand-file-name "~/.config/emacs/backups/gptel_conversations/")
   "Directory for auto-saved gptel buffers.")
 
 (defun my/gptel-auto-save ()
@@ -1745,4 +1752,5 @@ Stops at real text. Elsewhere: org-shifttab."
   :ensure t
   :init (defalias 'pi 'pi-coding-agent))
 
-(add-to-list 'exec-path "C:/bin/")
+(when (eq system-type 'windows-nt)
+  (add-to-list 'exec-path "C:/bin/"))
