@@ -563,75 +563,17 @@
 (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 
 (setq org-log-done t
-        org-auto-align-tags t
-        org-tags-column -80
-        org-fold-catch-invisible-edits 'show-and-error
-        org-special-ctrl-a/e t
-        org-insert-heading-respect-content t)
+      org-auto-align-tags t
+      org-tags-column -80
+      org-fold-catch-invisible-edits 'show-and-error
+      org-special-ctrl-a/e t
+      org-insert-heading-respect-content t)
 
-  ;; Indentation consistency: kill the phantom 2-space offsets and make
-  ;; org's per-level indent match tab-width (4), same as evil-shift-width.
-  (setq org-edit-src-content-indentation 0)
-  (setq org-indent-indentation-per-level tab-width)
-  (setq-default evil-shift-width tab-width)
-
-  ;; Vim-style dumb indentation in org
-  (add-hook 'org-mode-hook (lambda () (electric-indent-local-mode -1)))
-
-  (defun amuzak/org-insert-inherited-indent ()
-    "Insert the leading whitespace of the nearest previous non-blank line."
-    (let ((indent (save-excursion
-                    (beginning-of-line)
-                    (and (re-search-backward "^[ \\t]*\\([^ \\t\\n]\\)" nil t)
-                         (buffer-substring-no-properties
-                          (line-beginning-position) (match-beginning 1))))))
-      (when indent (insert indent))))
-
-  (defun amuzak/org-newline-inherit-indent ()
-    "Newline that copies the previous line's indent; never re-indents anything."
-    (interactive)
-    (newline)
-    (amuzak/org-insert-inherited-indent))
-
-  (defun amuzak/org-open-below ()
-    "Evil `o' that inherits the previous line's indent."
-    (interactive)
-    (evil-insert-newline-below)
-    (amuzak/org-insert-inherited-indent))
-
-  (defun amuzak/org-open-above ()
-    "Evil `O' that inherits the current line's indent."
-    (interactive)
-    (evil-insert-newline-above)
-    (amuzak/org-insert-inherited-indent))
-
-  (defun amuzak/org-insert-tab ()
-    "In src blocks: advance to the next tab-width stop. Elsewhere: org-cycle."
-    (interactive)
-    (if (org-in-src-block-p)
-        (insert (make-string (- tab-width (% (current-column) tab-width)) ?\s))
-      (org-cycle)))
-
-  (defun amuzak/org-insert-backtab ()
-    "In src blocks: eat whitespace back toward the previous tab-width stop.
-Stops at real text. Elsewhere: org-shifttab."
-    (interactive)
-    (if (org-in-src-block-p)
-        (let* ((col (current-column))
-               (rem (% col tab-width))
-               (target (max 0 (- col (if (zerop rem) tab-width rem)))))
-          (while (and (> (current-column) target)
-                      (memq (char-before) '(?\s ?\t)))
-            (delete-char -1)))
-      (org-shifttab)))
-
-  (with-eval-after-load 'org
-    (with-eval-after-load 'evil
-      (evil-define-key 'insert org-mode-map (kbd "RET") #'amuzak/org-newline-inherit-indent)
-      (evil-define-key 'insert org-mode-map (kbd "TAB") #'amuzak/org-insert-tab)
-      (evil-define-key 'insert org-mode-map (kbd "<backtab>") #'amuzak/org-insert-backtab)
-      (evil-define-key 'normal org-mode-map "o" #'amuzak/org-open-below)
-      (evil-define-key 'normal org-mode-map "O" #'amuzak/org-open-above)))
+;; Indentation consistency: kill the phantom 2-space offsets and make
+;; org's per-level indent match tab-width (4), same as evil-shift-width.
+(setq org-edit-src-content-indentation 0)
+(setq org-indent-indentation-per-level tab-width)
+(setq-default evil-shift-width tab-width)
 
 (plist-put org-format-latex-options :scale 1.35)
 (use-package org-fragtog
