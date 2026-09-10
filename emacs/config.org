@@ -107,6 +107,7 @@
 ** Package Manager
 
 #+begin_src emacs-lisp
+  (setq debug-on-error t)
   (defvar elpaca-installer-version 0.12)
   (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
   (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -300,7 +301,10 @@
       "n g" '(org-roam-graph :wk "Open Org Roam Graph")
       "n i" '(org-roam-node-insert :wk "Link to a Node")
       "n c" '(org-roam-capture :wk "Org Roam Capture")
-      "n j" '(org-roam-dailies-capture-today :wk "Org Roam Daily Capture Today"))
+      "n j" '(org-roam-dailies-capture-today :wk "Org Roam Daily Capture Today")
+      "n p" '(amuzak/papers-find :wk "Search Papers (citar)")
+      "n t" '(amuzak/papers-pdf2text :wk "Extract Text from Paper PDFs")
+      "n P" '(amuzak/papers-sync :wk "Sync Papers from library.bib"))
 
     ;; LSP
     (amuzak/leader-keys
@@ -1145,6 +1149,166 @@ Also enables inline images to be enabled by default
           ))
 #+end_src
 
+* PAPERS (Zotero library.bib -> org-roam)
+
+Pipeline: Better BibTeX auto-exports ~/Notes/Brain/Papers/library.bib, PDFs
+(named {citekey}.pdf) live in Papers/pdfs/, generated notes in Papers/notes/.
+Citar is the fuzzy finder (orderless over author/year/title/journal/keywords);
+notes are plain org files with :ID: and :ROAM_REFS: @citekey, so org-roam
+indexes them as first-class nodes (SPC n f / SPC n i / org-roam-ref-find).
+
+** Citar
+
+#+begin_src emacs-lisp
+  (use-package citar
+    :ensure t
+    ;; citar-capf for citation completion in LaTeX buffers.
+    :hook (LaTeX-mode . (lambda ()
+                          (add-hook 'completion-at-point-functions 'citar-capf -100 t)))
+    :init
+    (put 'citar-bibliography 'safe-local-variable #'listp)
+    :custom
+    (citar-bibliography '("~/Notes/Brain/Papers/library.bib"))
+    (citar-library-paths '("~/Notes/Brain/Papers/pdfs/"))
+    (citar-notes-paths '("~/Notes/Brain/Papers/notes/"))
+    (citar-file-note-extensions '("org"))
+    ;; Make sure citar parses the fields we render in candidates/notes.
+    (citar-additional-fields '(abstract doi url keywords journal))
+    ;; What shows up (and is searched) in the orderless candidate list.
+    (citar-templates
+     '((main . "${author editor:30%sn}   ${date year issued:4}   ${title:48}")
+       (suffix . "  ${=key= id:15}  ${type:12}  ${tags keywords keywords:*}")
+       (preview . "${author editor:%etal} (${year date issued:4}) ${title}, ${journal journaltitle publisher:30}.\n")
+       (note . "Notes on ${title}, by ${author editor}, ${year date issued}")))
+    ;; Open PDFs in Sioyek (same inverse-search wiring as the AUCTeX setup).
+    (citar-file-open-functions
+     '(("pdf" . amuzak/citar-open-sioyek)
+       ("html" . citar-file-open-external)
+       (t . find-file)))
+    ;; Generated notes use the rich metadata template below.
+    (citar-note-format-function #'amuzak/papers--write-note)
+    :commands (citar citar-open citar-open-library-file citar-create-note
+                     citar-open-notes amuzak/papers-find amuzak/papers-sync))
+
+  (defun amuzak/citar-open-sioyek (file)
+    "Open PDF FILE in Sioyek, with inverse search wired to emacsclient."
+    (interactive "fOpen in Sioyek: ")
+    (start-process "sioyek" nil "sioyek.exe" "--reuse-window"
+                   "--inverse-search" "emacsclient --no-wait +%2:%3 %1"
+                   (expand-file-name file)))
+#+end_src
+
+** Note generator & bulk sync
+
+#+begin_src emacs-lisp
+  (defun amuzak/bib-field (entry fields)
+    "Return the first non-empty value among FIELDS in bib ENTRY, braces stripped."
+    (cl-some
+     (lambda (f)
+       (let ((v (cdr (assoc f entry))))
+         (when (and v (not (string-empty-p (string-trim v))))
+           (string-trim (replace-regexp-in-string "[{}]" "" v)))))
+     fields))
+
+  (defun amuzak/papers-note-path (citekey)
+    "Path of the generated org note for CITEKEY."
+    (expand-file-name (concat citekey ".org") (car citar-notes-paths)))
+
+  (defun amuzak/papers--write-note (citekey entry)
+    "Write (never overwrite) the org-roam note for bib ENTRY at CITEKEY.
+Used both by `amuzak/papers-sync' and as `citar-note-format-function'."
+    (let* ((path (amuzak/papers-note-path citekey))
+           (title    (or (amuzak/bib-field entry '("title")) citekey))
+           (author   (amuzak/bib-field entry '("author" "editor")))
+           (year     (amuzak/bib-field entry '("year" "date" "issued")))
+           (journal  (amuzak/bib-field entry '("journaltitle" "journal" "publisher")))
+           (doi      (amuzak/bib-field entry '("doi")))
+           (url      (amuzak/bib-field entry '("url")))
+           (keywords (amuzak/bib-field entry '("keywords" "tags")))
+           (abstract (amuzak/bib-field entry '("abstract" "summary"))))
+      (with-temp-file path
+        (insert ":PROPERTIES:\n")
+        (insert (format ":ID: %s\n" (org-id-new)))
+        (insert (format ":ROAM_REFS: @%s\n" citekey))
+        (insert (format ":CITEKEY: %s\n" citekey))
+        (when author   (insert (format ":AUTHOR:   %s\n" author)))
+        (when year     (insert (format ":YEAR:     %s\n" year)))
+        (when journal  (insert (format ":JOURNAL:  %s\n" journal)))
+        (when doi      (insert (format ":DOI:      %s\n" doi)))
+        (when url      (insert (format ":URL:      %s\n" url)))
+        (when keywords (insert (format ":KEYWORDS: %s\n" keywords)))
+        (insert ":END:\n")
+        (insert (format "#+title: %s\n\n" title))
+        (insert (format "[[../pdfs/%s.pdf][Open PDF]]\n" citekey))
+        (when doi
+          (insert (format "[[https://doi.org/%s][Open Paper]]\n" doi)))
+        ;; Scholar search with the exact title quoted (Google's recommended
+        ;; pattern); url-hexify-string percent-encodes quotes/spaces/& etc.
+        (insert (format "[[https://scholar.google.com/scholar?q=%s][Open Scholar]]\n"
+                        (url-hexify-string (concat "\"" title "\""))))
+        (insert (format "[[../texts/%s.txt][Open Text]]\n" citekey))
+        (when abstract
+          (insert (format "\n* Abstract\n%s\n" abstract))))))
+
+  (defun amuzak/papers-sync ()
+    "Generate org-roam notes for every entry in library.bib.
+Existing notes are never overwritten, so paper notes you've written are safe.
+Only new entries get a fresh metadata note; the org-roam DB is reindexed after."
+    (interactive)
+    (require 'citar)      ; ensures :custom paths (citar-bibliography etc.) are set
+    (require 'parsebib)
+    (let* ((entries (parsebib-parse (expand-file-name (car citar-bibliography))))
+           (notes-dir (car citar-notes-paths))
+           (created 0) (existing 0))
+      (unless (file-directory-p notes-dir)
+        (make-directory notes-dir t))
+      (maphash
+       (lambda (citekey entry)
+         (if (file-exists-p (amuzak/papers-note-path citekey))
+             (cl-incf existing)
+           (amuzak/papers--write-note citekey entry)
+           (cl-incf created)))
+       entries)
+      (org-roam-db-sync)
+      (message "Papers sync: %d new note(s), %d already existed." created existing)))
+
+  (defun amuzak/papers-find ()
+    "Fuzzy-search the papers database (orderless over all metadata)
+and open the note, generating it first if it doesn't exist yet."
+    (interactive)
+    (require 'citar)
+    (citar-create-note (citar-select-ref)))
+
+  (defun amuzak/papers-pdf2text ()
+    "Run pdf2text.py to extract plain text from all paper PDFs."
+    (interactive)
+    (let* ((dir (expand-file-name "~/Notes/Brain/Papers/"))
+           (script (expand-file-name "pdf2text.py" dir))
+           (buf (get-buffer-create "*pdf2text*")))
+      (unless (file-exists-p script)
+        (user-error "pdf2text.py not found at %s" script))
+      (message "Starting PDF to text conversion...")
+      (with-current-buffer buf
+        (let ((inhibit-read-only t))
+          (erase-buffer))
+        (insert "Starting PDF to text conversion...\n"))
+      (let ((proc (start-process "pdf2text" buf "python" script)))
+        (set-process-sentinel
+         proc
+         (lambda (p _event)
+           (when (eq (process-status p) 'exit)
+             ;; Parse the "N extracted" count from the script's summary line.
+             (let ((n (with-current-buffer (process-buffer p)
+                        (save-excursion
+                          (goto-char (point-min))
+                          (if (re-search-forward "\\([0-9]+\\) extracted" nil t)
+                              (string-to-number (match-string 1))
+                            0)))))
+               (message "PDF to text conversion complete: converted %d files" n)
+               (when (/= (process-exit-status p) 0)
+                 (message "pdf2text exited nonzero; some files failed — see *pdf2text*")))))))))
+#+end_src
+
 * DASHBOARD
 
 #+begin_src emacs-lisp
@@ -1895,19 +2059,6 @@ Requires GDB 14+ or LLDB.
   :ensure t
   :after tex evil
   :hook (LaTeX-mode . evil-tex-mode))
-#+end_src
-
-** Citar
-
-#+begin_src emacs-lisp
-;; citar
-(use-package citar
-  :ensure t
-  :init
-  (put 'citar-bibliography 'safe-local-variable #'listp)
-  :hook
-  (LaTeX-mode . (lambda ()
-                  (add-hook 'completion-at-point-functions 'citar-capf -100 t))))
 #+end_src
 
 * LLM Integration
