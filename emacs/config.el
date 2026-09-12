@@ -390,11 +390,11 @@
 
 (setq org-confirm-babel-evaluate nil)
 
-(setq gc-cons-threshold (* 100 1024 1024)) ; 100MB
-
 (global-set-key [escape] 'keyboard-escape-quit)
 
 (setq backup-directory-alist '((".*" . "~/.config/emacs/backups/")))
+(setq auto-save-file-name-transforms
+      `((".*" ,(expand-file-name "~/.config/emacs/backups/" user-emacs-directory) t)))
 
 (setq-default tab-width 4)
 
@@ -1412,10 +1412,11 @@ and open the note, generating it first if it doesn't exist yet."
 
 (use-package lsp-pyright
   :ensure t
+  :defer t
   :custom
   (lsp-pyright-langserver-command "basedpyright")
-  :hook ((python-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))
-         (python-ts-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))))
+  :hook ((python-mode . lsp-deferred)
+         (python-ts-mode . lsp-deferred)))
 
 (use-package unity
   :ensure (:host github :repo "elizagamedev/unity.el")
@@ -1567,6 +1568,7 @@ and open the note, generating it first if it doesn't exist yet."
 
 (use-package tex
   :ensure auctex
+  :defer t
   :config
   (setq TeX-command-default "LaTeXMk")
   (setq TeX-save-query nil)

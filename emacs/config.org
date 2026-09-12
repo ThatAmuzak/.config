@@ -19,8 +19,6 @@
   - [[#messages-buffer-on-the-right][Messages Buffer on the Right]]
   - [[#use-short-answers-yes-or-no---y-or-n][Use Short Answers ("yes or no" -> "y or n")]]
   - [[#disable-confirmation-for-code-block-execution-in-org][Disable confirmation for code block execution in org]]
-  - [[#set-backup-directory-to-one-source][Set backup directory to one source]]
-  - [[#increase-gc-threshold][Increase GC Threshold]]
   - [[#minibuffer-escape][Minibuffer escape]]
   - [[#set-backup-directory][Set backup directory]]
   - [[#set-tab-width][Set Tab Width]]
@@ -56,6 +54,9 @@
   - [[#org-download][Org Download]]
 - [[#note-taking][NOTE TAKING]]
   - [[#thoughs-and-tasks][Thoughs and Tasks]]
+- [[#papers-zotero-librarybib---org-roam][PAPERS (Zotero library.bib -> org-roam)]]
+  - [[#citar][Citar]]
+  - [[#note-generator--bulk-sync][Note generator & bulk sync]]
 - [[#dashboard][DASHBOARD]]
 - [[#terminal][TERMINAL]]
 - [[#project-management][Project Management]]
@@ -80,7 +81,6 @@
 - [[#latex][LATEX]]
   - [[#auctex][Auctex]]
   - [[#evil-tex][Evil-Tex]]
-  - [[#citar][Citar]]
 - [[#llm-integration][LLM Integration]]
   - [[#gptel][GPTel]]
   - [[#gptel-agents][GPTel Agents]]
@@ -546,14 +546,6 @@
 (setq org-confirm-babel-evaluate nil)
 #+end_src
 
-** Set backup directory to one source
-
-** Increase GC Threshold
-
-#+begin_src emacs-lisp
-  (setq gc-cons-threshold (* 100 1024 1024)) ; 100MB
-#+end_src
-
 ** Minibuffer escape
 
 #+begin_src emacs-lisp
@@ -563,7 +555,9 @@
 ** Set backup directory
 
 #+begin_src emacs-lisp
-  (setq backup-directory-alist '((".*" . "~/.config/emacs/backups/")))
+(setq backup-directory-alist '((".*" . "~/.config/emacs/backups/")))
+(setq auto-save-file-name-transforms
+      `((".*" ,(expand-file-name "~/.config/emacs/backups/" user-emacs-directory) t)))
 #+end_src
 
 ** Set Tab Width
@@ -1829,10 +1823,11 @@ This is for literate programming
 #+begin_src emacs-lisp
   (use-package lsp-pyright
     :ensure t
+    :defer t
     :custom
     (lsp-pyright-langserver-command "basedpyright")
-    :hook ((python-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))
-           (python-ts-mode . (lambda () (require 'lsp-pyright) (lsp-deferred)))))
+    :hook ((python-mode . lsp-deferred)
+           (python-ts-mode . lsp-deferred)))
 #+end_src
 
 *** Unity Mode
@@ -2024,6 +2019,7 @@ Requires GDB 14+ or LLDB.
 #+begin_src emacs-lisp
   (use-package tex
     :ensure auctex
+    :defer t
     :config
     (setq TeX-command-default "LaTeXMk")
     (setq TeX-save-query nil)
