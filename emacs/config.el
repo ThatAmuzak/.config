@@ -1109,10 +1109,31 @@ and open the note, generating it first if it doesn't exist yet."
                       "kitty" "--directory" dir
                       "lazygit")))))
 
+(defun amuzak/projectile-root-outermost-git (dir)
+  (when-let ((root (projectile-root-bottom-up dir '(".git"))))
+    (let ((candidate root))
+      (while (and candidate
+                  (file-regular-p (expand-file-name ".git" candidate)))
+        (let* ((parent (projectile-parent candidate))
+               (outer (and parent
+                           (locate-dominating-file
+                            parent
+                            (lambda (d)
+                              (file-exists-p (expand-file-name ".git" d)))))))
+          (setq candidate
+                (and outer
+                     (file-directory-p (expand-file-name ".git/modules" outer))
+                     outer))))
+      (or candidate root))))
+
 (use-package projectile
   :ensure t
   :init
-  (projectile-mode +1))
+  (projectile-mode +1)
+  :config
+  (setq projectile-project-root-functions
+        (cons #'amuzak/projectile-root-outermost-git
+              (remq #'projectile-root-bottom-up projectile-project-root-functions))))
 
 ;; Vertico - vertical completion UI
 (use-package vertico
