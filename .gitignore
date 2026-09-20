@@ -50,3 +50,4 @@ emacs/.dap-breakpoints
 yasb
 emacs/tramp
 gh
+nvim/lazy-lock.json

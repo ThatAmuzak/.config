@@ -74,10 +74,6 @@ map("v", "<", "<gv", { desc = "Indent left and stay selected" })
 map("v", ">", ">gv", { desc = "Indent right and stay selected" })
 map("v", "p", '"_dP', { desc = "Paste without overwriting register" })
 
--- LSP hover / diagnostics
-map("n", "K", vim.lsp.buf.hover, { desc = "LSP Hover" })
-map("n", "E", vim.diagnostic.open_float, { desc = "Show Error on Line" })
-
 -- Window management (LazyVim default already handles <C-h/j/k/l>; kept for clarity)
 map("n", "<leader>v", "<C-w>v", { desc = "Split window vertically" })
 map("n", "<leader>h", "<C-w>s", { desc = "Split window horizontally" })
@@ -86,44 +82,3 @@ map("n", "<leader>xs", ":close<CR>", { desc = "Close current split" })
 
 -- Clear search highlight
 map("n", "<Esc>", "<cmd>nohlsearch<CR>", { desc = "Clear search highlight" })
-
--- Open dashboard
-map("n", "<leader>dd", function()
-  Snacks.dashboard.open()
-end, { desc = "Open dashboard" })
-
--- Search word under cursor
-map("n", "<leader>sif", function()
-  vim.fn.setreg("/", "\\<" .. vim.fn.expand("<cword>") .. "\\>")
-  vim.cmd("normal! n")
-end, { desc = "Search word under cursor" })
-
--- Search visual selection
-map("v", "<leader>sif", function()
-  local saved_reg = vim.fn.getreg('"')
-  vim.cmd('normal! "vy')
-  local selection = vim.fn.getreg("v"):gsub("[\n\r]", "")
-  vim.fn.setreg("/", vim.fn.escape(selection, "\\/"))
-  vim.fn.setreg('"', saved_reg)
-  vim.cmd("normal! n")
-end, { desc = "Search visual selection" })
-
--- Replace visual selection interactively
-local function replace_visual_selection()
-  local saved_reg = vim.fn.getreg('"')
-  vim.cmd('normal! "vy')
-  local sel = vim.fn.getreg("v"):gsub("[\n\r]", "")
-  vim.fn.setreg('"', saved_reg)
-
-  vim.ui.input({ prompt = ("Replace %q with: "):format(sel) }, function(input)
-    if not input then
-      return
-    end
-    local cmd = string.format("%%s/%s/%s/gc", vim.fn.escape(sel, "\\/"), input)
-    vim.cmd(cmd)
-  end)
-end
-
-map("v", "<leader>rif", function()
-  replace_visual_selection()
-end, { desc = "Replace visual selection interactively" })

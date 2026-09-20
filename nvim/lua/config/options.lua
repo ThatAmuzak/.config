@@ -20,6 +20,7 @@ opt.ignorecase = true
 opt.smartcase = true
 
 -- Cursor & line wrapping
+opt.wrap = true
 opt.scrolloff = 10
 opt.linebreak = true
 
@@ -40,12 +41,4 @@ opt.concealcursor = ""
 opt.mouse = "a"
 opt.clipboard = "unnamedplus"
 
--- Spelling
-opt.spell = true
-opt.spelllang = "en_us"
-
--- Windows/PowerShell shell (Windows-native config)
 opt.shell = "pwsh"
-opt.shellcmdflag = "-NoLogo -ExecutionPolicy RemoteSigned -Command"
-opt.shellquote = ""
-opt.shellxquote = ""
