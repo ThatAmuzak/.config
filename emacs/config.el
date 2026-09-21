@@ -1695,7 +1695,13 @@ and open the note, generating it first if it doesn't exist yet."
 (use-package beacon
   :ensure t
   :config
-  (beacon-mode 1))
+  (beacon-mode 1)
+  ;; Don't blink when a company completion popup appears (its idle timer
+  ;; shifts window-start, which beacon's scroll hook misreads as movement).
+  (add-hook 'beacon-dont-blink-predicates
+            (lambda ()
+              (and (bound-and-true-p company-mode)
+                   company-candidates))))
 
 (use-package grease
   :elpaca (:host github :repo "mwac-dev/grease.el")
