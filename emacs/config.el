@@ -1229,6 +1229,7 @@ and open the note, generating it first if it doesn't exist yet."
          (rust-ts-mode . lsp-deferred)
          (js-ts-mode . lsp-deferred)
          (typescript-ts-mode . lsp-deferred)
+         (tsx-ts-mode . lsp-deferred)
          (c-ts-mode . lsp-deferred)
          (c++-ts-mode . lsp-deferred)
          (LaTeX-mode . lsp-deferred)
@@ -1403,7 +1404,11 @@ and open the note, generating it first if it doesn't exist yet."
   (setf (alist-get 'python-ts-mode apheleia-mode-alist) '(ruff))
   (setf (alist-get 'csharp-ts-mode apheleia-mode-alist) '(csharpier))
   (setf (alist-get 'rustic-mode apheleia-mode-alist) '(rustfmt))
-  (setf (alist-get 'rust-ts-mode apheleia-mode-alist) '(rustfmt)))
+  (setf (alist-get 'rust-ts-mode apheleia-mode-alist) '(rustfmt))
+  (setf (alist-get 'js-ts-mode apheleia-mode-alist) '(prettier))
+  (setf (alist-get 'typescript-ts-mode apheleia-mode-alist) '(prettier))
+  (setf (alist-get 'tsx-ts-mode apheleia-mode-alist) '(prettier))
+  (setf (alist-get 'json-ts-mode apheleia-mode-alist) '(prettier)))
 
 (use-package markdown-mode
   :ensure t
@@ -1438,6 +1443,20 @@ and open the note, generating it first if it doesn't exist yet."
   (lsp-pyright-langserver-command "basedpyright")
   :hook ((python-mode . lsp-deferred)
          (python-ts-mode . lsp-deferred)))
+
+(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . tsx-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.jsx\\'" . js-ts-mode))
+
+(with-eval-after-load 'lsp-mode
+  (setq lsp-disabled-clients '(jsts-ls deno-ls tsgo tailwindcss))
+  (setq lsp-clients-typescript-prefer-use-project-ts-server t)
+  (setq lsp-typescript-format-enable nil
+        lsp-javascript-format-enable nil))
+
+(use-package add-node-modules-path
+  :ensure t
+  :hook ((js-ts-mode typescript-ts-mode tsx-ts-mode) . add-node-modules-path))
 
 (use-package unity
   :ensure (:host github :repo "elizagamedev/unity.el")
