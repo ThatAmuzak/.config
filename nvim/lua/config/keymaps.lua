@@ -8,28 +8,53 @@ local map = function(mode, lhs, rhs, opts)
   vim.keymap.set(mode, lhs, rhs, opts)
 end
 
--- Save file(s): write all modified buffers, skip terminals
+-- Backup new (unnamed) buffer contents to ~/.cache/nvim/<iso timestamp>.bak
+local function backup_new_buffer(buf)
+  local ts = os.date("!%Y-%m-%dT%H%M%S")
+  local dir = vim.fn.stdpath("cache")
+  local path = dir .. "/" .. ts .. ".bak"
+  local n = 2
+  while vim.fn.filereadable(path) == 1 do
+    path = dir .. "/" .. ts .. "-" .. n .. ".bak"
+    n = n + 1
+  end
+  vim.fn.writefile(vim.api.nvim_buf_get_lines(buf, 0, -1, false), path)
+end
+
+-- Save file(s): write all modified buffers; new (unnamed) buffers get backed
+-- up to the cache dir; terminals are skipped
 map("n", "<leader>ww", function()
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
     if
       vim.api.nvim_buf_is_loaded(buf)
       and vim.bo[buf].buftype ~= "terminal"
-      and vim.bo[buf].modifiable
       and vim.bo[buf].modified
     then
-      vim.api.nvim_buf_call(buf, function()
-        vim.cmd("silent write")
-      end)
+      if vim.bo[buf].buftype == "" and vim.api.nvim_buf_get_name(buf) == "" then
+        backup_new_buffer(buf)
+      elseif vim.bo[buf].modifiable then
+        vim.api.nvim_buf_call(buf, function()
+          vim.cmd("silent write")
+        end)
+      end
     end
   end
 end, { desc = "Save file(s)" })
 
--- Save all and quit (overrides LazyVim session-quit default)
+-- Save all and quit (overrides LazyVim session-quit default); terminal buffers
+-- are closed and exit is unconditional; new (unnamed) buffers get backed up to
+-- the cache dir
 map("n", "<leader>qq", function()
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
     if vim.api.nvim_buf_is_loaded(buf) then
       if vim.bo[buf].buftype == "terminal" then
         vim.cmd("bd! " .. buf)
+      elseif
+        vim.bo[buf].buftype == ""
+        and vim.api.nvim_buf_get_name(buf) == ""
+        and vim.bo[buf].modified
+      then
+        backup_new_buffer(buf)
       elseif vim.bo[buf].modifiable and vim.bo[buf].modified then
         vim.api.nvim_buf_call(buf, function()
           vim.cmd("silent write")
@@ -37,7 +62,7 @@ map("n", "<leader>qq", function()
       end
     end
   end
-  vim.cmd("qa")
+  vim.cmd("qa!")
 end, { desc = "Save all and quit" })
 
 -- Move by visual line
