@@ -2,6 +2,15 @@
 return {
   {
     "folke/snacks.nvim",
+    -- LazyVim v16 auto-imports the snacks_explorer extra, which maps
+    -- <leader>e / <leader>E / <leader>fe / <leader>fE. These `false`
+    -- entries delete those keymaps from the merged snacks spec.
+    keys = {
+      { "<leader>e", false },
+      { "<leader>E", false },
+      { "<leader>fe", false },
+      { "<leader>fE", false },
+    },
     opts = {
       explorer = { enabled = false },
       picker = {
