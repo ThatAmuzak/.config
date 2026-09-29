@@ -185,6 +185,7 @@
     "n i" '(org-roam-node-insert :wk "Link to a Node")
     "n c" '(org-roam-capture :wk "Org Roam Capture")
     "n j" '(org-roam-dailies-capture-today :wk "Org Roam Daily Capture Today")
+    "n r" '(org-roam-db-sync :wk "Sync Org Roam DB")
     "n p" '(amuzak/papers-find :wk "Search Papers (citar)")
     "n t" '(amuzak/papers-pdf2text :wk "Extract Text from Paper PDFs")
     "n P" '(amuzak/papers-sync :wk "Sync Papers from library.bib"))
@@ -817,6 +818,12 @@
            :if-new (file+head "Artifacts/${slug}.org" "#+title: ${title}\n#+STARTUP: showeverything\n")
            :unnarrowed t)
 
+          ("s" "learning track"
+           plain "%?"
+           :if-new (file+head "Learning/Scratch/${slug}.org"
+                              "#+title: ${title}\n#+filetags: :learn:\n:PROPERTIES:\n:ID: %(org-id-new)\n:END:\n")
+           :unnarrowed t)
+
           ))
   (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
   (org-roam-db-autosync-mode)
@@ -976,6 +983,172 @@ and open the note, generating it first if it doesn't exist yet."
                (message "PDF to text conversion complete: converted %d files" n)
                (when (/= (process-exit-status p) 0)
                  (message "pdf2text exited nonzero; some files failed — see *pdf2text*")))))))))
+
+(defvar my/learning-atlas-root (expand-file-name "~/Notes/Brain/Learning/")
+    "Root of the Learning Atlas vault (keep in sync with pi's LEARNING_ROOT).")
+
+  (defconst my/learning-atlas-state-template
+    (concat "{\n"
+            "  \"schema\": \"learn-state/1\",\n"
+            "  \"track\": \"%s\",\n"
+            "  \"updated\": \"%s\",\n"
+            "  \"last_touched\": \"%s\",\n"
+            "  \"streak\": { \"current\": 0, \"longest\": 0, \"checkins\": {} },\n"
+            "  \"level_basis\": { \"quizzes_completed\": 0 },\n"
+            "  \"frontier_proposal\": [],\n"
+            "  \"due\": [],\n"
+            "  \"nodes\": {},\n"
+            "  \"misconception_registry\": {},\n"
+            "  \"reflection_focus\": \"\"\n"
+            "}\n")
+    "Initial state.json template (%s = track slug, then today's date twice).")
+
+  (defun my/learning-atlas-scaffold ()
+    "After capturing a Learning/Scratch note, create the Theory/Progress
+scaffolding for that track (idempotent: open-not-overwrite)."
+    ;; org-capture runs in an INDIRECT buffer of the target file; plain
+    ;; buffer-file-name returns nil there, so resolve through the base buffer.
+    (let ((file (buffer-file-name (or (buffer-base-buffer) (current-buffer)))))
+      (when (and file (string-match-p "/Learning/Scratch/[^/]+\\.org\\'" file))
+        (let* ((slug (file-name-base file))
+               (theory-dir (expand-file-name (concat "Theory/" slug) my/learning-atlas-root))
+               (progress-dir (expand-file-name (concat "Progress/" slug) my/learning-atlas-root))
+               (dag (expand-file-name "DAG.org" theory-dir))
+               (state (expand-file-name "state.json" progress-dir))
+               (today (format-time-string "%Y-%m-%d")))
+          (unless (file-exists-p dag)
+            (make-directory theory-dir t)
+            (with-temp-file dag
+              (insert (format "#+title: %s\n#+filetags: :learn:\n\n* Nodes\n\n* Edges\n" slug))))
+          (unless (file-exists-p state)
+            (make-directory progress-dir t)
+            (with-temp-file state
+              (insert (format my/learning-atlas-state-template slug today today))))))))
+  (add-hook 'org-capture-prepare-finalize-hook #'my/learning-atlas-scaffold)
+
+(defface my/dashboard-learning-level
+    '((t :inherit success :weight bold))
+    "Face for the track level in the dashboard Learning Atlas block.")
+
+  (defun my/learning-atlas--days-since (date-str)
+    "Whole days between DATE-STR (YYYY-MM-DD, LOCAL calendar date) and today.
+DATE-STR is stored as a plain local calendar date, so it must be encoded in
+LOCAL time — encoding with ZONE=t (UTC) shifts the day boundary in
+non-UTC timezones and makes yesterday look like two days ago."
+    (let ((parts (split-string (string-trim date-str) "-")))
+      (if (and (stringp date-str) (= (length parts) 3))
+          (- (time-to-days (current-time))
+             (time-to-days (encode-time 0 0 0
+                                        (string-to-number (nth 2 parts))
+                                        (string-to-number (nth 1 parts))
+                                        (string-to-number (nth 0 parts)))))
+        9999)))
+
+  (defun my/learning-atlas--level (state)
+    "Live level: quizzes_completed - floor(max(0, idle_days - 7)/7), clamped at 0.
+One level is lost per FULL idle week; integer output."
+    (let* ((basis (cdr (assoc 'level_basis state)))
+           (quizzes (or (and basis (cdr (assoc 'quizzes_completed basis))) 0))
+           (last (cdr (assoc 'last_touched state)))
+           (idle (if (stringp last) (my/learning-atlas--days-since last) 9999))
+           (decay (floor (max 0 (- idle 7)) 7))
+           (level (max 0 (- quizzes decay))))
+      (number-to-string level)))
+
+  (defun my/learning-atlas--relative (days)
+    "Relative last-visited label, same wording as the agenda date faces."
+    (cond ((= days 0) "today")
+          ((= days 1) "yesterday")
+          (t (format "%d days ago" days))))
+
+  (defun my/learning-atlas--strip (checkins)
+    "14-day check-in strip (filled box = checked in that day)."
+    (let ((now (time-to-days (current-time))) (done '()))
+      (dolist (k (cdr (assoc 'checkins checkins)))
+        (let ((parts (split-string (symbol-name (car k)) "-")))
+          (when (= (length parts) 3)
+            (push (time-to-days (encode-time 0 0 0
+                                             (string-to-number (nth 2 parts))
+                                             (string-to-number (nth 1 parts))
+                                             (string-to-number (nth 0 parts))))
+                  done))))
+      (mapconcat
+       (lambda (off)
+         (let ((checked (member (- now off) done)))
+           (propertize (if checked "▣" "▢")
+                       'face (if checked 'success 'shadow))))
+       (number-sequence 0 13) "")))
+
+  (defun my/learning-atlas--entry (track state)
+    "Build one dashboard entry plist for TRACK from STATE (state.json alist)."
+    (let* ((last (cdr (assoc 'last_touched state)))
+           (idle (if (stringp last) (my/learning-atlas--days-since last) 9999))
+           (due (length (cdr (assoc 'due state)))))
+      (list :track track
+            :level (my/learning-atlas--level state)
+            :due due
+            :last (my/learning-atlas--relative idle)
+            :strip (my/learning-atlas--strip (cdr (assoc 'streak state)))
+            :last-date (or last "")
+            :dag (expand-file-name (concat "Theory/" track "/DAG.org") my/learning-atlas-root)
+            :theory (expand-file-name (concat "Theory/" track "/") my/learning-atlas-root))))
+
+  (defun my/learning-atlas-entries ()
+    "One plist per learning track, newest-touched first; nil when none exist."
+    (let ((entries))
+      (let ((progress (expand-file-name "Progress/" my/learning-atlas-root)))
+        (when (file-directory-p progress)
+          (dolist (dir (directory-files progress t "\\`[^.]" nil))
+            (when (file-directory-p dir)
+              (let ((state (ignore-errors (json-read-file (expand-file-name "state.json" dir)))))
+                (when state
+                  (push (my/learning-atlas--entry (or (cdr (assoc 'track state)) (file-name-nondirectory dir)) state)
+                        entries)))))))
+      (sort entries (lambda (a b) (string> (plist-get a :last-date) (plist-get b :last-date))))))
+
+  (defun my/learning-atlas--propertize-item (el)
+    "Format one dashboard line for learning track entry EL."
+    (concat (plist-get el :track)
+            "  " (propertize (concat "lvl " (plist-get el :level)) 'face 'my/dashboard-learning-level)
+            ;; only surface the due count when something is actually due
+            (let ((due (plist-get el :due)))
+              (if (> due 0)
+                  (concat "  " (propertize (concat "due " (number-to-string due)) 'face 'shadow))
+                ""))
+            "  " (propertize (plist-get el :last) 'face 'my/dashboard-agenda-date)
+            "  " (plist-get el :strip)))
+
+  (defun dashboard-insert-learning (list-size)
+    "Add the Learning Atlas section to the dashboard."
+    (let ((entries (my/learning-atlas-entries)))
+      (if (null entries)
+          (progn
+            (dashboard-insert-heading "Learning Atlas:")
+            (insert (propertize "\n    No learning tracks yet — capture one with \"s\" (SPC n c)"
+                                'face 'dashboard-no-items-face)))
+        (dashboard-insert-section
+         "Learning Atlas:"
+         entries
+         list-size
+         'learning
+         nil
+         `(lambda (&rest _)
+            (let ((dag ,(plist-get el :dag)))
+              (if (and dag (file-exists-p dag))
+                  (find-file-other-window dag)
+                (dired-other-window ,(plist-get el :theory)))))
+         (my/learning-atlas--propertize-item el)))))
+
+  (with-eval-after-load 'dashboard
+    (require 'json) ;; json-read-file is not reliably autoloaded; load before the generator uses it
+    (add-to-list 'dashboard-items '(learning . 5) t)
+    (add-to-list 'dashboard-item-generators '(learning . dashboard-insert-learning))
+    ;; heading icon for the Learning Atlas section (book octicon, rendered
+    ;; through the same dashboard-heading-icon mechanism as builtin sections)
+    (add-to-list 'dashboard-heading-icons '(learning . "nf-oct-book")))
+
+(setq org-latex-create-formula-image-program 'dvipng)
+(setq org-preview-latex-image-directory (expand-file-name "ltximg/" user-emacs-directory))
 
 (use-package dashboard
   :ensure t
