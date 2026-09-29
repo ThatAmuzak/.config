@@ -585,6 +585,18 @@
   :ensure t
   :hook (org-mode-hook . org-fragtog-mode))
 
+(use-package ob-mermaid
+  :ensure t
+  :after org
+  :custom
+  ;; Windows: explicit path to the npm shim is most robust.
+  (ob-mermaid-cli-path (expand-file-name "AppData/Roaming/npm/mmdc.cmd"
+                                         (getenv "USERPROFILE")))
+  :config
+  ;; Append to the languages loaded by the jupyter block above.
+  (add-to-list 'org-babel-load-languages '(mermaid . t))
+  (org-babel-do-load-languages 'org-babel-load-languages org-babel-load-languages))
+
 (use-package svg-tag-mode
   :ensure t
   :config
@@ -1010,7 +1022,11 @@ scaffolding for that track (idempotent: open-not-overwrite)."
     ;; buffer-file-name returns nil there, so resolve through the base buffer.
     (let ((file (buffer-file-name (or (buffer-base-buffer) (current-buffer)))))
       (when (and file (string-match-p "/Learning/Scratch/[^/]+\\.org\\'" file))
-        (let* ((slug (file-name-base file))
+        (let* ((slug (replace-regexp-in-string
+                      "[^a-z0-9]+" "-" (downcase (file-name-base file))))
+               ;; pi's track-slug contract: [a-z0-9][a-z0-9-]{0,63}; the
+               ;; file name itself is org-roam's ${slug} (underscores), so
+               ;; re-slugify to hyphens to match pi's track directories.
                (theory-dir (expand-file-name (concat "Theory/" slug) my/learning-atlas-root))
                (progress-dir (expand-file-name (concat "Progress/" slug) my/learning-atlas-root))
                (dag (expand-file-name "DAG.org" theory-dir))
@@ -1123,7 +1139,7 @@ One level is lost per FULL idle week; integer output."
     (let ((entries (my/learning-atlas-entries)))
       (if (null entries)
           (progn
-            (dashboard-insert-heading "Learning Atlas:")
+            (dashboard-insert-heading "Learning Atlas:" "e")
             (insert (propertize "\n    No learning tracks yet — capture one with \"s\" (SPC n c)"
                                 'face 'dashboard-no-items-face)))
         (dashboard-insert-section
@@ -1131,7 +1147,7 @@ One level is lost per FULL idle week; integer output."
          entries
          list-size
          'learning
-         nil
+         "e"
          `(lambda (&rest _)
             (let ((dag ,(plist-get el :dag)))
               (if (and dag (file-exists-p dag))
