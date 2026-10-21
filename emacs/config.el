@@ -62,8 +62,24 @@
     (define-key evil-visual-state-map "j" 'evil-next-visual-line)
     (define-key evil-visual-state-map "k" 'evil-previous-visual-line)
     (define-key evil-visual-state-map (kbd "x") 'evil-delete)
-    (define-key evil-normal-state-map (kbd "C-d") (lambda () (interactive) (evil-scroll-down nil) (beacon-blink)))
-    (define-key evil-normal-state-map (kbd "C-u") (lambda () (interactive) (evil-scroll-up nil) (beacon-blink)))
+    ;; Half-page scrolls in visual (screen) lines, so soft-wrapped
+    ;; buffers don't jump by more than what's actually displayed.
+    (defun amuzak/evil-scroll-visual-down ()
+      "Scroll down (forward) half a window by visual lines."
+      (interactive)
+      (scroll-up-line (/ (window-body-height) 2))
+      (beacon-blink))
+    (defun amuzak/evil-scroll-visual-up ()
+      "Scroll up (backward) half a window by visual lines.
+If the start of the buffer is already on screen, put the cursor on
+the top visible line instead of leaving it mid-window."
+      (interactive)
+      (scroll-down-line (/ (window-body-height) 2))
+      (when (= (window-start) (point-min))
+        (goto-char (window-start)))
+      (beacon-blink))
+    (define-key evil-normal-state-map (kbd "C-d") #'amuzak/evil-scroll-visual-down)
+    (define-key evil-normal-state-map (kbd "C-u") #'amuzak/evil-scroll-visual-up)
     (define-key evil-normal-state-map "n" (lambda () (interactive) (evil-ex-search-next) (recenter)))
     (define-key evil-normal-state-map "N" (lambda () (interactive) (evil-ex-search-previous) (recenter)))
 
